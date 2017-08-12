@@ -34,6 +34,13 @@
     return pizza && pizza.toppings_tracker[toppings_dict.sausage.index] > 0 ? false : true;
   };
 
+  var WCPOption = function(name, shortname, price) {
+    this.name = name;
+    this.shortname = shortname;
+    this.price = price;
+    // should enable filter live here?
+  };
+
   var TOPPING_NONE = 0;
   var TOPPING_LEFT = 1;
   var TOPPING_RIGHT = 2;
@@ -72,9 +79,7 @@
   };
 
   var WCPSauce = function(name, shortname, price, enable_filter) {
-    this.name = name;
-    this.shortname = shortname;
-    this.price = price;
+    WCPOption.call(this, name, shortname, price);
     this.enable = enable_filter;
     this.ShowOption = function(pizza) {
       return pizza && (this.enable(pizza) || pizza.sauce == this.shortname);
@@ -82,9 +87,7 @@
   };
 
   var WCPTopping = function(name, shortname, price, index, enable_filter, flavor_factor, bake_factor) {
-    this.name = name;
-    this.shortname = shortname;
-    this.price = price;
+    WCPOption.call(this, name, shortname, price);
     this.index = index;
     this.enable = enable_filter;
     this.flavor_factor = flavor_factor;
@@ -142,7 +145,13 @@
 
   var menu = {};
 
+  var WCPProduct = function(name, price) {
+    this.name = name;
+    this.price = price;
+  };
+
   var WCPPizza = function(name, crust, cheese, sauce, toppings, shortcode) {
+    WCPProduct.call(this, name, 0);
     // topping enum is 0: none, 1: left, 2: right, 3: both
     // toppings is array<tuple<enum, topping>>
     function ComputePrice(pizza) {
