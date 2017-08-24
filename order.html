@@ -1,29 +1,29 @@
 <div class="orderform" ng-app="WCPOrder" ng-controller="OrderController as orderCtrl">
   <span id="ordertop"></span>
-  <div ng-show="orderCtrl.s.stage == 0" ng-controller="MenuController as menuCtrl">
-    <div class="ordering-menu menu-list menu-list__dotted" ng-hide="menuCtrl.selection">
+  <div ng-show="orderCtrl.s.stage == 0" ng-controller="PizzaMenuController as pmenuCtrl">
+    <div class="ordering-menu menu-list menu-list__dotted" ng-hide="pmenuCtrl.selection">
       <h3 class="flush--top" ng-if="orderCtrl.s.cart.length === 0"><strong>Click a pizza below to get started</strong></h3>
       <h3 class="flush--top" ng-if="orderCtrl.s.cart.length > 0"><strong>Click a pizza below or next to continue</strong></h3>
       <ul class="flexitems menu-list__items">
-        <li class="flexitem menu-list__item" ng-repeat="pizza in menuCtrl.menu">
-          <div class="scrolltotop offer-link" ng-click="menuCtrl.setPizza(pizza)">
+        <li class="flexitem menu-list__item" ng-repeat="pizza in pmenuCtrl.pizza_menu">
+          <div class="scrolltotop offer-link" ng-click="pmenuCtrl.setPizza(pizza)">
             <wcpcartitem pizza="pizza" dots="true" price="true"></wcpcartitem>
           </div>
         </li>
       </ul>
     </div>
-    <div class="customizer menu-list__items" ng-show="menuCtrl.selection">
+    <div class="customizer menu-list__items" ng-show="pmenuCtrl.selection">
       <h3 class="flush--top"><strong>Customize your pizza</strong></h3>
       <div class="menu-list__item">
-        <wcpcartitem pizza="menuCtrl.selection" dots="true" price="true"></wcpcartitem>
+        <wcpcartitem pizza="pmenuCtrl.selection" dots="true" price="true"></wcpcartitem>
       </div>
       <hr class="separator">
-      <div class="wpcf7-response-output wpcf7-validation-errors" ng-if="!menuCtrl.suppress_guide && menuCtrl.message">{{menuCtrl.message}}</div>
-      <div ng-if="menuCtrl.selection">
+      <div class="wpcf7-response-output wpcf7-validation-errors" ng-if="!pmenuCtrl.suppress_guide && pmenuCtrl.message">{{pmenuCtrl.message}}</div>
+      <div ng-if="pmenuCtrl.selection">
         <div>Sauce:</div>
         <div class="flexitems">
-          <div class="flexitem" ng-repeat="sauce in menuCtrl.sauces">
-            <input id="{{sauce.shortname}}_whole" class="input-whole" ng-model="menuCtrl.selection.sauce" ng-value="sauce" ng-disabled="!sauce.ShowOption(menuCtrl.selection)" type="radio" ng-change="menuCtrl.updateSelection()">
+          <div class="flexitem" ng-repeat="sauce in pmenuCtrl.sauces">
+            <input id="{{sauce.shortname}}_whole" class="input-whole" ng-model="pmenuCtrl.selection.sauce" ng-value="sauce" ng-disabled="!sauce.ShowOption(pmenuCtrl.selection)" type="radio" ng-change="pmenuCtrl.updateSelection()">
             <span class="option-circle-container">
               <label for="{{sauce.shortname}}_whole" class="option-whole option-circle"></label>
             </span>
@@ -33,36 +33,36 @@
         <div>Crust:</div>
         <div class="flexitems">
           <div class="flexitem">
-            <input type="checkbox" id="{{menuCtrl.crusts["garlic"].shortname}}_whole" class="input-whole" ng-model="menuCtrl.selection.crust" ng-true-value="'garlic'" ng-false-value="'regular'" ng-change="menuCtrl.updateSelection()">
+            <input type="checkbox" id="{{pmenuCtrl.crusts["garlic"].shortname}}_whole" class="input-whole" ng-model="pmenuCtrl.selection.crust" ng-true-value="'garlic'" ng-false-value="'regular'" ng-change="pmenuCtrl.updateSelection()">
             <span class="option-circle-container">
-              <label for="{{menuCtrl.crusts["garlic"].shortname}}_whole" class="option-whole option-circle"></label>
+              <label for="{{pmenuCtrl.crusts["garlic"].shortname}}_whole" class="option-whole option-circle"></label>
             </span>
-            <label class="topping_text" for="{{menuCtrl.crusts["garlic"].shortname}}_whole">{{menuCtrl.crusts["garlic"].name}}</label>
+            <label class="topping_text" for="{{pmenuCtrl.crusts["garlic"].shortname}}_whole">{{pmenuCtrl.crusts["garlic"].name}}</label>
           </div>
         </div>
         <div>Cheese:</div>
         <div class="flexitems">
           <div class="flexitem">
-            <input type="checkbox" id="{{menuCtrl.cheese_options["extra_mozz"].shortname}}_whole" class="input-whole" ng-model="menuCtrl.selection.cheese_option" ng-true-value="'extra_mozz'" ng-false-value="'regular'" ng-change="menuCtrl.updateSelection()">
+            <input type="checkbox" id="{{pmenuCtrl.cheese_options["extra_mozz"].shortname}}_whole" class="input-whole" ng-model="pmenuCtrl.selection.cheese_option" ng-true-value="'extra_mozz'" ng-false-value="'regular'" ng-change="pmenuCtrl.updateSelection()">
             <span class="option-circle-container">
-              <label for="{{menuCtrl.cheese_options["extra_mozz"].shortname}}_whole" class="option-whole option-circle"></label>
+              <label for="{{pmenuCtrl.cheese_options["extra_mozz"].shortname}}_whole" class="option-whole option-circle"></label>
             </span>
-            <label class="topping_text" for="{{menuCtrl.cheese_options["extra_mozz"].shortname}}_whole">{{menuCtrl.cheese_options["extra_mozz"].name}}</label>
+            <label class="topping_text" for="{{pmenuCtrl.cheese_options["extra_mozz"].shortname}}_whole">{{pmenuCtrl.cheese_options["extra_mozz"].name}}</label>
           </div>
         </div>
-        <div>Toppings&nbsp;(limit&nbsp;5<span ng-if="menuCtrl.selection.is_split">&nbsp;per&nbsp;side</span>):</div>
+        <div>Toppings&nbsp;(limit&nbsp;5<span ng-if="pmenuCtrl.selection.is_split">&nbsp;per&nbsp;side</span>):</div>
         <div class="flexitems">
-          <div class="flexitem" wcptoppingdir ng-repeat="topping in menuCtrl.toppings" selection="menuCtrl.selection" menuctrl="menuCtrl" topping="topping" config="orderCtrl.CONFIG" split="orderCtrl.split_toppings">
+          <div class="flexitem" wcptoppingdir ng-repeat="topping in pmenuCtrl.toppings" selection="pmenuCtrl.selection" pmenuctrl="pmenuCtrl" topping="topping" config="orderCtrl.CONFIG" split="orderCtrl.split_toppings">
           </div>
         </div>
       </div>
       <div class="order-nav">
         <span class="one-fifth">
-          <button name="remove" class="btn button-remove scrolltotop" ng-click="menuCtrl.unsetPizza()">Cancel</button>
+          <button name="remove" class="btn button-remove scrolltotop" ng-click="pmenuCtrl.unsetPizza()">Cancel</button>
         </span>
         <span class="four-fifths">
-          <span class="order-nav-item float--right"><button name="add" class="btn scrolltotop" ng-click="orderCtrl.addToOrder(menuCtrl.quantity, menuCtrl.selection); menuCtrl.unsetPizza()">Add to order</button></span>
-          <span class="order-nav-item float--right"><input type="number" class="quantity" min=1 max=99 ng-model="menuCtrl.quantity" ng-blur="menuCtrl.fixQuantity()"></span>
+          <span class="order-nav-item float--right"><button name="add" class="btn scrolltotop" ng-click="orderCtrl.addToOrder(pmenuCtrl.quantity, pmenuCtrl.selection); pmenuCtrl.unsetPizza()">Add to order</button></span>
+          <span class="order-nav-item float--right"><input type="number" class="quantity" min=1 max=99 ng-model="pmenuCtrl.quantity" ng-blur="pmenuCtrl.fixQuantity()"></span>
         </span>
       </div>
     </div>
@@ -99,11 +99,11 @@
           </table>
         </div>
     </div>
-    <div class="order-nav" ng-hide="menuCtrl.selection">
+    <div class="order-nav" ng-hide="pmenuCtrl.selection">
       <span class="order-nav-item float--right">
-        <button type="submit" class="btn scrolltotop" ng-disabled="orderCtrl.s.cart.length < 1" ng-show="orderCtrl.HasNextStage()" ng-click="menuCtrl.unsetPizza(); orderCtrl.NextStage()">
-          <span ng-if="orderCtrl.s.cart.length >= 1">Next</span>
-          <span ng-if="orderCtrl.s.cart.length < 1">Add an item above to your order</span>
+        <h5 ng-if="orderCtrl.s.cart.length < 1">First, click on an item above to add it to your order</h5>
+        <button ng-if="orderCtrl.s.cart.length >= 1" type="submit" class="btn scrolltotop" ng-disabled="orderCtrl.s.cart.length < 1" ng-show="orderCtrl.HasNextStage()" ng-click="pmenuCtrl.unsetPizza(); orderCtrl.NextStage()">
+        Next
         </button>
       </span>
     </div>

@@ -6,6 +6,7 @@
   // TODO: notice about cancellation
   // TODO: intercept back/forward button
   // TODO: order small plates
+  // TODO: add privacy notice
   var $j = jQuery.noConflict();
 
   var TimingInfo = function() {
@@ -104,7 +105,7 @@
         case TOPPING_LEFT: return base && (this_topping_state == TOPPING_WHOLE || this_topping_state == TOPPING_LEFT || (left_bake + this.bake_factor <= BAKE_MAX && left_flavor + this.flavor_factor <= FLAVOR_MAX));
         case TOPPING_RIGHT: return base && (this_topping_state == TOPPING_WHOLE || this_topping_state == TOPPING_RIGHT || (right_bake + this.bake_factor <= BAKE_MAX && right_flavor + this.flavor_factor <= FLAVOR_MAX));
         case TOPPING_WHOLE: return base && (this_topping_state == TOPPING_WHOLE || (left_bake + this.bake_factor <= BAKE_MAX && left_flavor + this.flavor_factor <= FLAVOR_MAX && this_topping_state == TOPPING_RIGHT) || (right_bake + this.bake_factor <= BAKE_MAX && right_flavor + this.flavor_factor <= FLAVOR_MAX && this_topping_state == TOPPING_LEFT) || (left_bake + this.bake_factor <= BAKE_MAX && left_flavor + this.flavor_factor <= FLAVOR_MAX && right_bake + this.bake_factor <= BAKE_MAX && right_flavor + this.flavor_factor <= FLAVOR_MAX));
-      };
+      }
       console.assert(false, "invariant");
       return false; // error?
     };
@@ -143,11 +144,17 @@
   }
   initializeToppingsDict();
 
-  var menu = {};
+  var pizza_menu = {};
+  var salad_menu = {};
 
   var WCPProduct = function(name, price) {
     this.name = name;
     this.price = price;
+  };
+
+  var WCPSalad = function(name, price, description) {
+    WCPProduct.call(this, name, price);
+    this.description = description;
   };
 
   var WCPPizza = function(name, crust, cheese, sauce, toppings, shortcode) {
@@ -165,7 +172,7 @@
         }
       }
       return val;
-    };
+    }
     function RecomputeToppingsMetadata(pizza) {
       var addon_chz = 0;//pizza.cheese_option != cheese_options['regular'].shortname ? 1 : 0;
       var addon_crust = 0;//pizza.crust != 'regular' ? 1 : 0;
@@ -184,17 +191,17 @@
         }
         pizza.is_split = pizza.is_split || topping == TOPPING_LEFT || topping == TOPPING_RIGHT;
       }
-    };
+    }
 
     function GetCrustCheeseSauceList(pizza, getter, verbose) {
       var ret = [];
       if (pizza.crust != "regular") {
         ret.push(getter(crusts[pizza.crust]));
       }
-      if (verbose || pizza.cheese_option != cheese_options['regular'].shortname ) {
+      if (verbose || pizza.cheese_option != cheese_options.regular.shortname ) {
         ret.push(getter(cheese_options[pizza.cheese_option]));
       }
-      if (verbose || pizza.sauce.shortname != sauces['red'].shortname ) {
+      if (verbose || pizza.sauce.shortname != sauces.red.shortname ) {
         ret.push(getter(pizza.sauce));
       }
       return ret;
@@ -212,7 +219,7 @@
         shortcode_builder = shortcode_builder + "w";
       }
       return shortcode_builder;
-    };
+    }
 
     // begin member functions
     this.GenerateToppingsList = function() {
@@ -234,7 +241,7 @@
           case 1: ret.left.push(i); break;
           case 2: ret.right.push(i); break;
           case 3: ret.whole.push(i);
-        };
+        }
       }
       return ret;
     };
@@ -277,7 +284,7 @@
         sections.push("(" + [left, right].join(" | ") + ")");
       }
       return sections.join(" + ");
-    }
+    };
 
     this.ShortOneLineDisplayToppings = function() {
       var split_toppings = this.SplitToppingsList();
@@ -296,7 +303,7 @@
         sections.push("(" + [left, right].join(" | ") + ")");
       }
       return sections.join(" + ");
-    }
+    };
 
     this.Compare = function(other) {
       // 0 no match
@@ -365,7 +372,7 @@
 
     this.EqualsFromComparisonInfo = function(comparison_info) {
       return comparison_info.mirror || (comparison_info.min_non_topping == 2 && comparison_info.min_topping_left == 2 && comparison_info.min_topping_right == 2);
-    }
+    };
 
     this.Equals = function(other) {
       var comparison_info = this.Compare(other);
@@ -384,18 +391,18 @@
         }
         switch(comparison) {
           case 2: // exact match
-            names[idx] = menu[menu_pizza].name;
-            shortcodes[idx] = menu[menu_pizza].shortcode;
+            names[idx] = pizza_menu[menu_pizza].name;
+            shortcodes[idx] = pizza_menu[menu_pizza].shortcode;
             has_name[idx] = true;
             break;
           case 1: // at least other
             if (menu_compare == "byo") {
               // non-menu BYO
-              names[idx] = menu[menu_compare].name;
+              names[idx] = pizza_menu[menu_compare].name;
             }
             else {
               // menu pizza with add-ons
-              var new_name = menu[menu_compare].name;
+              var new_name = pizza_menu[menu_compare].name;
               new_name = (comparison_info.sauce == 2) ? new_name : new_name.concat(" + ", pizza.sauce.name);
               new_name = (comparison_info.crust == 2) ? new_name : new_name.concat(" + ", crusts[pizza.crust].name);
               new_name = (comparison_info.cheese == 2) ? new_name : new_name.concat(" + ", cheese_options[pizza.cheese_option].name);
@@ -412,8 +419,8 @@
 
       // iterate through menu, until has_left and has_right are true
       // a name can be assigned once an exact or at least match is found for a given side
-      for (var menu_pizza in menu) {
-        var comparison_info = this.Compare(menu[menu_pizza]);
+      for (var menu_pizza in pizza_menu) {
+        var comparison_info = this.Compare(pizza_menu[menu_pizza]);
         var comparison_left = Math.min.apply(null, [comparison_info.min_non_topping, comparison_info.min_topping_left]);
         var comparison_right = Math.min.apply(null, [comparison_info.min_non_topping, comparison_info.min_topping_right]);
         ComputeForSide(this, 0, comparison_left, menu_pizza);
@@ -435,7 +442,6 @@
     };
 
     // begin initialization
-    this.name = name;
     this.crust = crust;
     this.cheese_option = cheese;
     this.sauce = sauce;
@@ -448,14 +454,14 @@
     for (var i in toppings_array) {
       this.toppings_tracker.push(0);
     }
-    for (var i in toppings) {
-      this.toppings_tracker[toppings[i][1].index] = toppings[i][0];
+    for (var j in toppings) {
+      this.toppings_tracker[toppings[j][1].index] = toppings[j][0];
     }
     this.UpdatePie();
     // end initialization
   };
 
-  menu = {
+  pizza_menu = {
     omnivore: new WCPPizza("Omnivore",
       "garlic",
       "regular",
@@ -559,6 +565,22 @@
     ),
   };
 
+  salad_menu = {
+    beets: new WCPSalad("Beets By Schrute",
+      7,
+      "Arugula + Roasted Beet + Roasted Pistachio + Bleu + Tarragon Vinaigrette"
+    ),
+    spinach: new WCPSalad("Spinach Salad",
+      6,
+      "Baby Spinach + Chèvre + Candied Pecan + Roasted Red Bell Pepper Vinaigrette + Pickled Red Onion"
+    ),
+    caesar: new WCPSalad("Caesar Salad",
+      6,
+      "Romaine Heart + Parmigiano Reggiano + Caesar Dressing + Garlic Crouton + Lemon Wedge"
+    ),
+  };
+
+
   var WCPStoreConfig = function() {
     // WCP store settings
     // 0 == carry out/pickup
@@ -627,7 +649,7 @@
     this.TIME_STEP = [WCP_time_step];
 
     // menu related
-    this.MENU = menu;
+    this.PIZZA_MENU = pizza_menu;
     this.TOPPINGS  = toppings_array;
     this.SAUCES = sauces;
     this.CHEESE_OPTIONS = cheese_options;
@@ -649,7 +671,7 @@
       st.setHours(0, 0, 0, 0, 0);
       nd.setHours(0, 0, 0, 0, 0);
       return st < nd;
-    }
+    };
 
     this.IsPreviousDay = function(date) {
       return this.IsFirstDatePreviousDayToSecond(date, timing_info.current_time);
@@ -679,12 +701,12 @@
       var printHour = (hour % 12 === 0 ? 12 : hour % 12).toString();
       var printMinute = (minute < 10 ? "0" : "").concat(minute.toString());
       return printHour.concat(":").concat(printMinute + meridian);
-    }
+    };
 
     this.IsDineInHour = function(date, time) {
       var minmax = this.cfg.HOURS_BY_SERVICE_TYPE[this.cfg.DINEIN][date.getDay()];
       return time >= minmax[0] && time <= minmax[1];
-    }
+    };
 
     this.IsIllinoisAreaCode = function(phone) {
       var AREA_CODES = {
@@ -705,7 +727,7 @@
       var numeric_phone = phone.match(/\d/g);
       numeric_phone = numeric_phone.join("");
       return (numeric_phone.length == 10 && (numeric_phone.slice(0,3)) in AREA_CODES) || (numeric_phone.length == 11 && numeric_phone[0] == "1" && (numeric_phone.slice(1,4)) in AREA_CODES);
-    }
+    };
 
     this.EmailSubjectStringBuilder = function(service_type, name, date_string, service_time) {
       if (!name || name.length == 0 || !date_string || date_string.length == 0) {
@@ -715,7 +737,7 @@
       service_time = this.MinutesToPrintTime(service_time);
       //[service-option] for [user-name] on [service-date] - [service-time]
       return encodeURI(service_type + " for " + name + " on " + date_string + " - " + service_time);
-    }
+    };
 
     this.EmailBodyStringBuilder = function(service_type, date, time, phone) {
       if (date == null || !Number.isInteger(time)) {
@@ -746,7 +768,7 @@
         ];
       }
       return encodeURI(confirm_string_array.join(""));
-    }
+    };
 
     this.EventTitleStringBuilder = function(service, customer, cart) {
       if (!customer || !cart) {
@@ -860,7 +882,7 @@
       var load_time_plus_year = new Date(timing_info.current_time);
       load_time_plus_year.setFullYear(timing_info.load_time.getFullYear() + 1);
       return date <= load_time_plus_year;
-    }
+    };
 
     this.IsDateActive = function(date, service, size) {
       return !this.IsPreviousDay(date) && this.DisableExhaustedDates(date, service, size) && this.DisableFarOutDates(date);
@@ -899,7 +921,7 @@
     else {
       $j("span.leadtime").html("");
     }
-  };
+  }
 
   (function() {
 
@@ -990,20 +1012,20 @@
         // time has changed so log the selection time and clear the timeout flag
         this.s.debug_info["time-selection-time"] = new Date(timing_info.current_time);
         this.s.selected_time_timeout = false;
-      }
+      };
 
       this.ClearAddress = function() {
         this.s.delivery_zipcode = "";
         this.s.delivery_address = "";
-      }
+      };
 
       this.ClearSpecialInstructions = function() {
         this.s.special_instructions = "";
-      }
+      };
 
       this.ComputeDeliveryFee = function() {
         this.s.delivery_fee = this.s.delivery_zipcode && this.s.delivery_zipcode.length > 0 ? 5 : 0;
-      }
+      };
 
       this.ValidateDate = function() {
         // determines if a particular date (as input) is valid, and if so, populates the service dropdown
@@ -1055,7 +1077,7 @@
           var item_name = item.name;
           var short_item_name = item.name;
           // if we need to identify this by its ingredients and not a "name"
-          if (item.name == menu.byo.name) {
+          if (item.name == wcpconfig.PIZZA_MENU.byo.name) {
             item_name = item.OneLineDisplayToppings();
             short_item_name = item.ShortOneLineDisplayToppings();
             short_item_name = short_item_name == "" ? "cheese" : short_item_name;
@@ -1072,12 +1094,12 @@
         this.s.RecomputeOrderSize();
         this.rebuildCartString();
         this.ValidateDate();
-      }
+      };
 
       this.ChangedContactInfo = function() {
         // resets the submit failed flag as the contact info has changed
         this.s.submit_failed = false;
-      }
+      };
 
       this.addToOrder = function(quantity, selection) {
         // check for existing entry
@@ -1120,18 +1142,18 @@
       this.CF7SubmitFailed = function() {
         this.s.submit_failed = true;
         this.s.stage = 1;
-      }
+      };
 
       this.CF7SubmitSuccess = function() {
         this.s.stage = 5;
-      }
+      };
 
       this.SlowSubmitterTrigger = function() {
         // set flag for user notification that too much time passed
         this.s.selected_time_timeout = true;
         // set stage to 2 (time selection)
         this.s.stage = 2;
-      }
+      };
 
       this.NextStage = function() {
         this.s.stage = this.s.stage + 1;
@@ -1147,8 +1169,8 @@
       };
     }]);
 
-    app.controller("MenuController", function() {
-      this.menu = menu;
+    app.controller("PizzaMenuController", function() {
+      this.pizza_menu = wcpconfig.PIZZA_MENU;
       this.selection = null;
       this.quantity = 1;
       this.toppings = toppings_array;
@@ -1159,12 +1181,12 @@
       this.suppress_guide = false;
 
       this.PopulateOrderGuide = function() {
-        var addon_chz = this.selection.cheese_option != cheese_options['regular'].shortname ? 1 : 0;
-        var addon_crust = this.selection.crust != 'regular' ? 1 : 0;
+        var addon_chz = this.selection.cheese_option != cheese_options.regular.shortname ? 1 : 0;
+        var addon_crust = this.selection.crust != "regular" ? 1 : 0;
         this.message = "";
         if (this.selection) {
           if (this.selection.bake_count[0] + addon_chz + addon_crust < 2 || this.selection.bake_count[1] + addon_chz + addon_crust < 2) {
-            this.message = "Our pizza is designed as a vehicle for add-ons. We recommend at least two toppings to weigh the crust down during baking.";
+            this.message = "Our pizza is designed as a vehicle for add-ons. We recommend at least two toppings to weigh the crust down during baking. If this is your first time dining with us, we'd suggest ordering a menu pizza without modifications.";
           }
           else if (this.selection.flavor_count[0] + addon_crust > 5 || this.selection.flavor_count[1] + addon_crust > 5) {
             this.message = "We love our toppings too, but adding this many flavors can end up detracting from the overall enjoyment. We'd suggest scaling this pizza back a bit. If this is your first time dining with us, we'd suggest ordering a menu pizza without modifications.";
@@ -1203,18 +1225,18 @@
         },
         controller: function () {
         },
-        controllerAs: 'ctrl',
+        controllerAs: "ctrl",
         bindToController: true,
-        template: '\
-        <h4 class="menu-list__item-title"><span class="item_title">{{ctrl.pizza.name}}</span><span ng-if="ctrl.dots" class="dots"></span></h4>\
-        <p ng-repeat="topping_section in ctrl.pizza.toppings_sections" class="menu-list__item-desc">\
-          <span class="desc__content">\
-            <span ng-if="ctrl.pizza.is_split"><strong>{{topping_section[0]}}:</strong></span>\
-            <span>{{topping_section[1]}}</span>\
-          </span>\
-        </p>\
-        <span ng-if="ctrl.dots" class="dots"></span>\
-        <span ng-if="ctrl.price" class="menu-list__item-price">{{ctrl.pizza.price}}</span>'
+        template:
+        '<h4 class="menu-list__item-title"><span class="item_title">{{ctrl.pizza.name}}</span><span ng-if="ctrl.dots" class="dots"></span></h4>'+
+        '<p ng-repeat="topping_section in ctrl.pizza.toppings_sections" class="menu-list__item-desc">'+
+          '<span class="desc__content">'+
+            '<span ng-if="ctrl.pizza.is_split"><strong>{{topping_section[0]}}:</strong></span>'+
+            '<span>{{topping_section[1]}}</span>'+
+          '</span>'+
+        '</p>'+
+        '<span ng-if="ctrl.dots" class="dots"></span>'+
+        '<span ng-if="ctrl.price" class="menu-list__item-price">{{ctrl.pizza.price}}</span>',
       };
     });
 
@@ -1226,7 +1248,7 @@
           selection: "=selection",
           config: "=config",
           split: "=split",
-          menuctrl: "=menuctrl",
+          pmenuctrl: "=pmenuctrl",
         },
         controller: function () {
           this.Initalize = function () {
@@ -1234,16 +1256,16 @@
             this.left = this.selection.toppings_tracker[this.topping.index] == 1;
             this.right = this.selection.toppings_tracker[this.topping.index] == 2;
             this.whole = this.selection.toppings_tracker[this.topping.index] == 3;
-          }
+          };
           this.UpdateTopping = function() {
             this.selection.toppings_tracker[this.topping.index] = (+this.right)*2 + (+this.left) + (+this.whole)*3;
-            this.menuctrl.updateSelection();
+            this.pmenuctrl.updateSelection();
             this.selection.UpdatePie();
-          }
+          };
           this.ToggleWhole = function() {
             this.left = this.right = false;
             this.UpdateTopping();
-          }
+          };
           this.ToggleHalf = function() {
             if (this.left && this.right) {
               this.whole = true;
@@ -1253,23 +1275,22 @@
               this.whole = false;
             }
             this.UpdateTopping();
-          }
+          };
 
           this.Initalize();
         },
         controllerAs: 'ctrl',
         bindToController: true,
         template:
-        '\
-        <input id="{{ctrl.topping.shortname}}_whole" class="input-whole" ng-model="ctrl.whole" ng-disabled="!ctrl.topping.ShowOption(ctrl.selection, ctrl.config.WHOLE)" type="checkbox" ng-change="ctrl.ToggleWhole()">\
-        <input ng-show="ctrl.split" id="{{ctrl.topping.shortname}}_left" class="input-left"  ng-model="ctrl.left" ng-disabled="!ctrl.topping.ShowOption(ctrl.selection, ctrl.config.LEFT)" type="checkbox" ng-change="ctrl.ToggleHalf()">\
-        <input ng-show="ctrl.split" id="{{ctrl.topping.shortname}}_right" class="input-right" ng-model="ctrl.right" ng-disabled="!ctrl.topping.ShowOption(ctrl.selection, ctrl.config.RIGHT)" type="checkbox" ng-change="ctrl.ToggleHalf()">\
-          <span class="option-circle-container">\
-            <label for="{{ctrl.topping.shortname}}_whole" class="option-whole option-circle"></label>\
-            <label ng-show="ctrl.split" for="{{ctrl.topping.shortname}}_left" class="option-left option-circle"></label>\
-            <label ng-show="ctrl.split" for="{{ctrl.topping.shortname}}_right" class="option-right option-circle"></label>\
-          </span>\
-        <label class="topping_text" for="{{ctrl.topping.shortname}}_whole" ng-disabled="!ctrl.topping.ShowOption(ctrl.selection, ctrl.config.WHOLE)">{{ctrl.topping.name}}</label>'
+        '<input id="{{ctrl.topping.shortname}}_whole" class="input-whole" ng-model="ctrl.whole" ng-disabled="!ctrl.topping.ShowOption(ctrl.selection, ctrl.config.WHOLE)" type="checkbox" ng-change="ctrl.ToggleWhole()">'+
+        '<input ng-show="ctrl.split" id="{{ctrl.topping.shortname}}_left" class="input-left"  ng-model="ctrl.left" ng-disabled="!ctrl.topping.ShowOption(ctrl.selection, ctrl.config.LEFT)" type="checkbox" ng-change="ctrl.ToggleHalf()">'+
+        '<input ng-show="ctrl.split" id="{{ctrl.topping.shortname}}_right" class="input-right" ng-model="ctrl.right" ng-disabled="!ctrl.topping.ShowOption(ctrl.selection, ctrl.config.RIGHT)" type="checkbox" ng-change="ctrl.ToggleHalf()">'+
+          '<span class="option-circle-container">'+
+            '<label for="{{ctrl.topping.shortname}}_whole" class="option-whole option-circle"></label>'+
+            '<label ng-show="ctrl.split" for="{{ctrl.topping.shortname}}_left" class="option-left option-circle"></label>'+
+            '<label ng-show="ctrl.split" for="{{ctrl.topping.shortname}}_right" class="option-right option-circle"></label>'+
+          '</span>'+
+        '<label class="topping_text" for="{{ctrl.topping.shortname}}_whole" ng-disabled="!ctrl.topping.ShowOption(ctrl.selection, ctrl.config.WHOLE)">{{ctrl.topping.name}}</label>'
       };
     });
 
@@ -1306,11 +1327,11 @@
             var selected_date_string = $filter("date")(scope.orderinfo.s.selected_date, "EEEE, MMMM dd, yyyy");
             var confirmation_subject = OrderHelper.EmailSubjectStringBuilder(scope.orderinfo.s.service_type, scope.orderinfo.s.customer_name, selected_date_string, scope.orderinfo.s.service_time);
             $j(element).find("span.confirmation-subject textarea").val(confirmation_subject);
-          }
+          };
           var ConfirmationBodySetter = function() {
             var confirmation_body = OrderHelper.EmailBodyStringBuilder(scope.orderinfo.s.service_type, scope.orderinfo.s.selected_date, scope.orderinfo.s.service_time, scope.orderinfo.s.phone_number);
             $j(element).find("span.confirmation-body textarea").val(confirmation_body);
-          }
+          };
           var SlowSubmitterCheck = function() {
             // TODO: make sure no one is in the middle of customizing a pizza
             var old_time = scope.orderinfo.s.service_time;
@@ -1318,7 +1339,7 @@
             if (old_time != scope.orderinfo.s.service_time && scope.orderinfo.s.stage <= 3) {
               scope.orderinfo.SlowSubmitterTrigger();
             }
-          }
+          };
 
           scope.$watch("orderinfo.s.debug_info", function() {
             $j(element).find("span.time-selection-time input").val($filter("date")(scope.orderinfo.s.debug_info["time-selection-time"], "HH:mm:ss"));
@@ -1392,7 +1413,7 @@
             SlowSubmitterCheck();
           }
           UpdateLeadTime();
-          var time_updater = $interval(UpdateCurrentTime, 60000)
+          var time_updater = $interval(UpdateCurrentTime, 60000);
 
           element.on("$destroy", function(){
             $interval.cancel(time_updater);
