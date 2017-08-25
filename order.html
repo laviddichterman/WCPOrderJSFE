@@ -2,12 +2,12 @@
   <span id="ordertop"></span>
   <div ng-show="orderCtrl.s.stage == 0" ng-controller="PizzaMenuController as pmenuCtrl">
     <div class="ordering-menu menu-list menu-list__dotted" ng-hide="pmenuCtrl.selection">
-      <h3 class="flush--top" ng-if="orderCtrl.s.cart.length === 0"><strong>Click a pizza below to get started</strong></h3>
-      <h3 class="flush--top" ng-if="orderCtrl.s.cart.length > 0"><strong>Click a pizza below or next to continue</strong></h3>
+      <h3 class="flush--top" ng-if="orderCtrl.s.cart.pizza.length === 0"><strong>Click a pizza below to get started</strong></h3>
+      <h3 class="flush--top" ng-if="orderCtrl.s.cart.pizza.length > 0"><strong>Click a pizza below or next to continue</strong></h3>
       <ul class="flexitems menu-list__items">
         <li class="flexitem menu-list__item" ng-repeat="pizza in pmenuCtrl.pizza_menu">
           <div class="scrolltotop offer-link" ng-click="pmenuCtrl.setPizza(pizza)">
-            <wcpcartitem pizza="pizza" dots="true" price="true"></wcpcartitem>
+            <wcppizzacartitem pizza="pizza" dots="true" price="true"></wcppizzacartitem>
           </div>
         </li>
       </ul>
@@ -15,7 +15,7 @@
     <div class="customizer menu-list__items" ng-show="pmenuCtrl.selection">
       <h3 class="flush--top"><strong>Customize your pizza</strong></h3>
       <div class="menu-list__item">
-        <wcpcartitem pizza="pmenuCtrl.selection" dots="true" price="true"></wcpcartitem>
+        <wcppizzacartitem pizza="pmenuCtrl.selection" dots="true" price="true"></wcppizzacartitem>
       </div>
       <hr class="separator">
       <div class="wpcf7-response-output wpcf7-validation-errors" ng-if="!pmenuCtrl.suppress_guide && pmenuCtrl.message">{{pmenuCtrl.message}}</div>
@@ -61,12 +61,13 @@
           <button name="remove" class="btn button-remove scrolltotop" ng-click="pmenuCtrl.unsetPizza()">Cancel</button>
         </span>
         <span class="four-fifths">
-          <span class="order-nav-item float--right"><button name="add" class="btn scrolltotop" ng-click="orderCtrl.addToOrder(pmenuCtrl.quantity, pmenuCtrl.selection); pmenuCtrl.unsetPizza()">Add to order</button></span>
+          <span class="order-nav-item float--right"><button name="add" class="btn scrolltotop" ng-click="orderCtrl.addPizzaToOrder(pmenuCtrl.quantity, pmenuCtrl.selection); pmenuCtrl.unsetPizza()">Add to order</button></span>
           <span class="order-nav-item float--right"><input type="number" class="quantity" min=1 max=99 ng-model="pmenuCtrl.quantity" ng-blur="pmenuCtrl.fixQuantity()"></span>
         </span>
       </div>
     </div>
-    <div class="cart" ng-if="orderCtrl.s.cart.length > 0">
+    <div class="cart" ng-if="orderCtrl.s.cart.pizza.length > 0">
+      <!-- TODO: this should still display the cart if there are no pizzas but some "extras"-->
       <hr class="separator">
       <h3 class="flush">Current Order</h3>
         <div class="content">
@@ -78,11 +79,11 @@
               </tr>
             </thead>
             <tbody>
-              <tr ng-repeat="item in orderCtrl.s.cart" class="cart-item">
+              <tr ng-repeat="item in orderCtrl.s.cart.pizza" class="cart-item">
                 <td>
                   <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
                     <div class="menu-list__item">
-                      <wcpcartitem pizza="item[1]" dots="false" price="false"></wcpcartitem>
+                      <wcppizzacartitem pizza="item[1]" dots="false" price="false"></wcppizzacartitem>
                     </div>
                   </div>
                 </td>
@@ -90,7 +91,7 @@
                   <div class="grid-flex grid-valign-middle">
                     <input type="number" class="quantity" min=1 max=99 ng-model="item[0]" ng-blur="orderCtrl.fixQuantities()">
                     <span class="cart-item-remove">
-                      <button name="remove" ng-click="orderCtrl.removeFromOrder($index)" class="button-remove scrolltotop">X</button>
+                      <button name="remove" ng-click="orderCtrl.removePizzaFromOrder($index)" class="button-remove scrolltotop">X</button>
                     </span>
                   </div>
                 </td>
@@ -101,8 +102,8 @@
     </div>
     <div class="order-nav" ng-hide="pmenuCtrl.selection">
       <span class="order-nav-item float--right">
-        <h5 ng-if="orderCtrl.s.cart.length < 1">First, click on an item above to add it to your order</h5>
-        <button ng-if="orderCtrl.s.cart.length >= 1" type="submit" class="btn scrolltotop" ng-disabled="orderCtrl.s.cart.length < 1" ng-show="orderCtrl.HasNextStage()" ng-click="pmenuCtrl.unsetPizza(); orderCtrl.NextStage()">
+        <h5 ng-if="orderCtrl.s.cart.pizza.length < 1">First, click on an item above to add it to your order</h5>
+        <button ng-if="orderCtrl.s.cart.pizza.length >= 1" type="submit" class="btn scrolltotop" ng-disabled="orderCtrl.s.cart.pizza.length < 1" ng-show="orderCtrl.HasNextStage()" ng-click="pmenuCtrl.unsetPizza(); orderCtrl.NextStage()">
         Next
         </button>
       </span>
@@ -214,11 +215,11 @@
               </tr>
             </thead>
             <tbody>
-              <tr ng-repeat="item in orderCtrl.s.cart" class="cart-item">
+              <tr ng-repeat="item in orderCtrl.s.cart.pizza" class="cart-item">
                 <td class="cart-item-description">
                   <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
                     <div class="menu-list__item">
-                      <wcpcartitem pizza="item[1]" dots="false" price="false"></wcpcartitem>
+                      <wcppizzacartitem pizza="item[1]" dots="false" price="false"></wcppizzacartitem>
                     </div>
                   </div>
                 </td>

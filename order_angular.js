@@ -7,6 +7,7 @@
   // TODO: intercept back/forward button
   // TODO: order small plates
   // TODO: add privacy notice
+  // TODO: multiple of same pizza menu guide
   var $j = jQuery.noConflict();
 
   var TimingInfo = function() {
@@ -29,7 +30,7 @@
     return pizza && pizza.toppings_tracker[toppings_dict.brussels.index] > 0 ? false : true;
   };
   var disable_on_chicken_sausage = function (pizza) {
-    return pizza && pizza.toppings_tracker[toppings_dict.chicken_sausage.index] > 0 ? false : true;
+    return pizza && pizza.toppings_tracker[toppings_dict.chix.index] > 0 ? false : true;
   };
   var disable_on_pork_sausage = function (pizza) {
     return pizza && pizza.toppings_tracker[toppings_dict.sausage.index] > 0 ? false : true;
@@ -124,17 +125,17 @@
     new WCPTopping("Brussels Sprout", "brussels", 2, idx++, enable_on_white, 1, 1),
     new WCPTopping("Meatball", "meatball", 4, idx++, no_restriction, 1, 2),
     new WCPTopping("House Sausage", "sausage", 2, idx++, disable_on_chicken_sausage, 1, 1),
-    new WCPTopping("Rosemary Chicken Sausage", "chicken_sausage", 2, idx++, disable_on_pork_sausage, 1, 1),
-    new WCPTopping("Pineapple", "pineapple", 2, idx++, no_restriction, 1, 1),
+    new WCPTopping("Rosemary Chicken Sausage", "chix", 2, idx++, disable_on_pork_sausage, 1, 1),
+    new WCPTopping("Pineapple", "pine", 2, idx++, no_restriction, 1, 1),
     new WCPTopping("Red Bell Pepper", "rbp", 2, idx++, no_restriction, 1, 1),
     new WCPTopping("Sweet Hot Pepper", "shp", 2, idx++, no_restriction, 1, 1),
     new WCPTopping("Caramelized Onion", "onion", 2, idx++, no_restriction, 1, 1),
     new WCPTopping("Raw Red Onion", "raw_onion", 2, idx++, no_restriction, 1, 1),
     new WCPTopping("Kalamata Olive", "kala", 2, idx++, no_restriction, 1, 1),
     new WCPTopping("Castelvetrano Olive", "castel", 2, idx++, no_restriction, 1, 1),
-    new WCPTopping("Mushroom", "mushroom", 2, idx++, no_restriction, 1, 1),
-    new WCPTopping("Jalapeño", "jalapeno", 2, idx++, no_restriction, 1, 1),
-    new WCPTopping("Spinach", "spinach", 2, idx++, no_restriction, 1, 1),
+    new WCPTopping("Mushroom", "mush", 2, idx++, no_restriction, 1, 1),
+    new WCPTopping("Jalapeño", "jala", 2, idx++, no_restriction, 1, 1),
+    new WCPTopping("Spinach", "spin", 2, idx++, no_restriction, 1, 1),
     new WCPTopping("Pepperoni", "pepperoni", 2, idx++, no_restriction, 1, 1)
   ];
   function initializeToppingsDict() {
@@ -147,18 +148,19 @@
   var pizza_menu = {};
   var salad_menu = {};
 
-  var WCPProduct = function(name, price) {
+  var WCPProduct = function(name, shortcode, price) {
     this.name = name;
+    this.shortcode = shortcode;
     this.price = price;
   };
 
-  var WCPSalad = function(name, price, description) {
-    WCPProduct.call(this, name, price);
+  var WCPSalad = function(name, shortcode, price, description) {
+    WCPProduct.call(this, name, shortcode, price);
     this.description = description;
   };
 
-  var WCPPizza = function(name, crust, cheese, sauce, toppings, shortcode) {
-    WCPProduct.call(this, name, 0);
+  var WCPPizza = function(name, shortcode, crust, cheese, sauce, toppings) {
+    WCPProduct.call(this, name, shortcode, 0);
     // topping enum is 0: none, 1: left, 2: right, 3: both
     // toppings is array<tuple<enum, topping>>
     function ComputePrice(pizza) {
@@ -445,7 +447,6 @@
     this.crust = crust;
     this.cheese_option = cheese;
     this.sauce = sauce;
-    this.shortcode = shortcode;
     this.toppings_tracker = [];
     this.is_split = false;
     this.toppings_sections = [];
@@ -463,118 +464,122 @@
 
   pizza_menu = {
     omnivore: new WCPPizza("Omnivore",
+      "O",
       "garlic",
       "regular",
       sauces.red,
       [[TOPPING_WHOLE, toppings_dict.pepperoni],
       [TOPPING_WHOLE, toppings_dict.sausage],
       [TOPPING_WHOLE, toppings_dict.onion],
-      [TOPPING_WHOLE, toppings_dict.spinach]],
-      "O"
+      [TOPPING_WHOLE, toppings_dict.spin]]
     ),
     veggie: new WCPPizza("Veggie",
+      "V",
       "regular",
       "regular",
       sauces.red,
       [[TOPPING_WHOLE, toppings_dict.rbp],
       [TOPPING_WHOLE, toppings_dict.onion],
-      [TOPPING_WHOLE, toppings_dict.mushroom],
-      [TOPPING_WHOLE, toppings_dict.spinach]],
-      "V"
+      [TOPPING_WHOLE, toppings_dict.mush],
+      [TOPPING_WHOLE, toppings_dict.spin]],
+
     ),
     classic: new WCPPizza("Classic",
+      "C",
       "regular",
       "regular",
       sauces.red,
       [[TOPPING_WHOLE, toppings_dict.sausage],
       [TOPPING_WHOLE, toppings_dict.rbp],
       [TOPPING_WHOLE, toppings_dict.onion],
-      [TOPPING_WHOLE, toppings_dict.mushroom]],
-      "C"
+      [TOPPING_WHOLE, toppings_dict.mush]]
     ),
     popeye: new WCPPizza("Popeye",
+      "P",
       "regular",
       "regular",
       sauces.red,
       [[TOPPING_WHOLE, toppings_dict.bleu],
       [TOPPING_WHOLE, toppings_dict.kala],
-      [TOPPING_WHOLE, toppings_dict.mushroom],
-      [TOPPING_WHOLE, toppings_dict.spinach]],
-      "P"
+      [TOPPING_WHOLE, toppings_dict.mush],
+      [TOPPING_WHOLE, toppings_dict.spin]]
     ),
     sweet_pete: new WCPPizza("Sweet Pete",
+      "S",
       "regular",
       "regular",
       sauces.red,
       [[TOPPING_WHOLE, toppings_dict.giard],
       [TOPPING_WHOLE, toppings_dict.bacon],
       [TOPPING_WHOLE, toppings_dict.sausage],
-      [TOPPING_WHOLE, toppings_dict.pineapple]],
-      "S"
+      [TOPPING_WHOLE, toppings_dict.pine]]
     ),
     hot_island: new WCPPizza("Hot Island",
+      "H",
       "garlic",
       "regular",
       sauces.red,
       [[TOPPING_WHOLE, toppings_dict.sausage],
-      [TOPPING_WHOLE, toppings_dict.pineapple],
-      [TOPPING_WHOLE, toppings_dict.jalapeno]],
-      "H"
+      [TOPPING_WHOLE, toppings_dict.pine],
+      [TOPPING_WHOLE, toppings_dict.jala]]
     ),
     meatza: new WCPPizza("Meatza",
+      "M",
       "regular",
       "regular",
       sauces.red,
       [[TOPPING_WHOLE, toppings_dict.bacon],
       [TOPPING_WHOLE, toppings_dict.pepperoni],
-      [TOPPING_WHOLE, toppings_dict.sausage]],
-      "M"
+      [TOPPING_WHOLE, toppings_dict.sausage]]
     ),
     tuscany_raider: new WCPPizza("Tuscany Raider",
+      "T",
       "regular",
       "regular",
       sauces.white,
-      [[TOPPING_WHOLE, toppings_dict.chicken_sausage],
+      [[TOPPING_WHOLE, toppings_dict.chix],
       [TOPPING_WHOLE, toppings_dict.shp],
-      [TOPPING_WHOLE, toppings_dict.spinach]],
-      "T"
+      [TOPPING_WHOLE, toppings_dict.spin]]
     ),
     brussels_snout: new WCPPizza("Brussels Snout",
+      "R",
       "regular",
       "regular",
       sauces.white,
       [[TOPPING_WHOLE, toppings_dict.bacon],
       [TOPPING_WHOLE, toppings_dict.brussels],
-      [TOPPING_WHOLE, toppings_dict.onion]],
-      "R"
+      [TOPPING_WHOLE, toppings_dict.onion]]
     ),
     blue_pig: new WCPPizza("Blue Pig",
+      "B",
       "regular",
       "regular",
       sauces.red,
       [[TOPPING_WHOLE, toppings_dict.bleu],
-      [TOPPING_WHOLE, toppings_dict.bacon]],
-      "B"
+      [TOPPING_WHOLE, toppings_dict.bacon]]
     ),
     byo: new WCPPizza("Build-Your-Own",
+      "z",
       "regular",
       "regular",
       sauces.red,
-      [],
-      "z"
+      []
     ),
   };
 
   salad_menu = {
     beets: new WCPSalad("Beets By Schrute",
+      "Be",
       7,
       "Arugula + Roasted Beet + Roasted Pistachio + Bleu + Tarragon Vinaigrette"
     ),
     spinach: new WCPSalad("Spinach Salad",
+      "Sp",
       6,
       "Baby Spinach + Chèvre + Candied Pecan + Roasted Red Bell Pepper Vinaigrette + Pickled Red Onion"
     ),
     caesar: new WCPSalad("Caesar Salad",
+      "Cz",
       6,
       "Romaine Heart + Parmigiano Reggiano + Caesar Dressing + Garlic Crouton + Lemon Wedge"
     ),
@@ -771,7 +776,7 @@
     };
 
     this.EventTitleStringBuilder = function(service, customer, cart) {
-      if (!customer || !cart) {
+      if (!customer || cart.pizza.length == 0) {
         return "";
       }
       customer = customer.replace(/\s/g, "+").replace(/[&]/g, "and");
@@ -785,15 +790,21 @@
       else if (service == this.cfg.DELIVERY) {
         service_string = "DELIVER";
       }
-      var total = 0;
-      var shortcodes = "";
-      for (var i in cart) {
-        var quantity = cart[i][0];
-        var shortcode = cart[i][1].shortcode;
-        total = total + quantity;
-        shortcodes = shortcodes + Array(quantity+1).join("+" + shortcode);
+      var num_pizzas = 0;
+      var pizza_shortcodes = "";
+      for (var i in cart.pizza) {
+        var quantity = cart.pizza[i][0];
+        var shortcode = cart.pizza[i][1].shortcode;
+        num_pizzas = num_pizzas + quantity;
+        pizza_shortcodes = pizza_shortcodes + Array(quantity+1).join("+" + shortcode);
       }
-      return service_string + "+" + encodeURI(customer) + (service != this.cfg.DELIVERY ? "" : "+[]") + "+" + total + "x" + shortcodes;
+      var extras_shortcodes = "";
+      for (var j in cart.extras) {
+        var quantity = cart.extras[j][0];
+        var shortcode = cart.extras[j][1].shortcode;
+        extras_shortcodes = extras_shortcodes + "+" + quantity.toString(10) + "x" + shortcode;
+      }
+      return service_string + "+" + encodeURI(customer) + (service != this.cfg.DELIVERY ? "" : "+[]") + "+" + num_pizzas + "x" + shortcodes + (extras_shortcodes.length > 0 ? "+EX+"+extras_shortcodes : "");
     };
 
     this.EventDateTimeStringBuilder = function(date, time) {
@@ -936,10 +947,10 @@
     var WCPOrderState = function(cfg, enable_delivery, enable_split_toppings) {
       this.RecomputeOrderSize = function() {
         var size = 0;
-        for (var i in this.cart) {
-          size = size + this.cart[i][0];
+        for (var i in this.cart.pizza) {
+          size = size + this.cart.pizza[i][0];
         }
-        this.numitems = size;
+        this.num_pizza = size;
       };
 
       this.date_string = "";
@@ -955,9 +966,9 @@
       this.delivery_address = "";
       this.delivery_zipcode = "";
       this.email_address = "";
-      this.cart = [];
+      this.cart = {pizza: [], extras:[]};
       this.cartstring = "";
-      this.numitems = 0;
+      this.num_pizza = 0;
       this.shortcartstring = "";
       this.referral = "";
       this.acknowledge_instructions_dialogue = false;
@@ -973,7 +984,7 @@
         // DINEIN
         function (state) { return true; },
         // DELIVERY
-        function (state) { return state.enable_delivery && state.numitems >= 5; }
+        function (state) { return state.enable_delivery && state.num_pizza >= 5; }
       ];
 
       // stage 0: menu/cart controller: cart display // pie selection // customize pie, add to cart
@@ -1040,7 +1051,7 @@
         }
         if (no_longer_meets_service_requirement ||
             isNaN(parsedDate) ||
-            !OrderHelper.IsDateActive(new Date(parsedDate), this.s.service_type, this.s.numitems)) {
+            !OrderHelper.IsDateActive(new Date(parsedDate), this.s.service_type, this.s.num_pizza)) {
           this.s.date_valid = false;
           this.s.service_times = ["Please select a valid date"];
           this.s.service_time = "Please select a valid date";
@@ -1053,7 +1064,7 @@
           this.s.date_string = $filter("date")(this.s.selected_date, "EEEE, MMMM dd, yyyy");
           this.s.date_valid = true;
 
-          this.s.service_times = OrderHelper.GetStartTimes(this.s.selected_date, this.s.service_type, this.s.numitems);
+          this.s.service_times = OrderHelper.GetStartTimes(this.s.selected_date, this.s.service_type, this.s.num_pizza);
 
           if (!old_service_time || this.s.service_times.findIndex(function(elt, idx, arr) { return elt == old_service_time; }) == -1) {
               this.s.service_time = this.s.service_times[0];
@@ -1071,9 +1082,10 @@
         var str_builder = "";
         var short_builder = "";
 
-        for (var i in this.s.cart) {
-          var quantity = this.s.cart[i][0];
-          var item = this.s.cart[i][1];
+        // process cart for pizzas
+        for (var i in this.s.cart.pizza) {
+          var quantity = this.s.cart.pizza[i][0];
+          var item = this.s.cart.pizza[i][1];
           var item_name = item.name;
           var short_item_name = item.name;
           // if we need to identify this by its ingredients and not a "name"
@@ -1084,6 +1096,14 @@
           }
           str_builder = str_builder + quantity + "x: " + item_name + "\n";
           short_builder = short_builder + quantity + "x: " + short_item_name + "\n";
+        }
+
+        // process cart for extras
+        for (var j in this.s.cart.extras) {
+          var quantity = this.s.cart.extras[j][0];
+          var item_name = this.s.cart.extras[j][1].name;
+          str_builder = str_builder + quantity + "x: " + item_name + "\n";
+          short_builder = short_builder + quantity + "x: " + item_name + "\n";
         }
 
         this.s.cartstring = str_builder;
@@ -1101,36 +1121,42 @@
         this.s.submit_failed = false;
       };
 
-      this.addToOrder = function(quantity, selection) {
+      this.addPizzaToOrder = function(quantity, selection) {
         // check for existing entry
-        for (var i in this.s.cart) {
-          if (this.s.cart[i][1].Equals(selection)) {
-            this.s.cart[i][0] += quantity;
+        for (var i in this.s.cart.pizza) {
+          if (this.s.cart.pizza[i][1].Equals(selection)) {
+            this.s.cart.pizza[i][0] += quantity;
             this.PostCartUpdate();
             return;
           }
         }
         // add new entry
-        this.s.cart.push([quantity, selection]);
+        this.s.cart.pizza.push([quantity, selection]);
         this.PostCartUpdate();
       };
 
-      this.removeFromOrder = function(idx) {
-        this.s.cart.splice(idx, 1);
+      this.removePizzaFromOrder = function(idx) {
+        this.s.cart.pizza.splice(idx, 1);
         this.PostCartUpdate();
       };
 
       this.subtotal = function() {
         var val = 0;
-        for (var i in this.s.cart) {
-          val += this.s.cart[i][0] * this.s.cart[i][1].price;
+        for (var i in this.s.cart.pizza) {
+          val += this.s.cart.pizza[i][0] * this.s.cart.pizza[i][1].price;
+        }
+        for (var j in this.s.cart.extras) {
+          val += this.s.cart.extras[j][0] * this.s.cart.extras[j][1].price;
         }
         return val;
       };
 
       this.fixQuantities = function () {
-        for (var item in this.s.cart) {
-          this.s.cart[item][0] = FixQuantity(this.s.cart[item][0]);
+        for (var item in this.s.cart.pizza) {
+          this.s.cart.pizza[item][0] = FixQuantity(this.s.cart.pizza[item][0]);
+        }
+        for (var j in this.s.cart.extras) {
+          this.s.cart.extras[j][0] = FixQuantity(this.s.cart.extras[j][0]);
         }
         this.PostCartUpdate();
       };
@@ -1200,7 +1226,7 @@
       };
 
       this.setPizza = function(selectedPizza) {
-        this.selection = new WCPPizza(selectedPizza.name, selectedPizza.crust, selectedPizza.cheese_option, selectedPizza.sauce, selectedPizza.GenerateToppingsList(), selectedPizza.shortcode);
+        this.selection = new WCPPizza(selectedPizza.name, selectedPizza.shortcode, selectedPizza.crust, selectedPizza.cheese_option, selectedPizza.sauce, selectedPizza.GenerateToppingsList());
         this.quantity = 1;
         this.PopulateOrderGuide();
       };
@@ -1215,7 +1241,7 @@
       };
     });
 
-    app.directive("wcpcartitem", function() {
+    app.directive("wcppizzacartitem", function() {
       return {
         restrict: "E",
         scope: {
@@ -1464,7 +1490,7 @@
         },
         link: function(scope, element, attrs, ctrl) {
           var DateActive = function(date) {
-            var is_active = OrderHelper.IsDateActive(date, scope.orderinfo.s.service_type, scope.orderinfo.s.numitems);
+            var is_active = OrderHelper.IsDateActive(date, scope.orderinfo.s.service_type, scope.orderinfo.s.num_pizza);
             var tooltip = is_active ? "Currently taking orders for this date" : "We are not taking orders for this date";
             return [is_active, "", tooltip];
           };
