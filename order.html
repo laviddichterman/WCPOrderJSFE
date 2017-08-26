@@ -1,12 +1,12 @@
 <div class="orderform" ng-app="WCPOrder" ng-controller="OrderController as orderCtrl">
   <span id="ordertop"></span>
-  <div ng-show="orderCtrl.s.stage == 0" ng-controller="PizzaMenuController as pmenuCtrl">
-    <div class="ordering-menu menu-list menu-list__dotted" ng-hide="pmenuCtrl.selection">
+  <div ng-show="orderCtrl.s.stage == 0 || orderCtrl.s.stage == 1" ng-controller="PizzaMenuController as pmenuCtrl">
+    <div class="ordering-menu menu-list menu-list__dotted" ng-show="orderCtrl.s.stage == 0 && !pmenuCtrl.selection">
       <h3 class="flush--top" ng-if="orderCtrl.s.cart.pizza.length === 0"><strong>Click a pizza below to get started</strong></h3>
       <h3 class="flush--top" ng-if="orderCtrl.s.cart.pizza.length > 0"><strong>Click a pizza below or next to continue</strong></h3>
       <ul class="flexitems menu-list__items">
         <li class="flexitem menu-list__item" ng-repeat="pizza in pmenuCtrl.pizza_menu">
-          <div class="scrolltotop offer-link" ng-click="pmenuCtrl.setPizza(pizza)">
+          <div class="offer-link" ng-click="orderCtrl.ScrollTop(); pmenuCtrl.setPizza(pizza)">
             <wcppizzacartitem pizza="pizza" dots="true" price="true"></wcppizzacartitem>
           </div>
         </li>
@@ -62,12 +62,25 @@
         </span>
         <span class="four-fifths">
           <span class="order-nav-item float--right"><button name="add" class="btn scrolltotop" ng-click="orderCtrl.addPizzaToOrder(pmenuCtrl.quantity, pmenuCtrl.selection); pmenuCtrl.unsetPizza()">Add to order</button></span>
-          <span class="order-nav-item float--right"><input type="number" class="quantity" min=1 max=99 ng-model="pmenuCtrl.quantity" ng-blur="pmenuCtrl.fixQuantity()"></span>
         </span>
       </div>
     </div>
-    <div class="cart" ng-if="orderCtrl.s.cart.pizza.length > 0">
-      <!-- TODO: this should still display the cart if there are no pizzas but some "extras"-->
+    <div class="ordering-menu menu-list menu-list__dotted" ng-show="orderCtrl.s.stage == 1">
+      <h3 class="flush--top"><strong>Add salad or click next to continue</strong></h3>
+      <ul class="menu-list__items">
+        <li class="menu-list__item" ng-repeat="extra in pmenuCtrl.extras_menu">
+          <div class="offer-link" ng-click="orderCtrl.ScrollTop(); orderCtrl.addExtraToOrder(extra)">
+            <h4 class="menu-list__item-title"><span class="item_title">{{extra.name}}</span><span class="dots"></span></h4>
+            <p class="menu-list__item-desc">
+              <span class="desc__content">{{extra.description}}</span>
+            </p>
+            <span class="dots"></span>
+            <span class="menu-list__item-price">{{extra.price}}</span>
+          </div>
+        </li>
+      </ul>
+    </div>
+    <div class="cart" ng-if="orderCtrl.s.cart.pizza.length > 0 || orderCtrl.s.cart.extras.length > 0">
       <hr class="separator">
       <h3 class="flush">Current Order</h3>
         <div class="content">
@@ -91,7 +104,25 @@
                   <div class="grid-flex grid-valign-middle">
                     <input type="number" class="quantity" min=1 max=99 ng-model="item[0]" ng-blur="orderCtrl.fixQuantities()">
                     <span class="cart-item-remove">
-                      <button name="remove" ng-click="orderCtrl.removePizzaFromOrder($index)" class="button-remove scrolltotop">X</button>
+                      <button name="remove" ng-click="orderCtrl.ScrollTop(); orderCtrl.removePizzaFromOrder($index)" class="button-remove">X</button>
+                    </span>
+                  </div>
+                </td>
+              </tr>
+              <tr ng-repeat="item in orderCtrl.s.cart.extras" class="cart-item">
+                <td>
+                  <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
+                    <div class="menu-list__item">
+                      <h4 class="menu-list__item-title"><span class="item_title">{{item[1].name}}</span></h4>
+                      <p class="menu-list__item-desc"><span class="desc__content">{{item[1].description}}</span></p>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div class="grid-flex grid-valign-middle">
+                    <input type="number" class="quantity" min=1 max=99 ng-model="item[0]" ng-blur="orderCtrl.fixQuantities()">
+                    <span class="cart-item-remove">
+                      <button name="remove" ng-click="orderCtrl.ScrollTop(); orderCtrl.removeExtraFromOrder($index)" class="button-remove">X</button>
                     </span>
                   </div>
                 </td>
@@ -101,18 +132,15 @@
         </div>
     </div>
     <div class="order-nav" ng-hide="pmenuCtrl.selection">
-      <span class="order-nav-item float--right">
-        <h5 ng-if="orderCtrl.s.cart.pizza.length < 1">First, click on an item above to add it to your order</h5>
-        <button ng-if="orderCtrl.s.cart.pizza.length >= 1" type="submit" class="btn scrolltotop" ng-disabled="orderCtrl.s.cart.pizza.length < 1" ng-show="orderCtrl.HasNextStage()" ng-click="pmenuCtrl.unsetPizza(); orderCtrl.NextStage()">
-        Next
-        </button>
-      </span>
+      <h5 class="order-nav-item float--right" ng-if="orderCtrl.s.cart.pizza.length < 1 && orderCtrl.s.stage == 0">First, click on an item above to add it to your order</h5>
+      <button type="submit" class="btn scrolltotop" ng-show="orderCtrl.HasPreviousStage()" ng-click="orderCtrl.PreviousStage()">Previous</button>
+      <button type="submit" class="btn scrolltotop" ng-disabled="orderCtrl.s.cart.pizza.length < 1" ng-show="orderCtrl.HasNextStage() && orderCtrl.s.cart.pizza.length >= 1" ng-click="pmenuCtrl.unsetPizza(); orderCtrl.NextStage()">Next</button>
     </div>
   </div>
-  <div ng-show="orderCtrl.s.stage == 1">
+  <div ng-show="orderCtrl.s.stage == 2">
     <h3 class="flush--top">Tell us a little about you.</h3>
     <div class="wpcf7-response-output wpcf7-mail-sent-ng" ng-if="orderCtrl.s.submit_failed">There was an error submitting your order. This is generally caused by a bad email address. Please check your information and try again.</div>
-    <form novalidate name="stage1">
+    <form novalidate name="stage2">
       <span class="customer-name-text">Name:</span>
       <span class="wpcf7-form-control-wrap customer-name">
         <input type="text" name="customer_name" size="40" ng-model="orderCtrl.s.customer_name" ng-change="orderCtrl.ChangedContactInfo()" required>
@@ -133,13 +161,13 @@
     </form>
     <div class="order-nav">
       <button type="submit" class="btn scrolltotop" ng-show="orderCtrl.HasPreviousStage()" ng-click="orderCtrl.PreviousStage()">Previous</button>
-      <button type="submit" class="btn scrolltotop" ng-disabled="!stage1.$valid || orderCtrl.s.submit_failed" ng-show="orderCtrl.HasNextStage()" ng-click="orderCtrl.NextStage()">Next</button>
+      <button type="submit" class="btn scrolltotop" ng-disabled="!stage2.$valid || orderCtrl.s.submit_failed" ng-show="orderCtrl.HasNextStage()" ng-click="orderCtrl.NextStage()">Next</button>
     </div>
   </div>
-  <div ng-show="orderCtrl.s.stage == 2">
+  <div ng-show="orderCtrl.s.stage == 3">
     <h3 class="flush--top">How and when would you like your order?</h3>
     <span>Requested Service:</span>
-    <form novalidate name="stage2">
+    <form novalidate name="stage3">
     <div class="flexitems">
       <div class="flexitem" ng-repeat="service in orderCtrl.CONFIG.SERVICE_TYPES track by $index">
         <label ng-if="orderCtrl.s.service_type_functors[$index](orderCtrl.s)"><input type="radio" ng-change="orderCtrl.ValidateDate(); orderCtrl.ClearAddress(); orderCtrl.ComputeDeliveryFee()" ng-model="orderCtrl.s.service_type" ng-value="service[1]">
@@ -171,10 +199,10 @@
     </form>
     <div class="order-nav">
       <button type="submit" class="btn scrolltotop" ng-show="orderCtrl.HasPreviousStage()" ng-click="orderCtrl.PreviousStage()">Previous</button>
-      <button type="submit" class="btn scrolltotop" ng-disabled="!orderCtrl.s.date_valid || (orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && (stage2.address.$error.address || stage2.zipcode.$error.zipcode))" ng-show="orderCtrl.HasNextStage()" ng-click="orderCtrl.NextStage()">Next</button>
+      <button type="submit" class="btn scrolltotop" ng-disabled="!orderCtrl.s.date_valid || (orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && (stage3.address.$error.address || stage3.zipcode.$error.zipcode))" ng-show="orderCtrl.HasNextStage()" ng-click="orderCtrl.NextStage()">Next</button>
     </div>
   </div>
-  <div ng-show="orderCtrl.s.stage == 3">
+  <div ng-show="orderCtrl.s.stage == 4">
       <h3 class="flush--top">Everything look right?</h3>
       <table>
         <tr>
@@ -220,6 +248,24 @@
                   <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
                     <div class="menu-list__item">
                       <wcppizzacartitem pizza="item[1]" dots="false" price="false"></wcppizzacartitem>
+                    </div>
+                  </div>
+                </td>
+                <td class="cart-item-quantity-price no-wrap">
+                  <div class="grid-flex grid-valign-middle">
+                    <span class="column no-shrink menu-list__item-price">{{item[0]}}</span>
+                    <span class="column no-shrink">×</span>
+                    <span class="column no-shrink menu-list__item-price">{{item[1].price}}</span>
+                  </div>
+                </td>
+                <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{item[1].price * item[0] | number:2}}</span></td>
+              </tr>
+              <tr ng-repeat="item in orderCtrl.s.cart.extras" class="cart-item">
+                <td class="cart-item-description">
+                  <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
+                    <div class="menu-list__item">
+                      <h4 class="menu-list__item-title"><span class="item_title">{{item[1].name}}</span></h4>
+                      <p class="menu-list__item-desc"><span class="desc__content">{{item[1].description}}</span></p>
                     </div>
                   </div>
                 </td>
@@ -279,10 +325,10 @@
       </span>
     </div>
   </div>
-  <div ng-show="orderCtrl.s.stage == 4">
+  <div ng-show="orderCtrl.s.stage == 5">
     <div class="wpcf7 wpcf7-response-output wpcf7-mail-sent-ok">Submitting order! This can take between 5-15 seconds.<span class="ajax-loader is-active"></span></div>
   </div>
-  <div class="submitsuccess wpcf7-response-output wpcf7-mail-sent-ok" ng-show="orderCtrl.s.stage == 5">
+  <div class="submitsuccess wpcf7-response-output wpcf7-mail-sent-ok" ng-show="orderCtrl.s.stage == 6">
     Order submitted successfully! Please check your email.
   </div>
 </div>

@@ -10,6 +10,12 @@
   // TODO: multiple of same pizza menu guide
   var $j = jQuery.noConflict();
 
+  function ScrollTopJQ() {
+    $j("html, body").animate({
+        scrollTop: $j("#ordertop").offset().top - 150
+    }, 500);
+  }
+
   var TimingInfo = function() {
     this.load_time = new Date([WCP_blog_epoch_time]);
     this.current_time = this.load_time;
@@ -481,8 +487,7 @@
       [[TOPPING_WHOLE, toppings_dict.rbp],
       [TOPPING_WHOLE, toppings_dict.onion],
       [TOPPING_WHOLE, toppings_dict.mush],
-      [TOPPING_WHOLE, toppings_dict.spin]],
-
+      [TOPPING_WHOLE, toppings_dict.spin]]
     ),
     classic: new WCPPizza("Classic",
       "C",
@@ -654,6 +659,7 @@
     this.TIME_STEP = [WCP_time_step];
 
     // menu related
+    this.EXTRAS_MENU = salad_menu;
     this.PIZZA_MENU = pizza_menu;
     this.TOPPINGS  = toppings_array;
     this.SAUCES = sauces;
@@ -804,7 +810,7 @@
         var shortcode = cart.extras[j][1].shortcode;
         extras_shortcodes = extras_shortcodes + "+" + quantity.toString(10) + "x" + shortcode;
       }
-      return service_string + "+" + encodeURI(customer) + (service != this.cfg.DELIVERY ? "" : "+[]") + "+" + num_pizzas + "x" + shortcodes + (extras_shortcodes.length > 0 ? "+EX+"+extras_shortcodes : "");
+      return service_string + "+" + encodeURI(customer) + (service != this.cfg.DELIVERY ? "" : "+[]") + "+" + num_pizzas + "x" + pizza_shortcodes + (extras_shortcodes.length > 0 ? "+Extras"+extras_shortcodes : "");
     };
 
     this.EventDateTimeStringBuilder = function(date, time) {
@@ -988,11 +994,12 @@
       ];
 
       // stage 0: menu/cart controller: cart display // pie selection // customize pie, add to cart
-      // stage 1: customer name, phone, email address, address , referral info
-      // stage 2: select service_type date/time
-      // stage 3: review order, special instructions
-      // stage 4: pressed submit, waiting validation
-      // stage 5: submitted successfully
+      // stage 1: salads
+      // stage 2: customer name, phone, email address, address , referral info
+      // stage 3: select service_type date/time
+      // stage 4: review order, special instructions
+      // stage 5: pressed submit, waiting validation
+      // stage 6: submitted successfully
       this.stage = 0;
 
       // flag for when submitting fails according to submission backend
@@ -1012,6 +1019,8 @@
       this.split_toppings = $location.search().split == true;
 
       var enable_delivery = $location.search().delivery == true;
+
+      this.ScrollTop = ScrollTopJQ;
 
       this.s = new WCPOrderState(this.CONFIG, enable_delivery, this.split_toppings);
 
@@ -1140,6 +1149,26 @@
         this.PostCartUpdate();
       };
 
+      this.addExtraToOrder = function(selection) {
+        // check for existing entry
+        for (var i in this.s.cart.extras) {
+          if (this.s.cart.extras[i][1].shortcode == selection.shortcode) {
+            // note, dumb check here for equality
+            this.s.cart.extras[i][0] += 1;
+            this.PostCartUpdate();
+            return;
+          }
+        }
+        // add new entry
+        this.s.cart.extras.push([1, selection]);
+        this.PostCartUpdate();
+      };
+
+      this.removeExtraFromOrder = function(idx) {
+        this.s.cart.extras.splice(idx, 1);
+        this.PostCartUpdate();
+      };
+
       this.subtotal = function() {
         var val = 0;
         for (var i in this.s.cart.pizza) {
@@ -1162,23 +1191,23 @@
       };
 
       this.Submit = function() {
-        this.s.stage = 4;
+        this.s.stage = 5;
       };
 
       this.CF7SubmitFailed = function() {
         this.s.submit_failed = true;
-        this.s.stage = 1;
+        this.s.stage = 2;
       };
 
       this.CF7SubmitSuccess = function() {
-        this.s.stage = 5;
+        this.s.stage = 6;
       };
 
       this.SlowSubmitterTrigger = function() {
         // set flag for user notification that too much time passed
         this.s.selected_time_timeout = true;
         // set stage to 2 (time selection)
-        this.s.stage = 2;
+        this.s.stage = 3;
       };
 
       this.NextStage = function() {
@@ -1188,15 +1217,16 @@
         this.s.stage = this.s.stage - 1;
       };
       this.HasPreviousStage = function() {
-        return this.s.stage > 0 && this.s.stage <= 3;
+        return this.s.stage > 0 && this.s.stage <= 4;
       };
       this.HasNextStage = function() {
-        return this.s.stage < 3;
+        return this.s.stage < 4;
       };
     }]);
 
     app.controller("PizzaMenuController", function() {
       this.pizza_menu = wcpconfig.PIZZA_MENU;
+      this.extras_menu = wcpconfig.EXTRAS_MENU;
       this.selection = null;
       this.quantity = 1;
       this.toppings = toppings_array;
@@ -1509,9 +1539,7 @@
     }]);
 
     $j(".scrolltotop").click(function() {
-      $j("html, body").animate({
-          scrollTop: $j("#ordertop").offset().top - 150
-      }, 500);
+      ScrollTopJQ();
     });
 
     $j("span.user-email input").on("blur", function(event) {
