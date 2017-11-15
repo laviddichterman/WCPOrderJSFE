@@ -794,7 +794,7 @@
       return encodeURI(confirm_string_array.join(""));
     };
 
-    this.EventTitleStringBuilder = function(service, customer, cart) {
+    this.EventTitleStringBuilder = function(service, customer, cart, special_instructions) {
       if (!customer || cart.pizza.length == 0) {
         return "";
       }
@@ -809,6 +809,9 @@
       else if (service == this.cfg.DELIVERY) {
         service_string = "DELIVER";
       }
+
+      var has_special_instructions = special_instructions && special_instructions.length > 0;
+
       var num_pizzas = 0;
       var pizza_shortcodes = "";
       for (var i in cart.pizza) {
@@ -823,7 +826,10 @@
         var shortcode = cart.extras[j][1].shortcode;
         extras_shortcodes = extras_shortcodes + "+" + quantity.toString(10) + "x" + shortcode;
       }
-      return service_string + "+" + encodeURI(customer) + (service != this.cfg.DELIVERY ? "" : "+[]") + "+" + num_pizzas + "x" + pizza_shortcodes + (extras_shortcodes.length > 0 ? "+Extras"+extras_shortcodes : "");
+      var customer_encoded = encodeURI(customer);
+      var pizzas_title = num_pizzas + "x" + pizza_shortcodes;
+      var extras_title = extras_shortcodes.length > 0 ? "+Extras"+extras_shortcodes : "";
+      return service_string + "+" + customer_encoded + "+" + pizzas_title + extras_title + (has_special_instructions ? "+%2A" : "");
     };
 
     this.EventDateTimeStringBuilder = function(date, time) {
@@ -1385,7 +1391,7 @@
           $j(element).find("span.load-time input").val($filter("date")(timing_info.load_time, "HH:mm:ss"));
 
           var EventTitleSetter = function() {
-            var event_title = OrderHelper.EventTitleStringBuilder(scope.orderinfo.s.service_type, scope.orderinfo.s.customer_name, scope.orderinfo.s.cart);
+            var event_title = OrderHelper.EventTitleStringBuilder(scope.orderinfo.s.service_type, scope.orderinfo.s.customer_name, scope.orderinfo.s.cart, scope.orderinfo.s.special_instructions);
             $j(element).find("span.eventtitle input").val(event_title);
           };
           var EventDetailSetter = function() {
