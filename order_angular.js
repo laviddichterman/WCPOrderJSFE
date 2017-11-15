@@ -670,6 +670,31 @@
     this.CRUSTS = crusts;
     // END menu related
 
+    // user messaging
+    var AREA_CODES = {
+      "217": "Central Illinois, running west from the Illinois-Indiana border through Danville, Effingham, Champaign–Urbana, Decatur, Springfield, Quincy until Illinois' western border with Iowa.",
+      "309": "Central-Western Illinois including Bloomington–Normal, Peoria, and all the way west to the Illinois part of the Quad Cities including Moline, and Rock Island.",
+      "312": "Chicago, the central city area including the Chicago Loop and the Near North Side.",
+      "630": "West suburbs of Chicago in DuPage County and Kane County including Wheaton, Naperville, and Aurora.",
+      "331": "West suburbs of Chicago in DuPage County and Kane County including Wheaton, Naperville, and Aurora.",
+      "618": "Southern Illinois, including Carbondale and most of the Metro East region of St. Louis suburbs in Illinois",
+      "708": "South suburbs and inner west suburbs of Chicago, including the Chicago Southland and most west and south suburbs in Cook County such as Oak Park, Oak Lawn, Chicago Heights, and Orland Park.",
+      "773": "Chicago, covers most of the geographical area of Chicago except the downtown Chicago Loop, which is in area code 312.",
+      "815": "Northern Illinois outside of the immediate Chicago area including Joliet, Kankakee, LaSalle, DeKalb, and Rockford.",
+      "779": "Northern Illinois outside of the immediate Chicago area including Joliet, Kankakee, LaSalle, DeKalb, and Rockford.",
+      "847": "North and northwest suburbs of Chicago including all of Lake County, part of McHenry County, northern Cook County, and northeastern Kane County.",
+      "224": "North and northwest suburbs of Chicago including all of Lake County, part of McHenry County, northern Cook County, and northeastern Kane County.",
+      "872": "City of Chicago, overlaying area codes 312 and 773."
+    };
+    var NOTE_SPECIAL_INSTRUCTIONS = "Since you specified special instructions, we will let you know if we can accommodate your request. We may need your confirmation if your instructions will incur an additional cost or we cannot accommodate them, so please watch your email.";
+    var NOTE_KEEP_LEVEL = "Be sure to travel with your pizza as flat as possible, on the floor or in the trunk. Seats are generally not a level surface.";
+    var NOTE_PICKUP_BEFORE_DI = "We won't be open for dine-in at the time of your pickup. Our door will be locked. Please text 206.486.4743 or respond to this email thread when you've arrived at our location (see details below) so we can let you in.";
+    var NOTE_PICKUP_DURING_DI = "We'll be open for dining service so please come to the Windy City Pie counter inside the Batch Bar (see details below) and inform us the name under which the order was placed."
+    var NOTE_DI = "Please come to our counter and let us know the name under which your order was placed. Please arrive promptly so your pizza is as fresh as possible and you have time to get situated and get beverages from the Batch Bar."
+    var NOTE_DELIVERY_BETA = "Our catering offering is current in a limited beta. We'll reach out shortly to determine our availability for the requested time and to get a better idea of your needs.";
+    var NOTE_PAYMENT = "We happily accept any major credit card or cash for payment upon arrival.";
+    // END user messaging
+
     //END WCP store config
   };
 
@@ -723,24 +748,9 @@
     };
 
     this.IsIllinoisAreaCode = function(phone) {
-      var AREA_CODES = {
-        "217": "Central Illinois, running west from the Illinois-Indiana border through Danville, Effingham, Champaign–Urbana, Decatur, Springfield, Quincy until Illinois' western border with Iowa.",
-        "309": "Central-Western Illinois including Bloomington–Normal, Peoria, and all the way west to the Illinois part of the Quad Cities including Moline, and Rock Island.",
-        "312": "Chicago, the central city area including the Chicago Loop and the Near North Side.",
-        "630": "West suburbs of Chicago in DuPage County and Kane County including Wheaton, Naperville, and Aurora.",
-        "331": "West suburbs of Chicago in DuPage County and Kane County including Wheaton, Naperville, and Aurora.",
-        "618": "Southern Illinois, including Carbondale and most of the Metro East region of St. Louis suburbs in Illinois",
-        "708": "South suburbs and inner west suburbs of Chicago, including the Chicago Southland and most west and south suburbs in Cook County such as Oak Park, Oak Lawn, Chicago Heights, and Orland Park.",
-        "773": "Chicago, covers most of the geographical area of Chicago except the downtown Chicago Loop, which is in area code 312.",
-        "815": "Northern Illinois outside of the immediate Chicago area including Joliet, Kankakee, LaSalle, DeKalb, and Rockford.",
-        "779": "Northern Illinois outside of the immediate Chicago area including Joliet, Kankakee, LaSalle, DeKalb, and Rockford.",
-        "847": "North and northwest suburbs of Chicago including all of Lake County, part of McHenry County, northern Cook County, and northeastern Kane County.",
-        "224": "North and northwest suburbs of Chicago including all of Lake County, part of McHenry County, northern Cook County, and northeastern Kane County.",
-        "872": "City of Chicago, overlaying area codes 312 and 773."
-      };
       var numeric_phone = phone.match(/\d/g);
       numeric_phone = numeric_phone.join("");
-      return (numeric_phone.length == 10 && (numeric_phone.slice(0,3)) in AREA_CODES) || (numeric_phone.length == 11 && numeric_phone[0] == "1" && (numeric_phone.slice(1,4)) in AREA_CODES);
+      return (numeric_phone.length == 10 && (numeric_phone.slice(0,3)) in this.cfg.AREA_CODES);
     };
 
     this.EmailSubjectStringBuilder = function(service_type, name, date_string, service_time) {
