@@ -1538,6 +1538,16 @@
       };
     }]);
 
+    app.directive("jqmaskedphone", function() {
+      return {
+        restrict: "A",
+        require: "ngModel",
+        link: function(scope, element, attrs, ctrl) {
+          $j(element).mask("(999) 999-9999");
+        }
+      };
+    });
+
     $j(".scrolltotop").click(function() {
       ScrollTopJQ();
     });

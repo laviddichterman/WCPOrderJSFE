@@ -147,7 +147,7 @@
       </span>
       <span class="phone-number-text">Mobile Phone Number:</span>
       <span class="wpcf7-form-control-wrap phonenum">
-        <input type="tel" name="phone_number" value="" size="40" ng-model="orderCtrl.s.phone_number" ng-change="orderCtrl.ChangedContactInfo()" ng-pattern="/[\d|\+|(|)|\.|\s|-]{10,}/" required>
+        <input jqmaskedphone type="tel" name="phone_number" value="" size="40" ng-model="orderCtrl.s.phone_number" ng-change="orderCtrl.ChangedContactInfo()" required>
       </span>
       <span class="user-email-text">E-mail Address:</span>
       <span class="wpcf7-form-control-wrap user-email">
@@ -332,5 +332,6 @@
     Order submitted successfully! Please check your email.
   </div>
 </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.11/angular.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mailcheck/1.1.2/mailcheck.min.js"></script>
-<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.6/angular.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.maskedinput/1.4.1/jquery.maskedinput.min.js"></script>
