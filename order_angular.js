@@ -24,6 +24,7 @@
     this.current_time = this.load_time;
     this.browser_load_time = new Date();
     this.load_time_diff = 0;
+    this.order_placed_during_dining = false;
   };
 
   var timing_info = new TimingInfo();
@@ -753,6 +754,27 @@
       return (numeric_phone.length == 10 && (numeric_phone.slice(0,3)) in this.cfg.AREA_CODES);
     };
 
+    this.AutomatedInstructionsBuilder = function(service_type, date, time, special_instructions, placed_during_dinein) {
+      if (date == null || !Number.isInteger(time)) {
+        return "";
+      }
+      var service_during_dine_in = this.IsDineInHour(date, time);
+      var has_special_instructions = special_instructions && special_instructions.length > 0;
+
+      var response_time = placed_during_dinein ? "shortly" : "as soon as we're able";
+      var special_instructions_note = has_special_instructions ? " " + this.cfg.NOTE_SPECIAL_INSTRUCTIONS : "";
+      var non_delivery_preamble = "We'll get back to you " + response_time + " to confirm your order." + special_instructions_note;
+
+      switch (service_type) {
+        case this.cfg.DELIVERY: return this.cfg.NOTE_DELIVERY_BETA;
+        case this.cfg.PICKUP:
+          return non_delivery_preamble + "\n" + (service_during_dine_in ? this.cfg.NOTE_PICKUP_DURING_DI : this.cfg.NOTE_PICKUP_BEFORE_DI) + "\n" + this.cfg.NOTE_PAYMENT;
+        case this.cfg.DINEIN:
+          return non_delivery_preamble + "\n" + this.cfg.NOTE_DI + "\n" + this.cfg.NOTE_PAYMENT;
+        default: console.assert(false, "invalid service value");
+      }
+    };
+
     this.EmailSubjectStringBuilder = function(service_type, name, date_string, service_time) {
       if (!name || name.length == 0 || !date_string || date_string.length == 0) {
         return "";
@@ -767,16 +789,16 @@
       if (date == null || !Number.isInteger(time)) {
         return "";
       }
-      var during_dine_in = this.IsDineInHour(date, time);
+      var service_during_dine_in = this.IsDineInHour(date, time);
       var service_time_print = this.MinutesToPrintTime(time);
       var nice_area_code = this.IsIllinoisAreaCode(phone);
       var confirm_string_array = [];
-      if (during_dine_in) {
+      if (service_during_dine_in) {
         confirm_string_array = [
-          nice_area_code ? "Nice area code. " : "",
-          "We're happy to confirm your order for ",
+          nice_area_code ? "Hello, nice area code, " : "Hello",
+          "and thanks for your order! We're happy to confirm your order for ",
           service_time_print,
-          " at the Batch Bar (<a href=3D\"http://bit.ly/WindyCityPieGoogleMaps\">1417 Elliott Ave W, 98119</a>, the northernmost door).",
+          ". Please follow the instructions from our previous email when you arrive and don't hesitate to contact us if you have any questions!",
           "\n\n",
           "We'll be open for dining service so please come to the counter and inform us the name under which the order was placed. You will be able to eat your pizza on the premises if you choose, but we cannot reserve seating. We are a 21+ establishment, so let us know now if anyone in the party is under 21 so we can make alternate arrangements for pickup. If you have any questions please contact us immediately by responding to this email thread. We accept cash and any major credit card upon pickup."
         ];
@@ -1398,6 +1420,11 @@
             var eventdetail = OrderHelper.EventDetailStringBuilder(scope.orderinfo.s.shortcartstring, scope.orderinfo.s.phone_number, scope.orderinfo.s.special_instructions);
             $j(element).find("span.eventdetail textarea").val(eventdetail);
           };
+          var AutomatedInstructionsSetter = function() {
+            var confirmation_body = OrderHelper.AutomatedInstructionsBuilder(scope.orderinfo.s.service_type, scope.orderinfo.s.selected_date, scope.orderinfo.s.service_time, scope.orderinfo.s.special_instructions, timing_info.order_placed_during_dining);
+            $j(element).find("span.confirmation-body textarea").val(encodeURI(confirmation_body));
+            $j(element).find("span.automated_instructions textarea").val(confirmation_body);
+          };
           var ConfirmationSubjectSetter = function() {
             var selected_date_string = $filter("date")(scope.orderinfo.s.selected_date, "EEEE, MMMM dd, yyyy");
             var confirmation_subject = OrderHelper.EmailSubjectStringBuilder(scope.orderinfo.s.service_type, scope.orderinfo.s.customer_name, selected_date_string, scope.orderinfo.s.service_time);
@@ -1425,6 +1452,7 @@
             EventTitleSetter();
             ConfirmationSubjectSetter();
             ConfirmationBodySetter();
+            AutomatedInstructionsSetter();
           }, true);
           scope.$watch("orderinfo.s.customer_name", function() {
             $j(element).find("span.user-name input").val(scope.orderinfo.s.customer_name);
@@ -1437,6 +1465,7 @@
             $j(element).find("span.additional_message input").val(scope.orderinfo.s.additional_message);
             ConfirmationSubjectSetter();
             ConfirmationBodySetter();
+            AutomatedInstructionsSetter();
           }, true);
           scope.$watch("orderinfo.s.service_time", function() {
             $j(element).find("span.service-time input").val($filter("MinutesToPrintTime")(scope.orderinfo.s.service_time));
@@ -1444,6 +1473,7 @@
             $j(element).find("span.eventdate input").val(eventdate);
             ConfirmationSubjectSetter();
             ConfirmationBodySetter();
+            AutomatedInstructionsSetter();
           }, true);
           scope.$watch("orderinfo.s.phone_number", function() {
             $j(element).find("span.phonenum input").val(scope.orderinfo.s.phone_number);
@@ -1465,7 +1495,9 @@
           scope.$watch("orderinfo.s.special_instructions", function() {
             var temp = scope.orderinfo.s.special_instructions.length > 0 ? "Special instructions: " + scope.orderinfo.s.special_instructions : "";
             $j(element).find("span.special_instructions input").val(temp);
+            EventTitleSetter();
             EventDetailSetter();
+            AutomatedInstructionsSetter();
           }, true);
           scope.$watch("orderinfo.s.cartstring", function() {
             $j(element).find("span.your-order textarea").val(scope.orderinfo.s.cartstring);
@@ -1484,9 +1516,12 @@
               timing_info.load_time_diff = time_diff;
             }
             timing_info.current_time = new Date(timing_info.load_time.getTime() + timing_info.load_time_diff);
+            timing_info.order_placed_during_dining = OrderHelper.IsDineInHour(timing_info.current_time, OrderHelper.DateToMinutes(timing_info.current_time));
             UpdateLeadTime();
             SlowSubmitterCheck();
+            AutomatedInstructionsSetter();
           }
+          UpdateCurrentTime();
           UpdateLeadTime();
           var time_updater = $interval(UpdateCurrentTime, 60000);
 
