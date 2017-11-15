@@ -1,13 +1,16 @@
   // TODO: auto email response
+  // TODO: handle leaving page before submitting (onbeforeunload)
   // TODO: guided menu help/suggestions
   // TODO: tooltip explanations of disabled items
   // TODO: half toppings UI
   // TODO: half pizza naming conventions
   // TODO: notice about cancellation
   // TODO: intercept back/forward button
-  // TODO: order small plates
   // TODO: add privacy notice
   // TODO: multiple of same pizza menu guide
+  // TODO: move garlic, extra cheese, white sauce to before the pizza name
+  // TODO: update abbreviations for toppings
+  // TODO: look for "slice", "cut", "half" in the special instructions and display appropriate blurb
   var $j = jQuery.noConflict();
 
   function ScrollTopJQ() {
@@ -616,8 +619,8 @@
 
     this.PICKUP_HOURS = [
       [11*60, 22*60], //sunday
-      [11*60, 22*60], //monday
-      [1, 0], //tuesday (disabled)
+      [16*60, 22*60], //monday
+      [16*60, 22*60], //tuesday
       [11*60, 22*60], //wednesday
       [11*60, 22*60], //thursday
       [11*60, 23*60], //friday
@@ -627,7 +630,7 @@
     this.DINEIN_HOURS = [
       [12*60, 21.5*60], //sunday
       [16*60, 21.5*60], //monday
-      [1, 0], //tuesday (disabled)
+      [16*60, 21.5*60], //tuesday
       [16*60, 21.5*60], //wednesday
       [16*60, 21.5*60], //thursday
       [16*60, 22.5*60], //friday
@@ -637,7 +640,7 @@
     this.DELIVERY_HOURS = [
       [11*60, 22*60], //sunday
       [11*60, 22*60], //monday
-      [1, 0], //tuesday (disabled)
+      [11*60, 22*60], //tuesday
       [11*60, 22*60], //wednesday
       [11*60, 22*60], //thursday
       [11*60, 22*60], //friday
