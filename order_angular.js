@@ -672,7 +672,7 @@
     // END menu related
 
     // user messaging
-    var AREA_CODES = {
+    this.AREA_CODES = {
       "217": "Central Illinois, running west from the Illinois-Indiana border through Danville, Effingham, Champaign–Urbana, Decatur, Springfield, Quincy until Illinois' western border with Iowa.",
       "309": "Central-Western Illinois including Bloomington–Normal, Peoria, and all the way west to the Illinois part of the Quad Cities including Moline, and Rock Island.",
       "312": "Chicago, the central city area including the Chicago Loop and the Near North Side.",
@@ -687,13 +687,17 @@
       "224": "North and northwest suburbs of Chicago including all of Lake County, part of McHenry County, northern Cook County, and northeastern Kane County.",
       "872": "City of Chicago, overlaying area codes 312 and 773."
     };
-    var NOTE_SPECIAL_INSTRUCTIONS = "Since you specified special instructions, we will let you know if we can accommodate your request. We may need your confirmation if your instructions will incur an additional cost or we cannot accommodate them, so please watch your email.";
-    var NOTE_KEEP_LEVEL = "Be sure to travel with your pizza as flat as possible, on the floor or in the trunk. Seats are generally not a level surface.";
-    var NOTE_PICKUP_BEFORE_DI = "We won't be open for dine-in at the time of your pickup. Our door will be locked. Please text 206.486.4743 or respond to this email thread when you've arrived at our location (see details below) so we can let you in.";
-    var NOTE_PICKUP_DURING_DI = "We'll be open for dining service so please come to the Windy City Pie counter inside the Batch Bar (see details below) and inform us the name under which the order was placed."
-    var NOTE_DI = "Please come to our counter and let us know the name under which your order was placed. Please arrive promptly so your pizza is as fresh as possible and you have time to get situated and get beverages from the Batch Bar."
-    var NOTE_DELIVERY_BETA = "Our catering offering is current in a limited beta. We'll reach out shortly to determine our availability for the requested time and to get a better idea of your needs.";
-    var NOTE_PAYMENT = "We happily accept any major credit card or cash for payment upon arrival.";
+    this.NOTE_SPECIAL_INSTRUCTIONS = "Since you specified special instructions, we will let you know if we can accommodate your request. We may need your confirmation if your instructions will incur an additional cost or we cannot accommodate them, so please watch your email.";
+    this.NOTE_KEEP_LEVEL = "Be sure to travel with your pizza as flat as possible, on the floor or in the trunk. Seats are generally not a level surface.";
+    this.NOTE_PICKUP_BEFORE_DI = "We won't be open for dine-in at the time of your pickup. Our door will be locked. Please text 206.486.4743 or respond to this email thread when you've arrived at our location (see details below) so we can let you in.";
+    this.NOTE_PICKUP_DURING_DI = "We'll be open for dining service so please come to the Windy City Pie counter inside the Batch Bar (see details below) and inform us the name under which the order was placed.";
+    this.NOTE_DI = "Please come to our counter and let us know the name under which your order was placed. Please arrive promptly so your pizza is as fresh as possible and you have time to get situated and get beverages from the Batch Bar.";
+    this.NOTE_DELIVERY_BETA = "Our catering offering is current in a limited beta. We'll reach out shortly to determine our availability for the requested time and to get a better idea of your needs.";
+    this.NOTE_PAYMENT = "We happily accept any major credit card or cash for payment upon arrival.";
+
+    this.REQUEST_SLICING = "In order to ensure the quality of our pizzas, we will not slice them. We'd recommend bringing anything from a bench scraper to a butter knife to slice the pizza. Slicing the whole pizza when it's hot inhibits the crust from properly setting, and can cause the crust to get soggy both during transit and as the pie is eaten. We want your pizza to be the best possible and bringing a tool with which to slice the pie will make a big difference.";
+    this.REQUEST_VEGAN = "Our pizzas cannot be made vegan or without cheese. If you're looking for a vegan option, our Beets By Schrute salad can be made vegan by omitting the bleu cheese.";
+    this.REQUEST_HALF = "While half toppings are not on the menu, we can do them (with the exception of half roasted garlic crust or half red sauce, half white sauce) but they are charged the same as full toppings. As such, we recommend against them as they're not a good value for the customer and an imbalance of toppings will cause uneven baking of your pizza.";
     // END user messaging
 
     //END WCP store config
@@ -1020,6 +1024,7 @@
       this.referral = "";
       this.acknowledge_instructions_dialogue = false;
       this.special_instructions = "";
+      this.special_instructions_responses = [];
       this.additional_message = "";
       this.enable_split_toppings = false;
       this.enable_delivery = enable_delivery;
@@ -1443,6 +1448,20 @@
             }
           };
 
+          var ParseSpecialInstructionsAndPopulateResponses = function() {
+            scope.orderinfo.s.special_instructions_responses = [];
+            var special_instructions_lower = scope.orderinfo.s.special_instructions.toLowerCase();
+            if (special_instructions_lower.indexOf("split") >= 0 || special_instructions_lower.indexOf("half") >= 0 || special_instructions_lower.indexOf("1/2") >= 0) {
+              scope.orderinfo.s.special_instructions_responses.push(wcpconfig.REQUEST_HALF);
+            }
+            if (special_instructions_lower.indexOf("slice") >= 0 || special_instructions_lower.indexOf("cut") >= 0) {
+              scope.orderinfo.s.special_instructions_responses.push(wcpconfig.REQUEST_SLICING);
+            }
+            if (special_instructions_lower.indexOf("no cheese") >= 0 || special_instructions_lower.indexOf("vegan") >= 0 || special_instructions_lower.indexOf("without cheese") >= 0) {
+              scope.orderinfo.s.special_instructions_responses.push(wcpconfig.REQUEST_VEGAN);
+            }
+          };
+
           scope.$watch("orderinfo.s.debug_info", function() {
             $j(element).find("span.time-selection-time input").val($filter("date")(scope.orderinfo.s.debug_info["time-selection-time"], "HH:mm:ss"));
           }, true);
@@ -1493,6 +1512,7 @@
             $j(element).find("span.howdyouhear input").val(scope.orderinfo.s.referral);
           }, true);
           scope.$watch("orderinfo.s.special_instructions", function() {
+            ParseSpecialInstructionsAndPopulateResponses();
             var temp = scope.orderinfo.s.special_instructions.length > 0 ? "Special instructions: " + scope.orderinfo.s.special_instructions : "";
             $j(element).find("span.special_instructions input").val(temp);
             EventTitleSetter();
