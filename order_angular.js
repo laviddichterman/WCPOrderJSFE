@@ -689,8 +689,8 @@
     };
     this.NOTE_SPECIAL_INSTRUCTIONS = "Since you specified special instructions, we will let you know if we can accommodate your request. We may need your confirmation if your instructions will incur an additional cost or we cannot accommodate them, so please watch your email.";
     this.NOTE_KEEP_LEVEL = "Be sure to travel with your pizza as flat as possible, on the floor or in the trunk. Seats are generally not a level surface.";
-    this.NOTE_PICKUP_BEFORE_DI = "We won't be open for dine-in at the time of your pickup. Our door will be locked. Please text 206.486.4743 or respond to this email thread when you've arrived at our location (see details below) so we can let you in.";
-    this.NOTE_PICKUP_DURING_DI = "We'll be open for dining service so please come to the Windy City Pie counter inside the Batch Bar (see details below) and inform us the name under which the order was placed.";
+    this.NOTE_PICKUP_BEFORE_DI = "We won't be open for dine-in at the time of your pickup. Our door will be locked. Please text 206.486.4743 or respond to this email thread when you've arrived at the northernmost door of 1417 Elliott Ave W, 98119, facing Elliott Ave W so we can let you in. Please let us know if you have any additional questions about the pickup process.";
+    this.NOTE_PICKUP_DURING_DI = "We'll be open for dining service so please come to the Windy City Pie counter inside the Batch Bar and inform us the name under which the order was placed.";
     this.NOTE_DI = "Please come to our counter and let us know the name under which your order was placed. Please arrive promptly so your pizza is as fresh as possible and you have time to get situated and get beverages from the Batch Bar.";
     this.NOTE_DELIVERY_BETA = "Our catering offering is current in a limited beta. We'll reach out shortly to determine our availability for the requested time and to get a better idea of your needs.";
     this.NOTE_PAYMENT = "We happily accept any major credit card or cash for payment upon arrival.";
@@ -793,29 +793,53 @@
       if (date == null || !Number.isInteger(time)) {
         return "";
       }
+
       var service_during_dine_in = this.IsDineInHour(date, time);
       var service_time_print = this.MinutesToPrintTime(time);
       var nice_area_code = this.IsIllinoisAreaCode(phone);
       var confirm_string_array = [];
-      if (service_during_dine_in) {
-        confirm_string_array = [
-          nice_area_code ? "Hello, nice area code, " : "Hello",
-          "and thanks for your order! We're happy to confirm your order for ",
-          service_time_print,
-          ". Please follow the instructions from our previous email when you arrive and don't hesitate to contact us if you have any questions!",
-          "\n\n",
-          "We'll be open for dining service so please come to the counter and inform us the name under which the order was placed. You will be able to eat your pizza on the premises if you choose, but we cannot reserve seating. We are a 21+ establishment, so let us know now if anyone in the party is under 21 so we can make alternate arrangements for pickup. If you have any questions please contact us immediately by responding to this email thread. We accept cash and any major credit card upon pickup."
-        ];
-      }
-      else {
-        confirm_string_array = [
-          nice_area_code ? "Hello, nice area code," : "Hello",
-          " and thanks for your order! We're happy to confirm your pickup for ",
-          service_time_print,
-          ".\n\n",
-          "Here are the pickup instructions, please be sure to read them now:\n",
-          "We won't be open for dine-in at the time of your pickup so we'll meet you outside, in one of the Batch 206 parking stalls facing Elliott Ave W (<a href=3D\"http://bit.ly/WindyCityPieGoogleMaps\">1417 Elliott Ave W, 98119</a>). Send a text to <a href=3D\"tel:2064864743\">206.486.4743</a>, or respond to this email thread when you've arrived and we'll be right out with your pizza. We happily accept any major credit card or cash for payment upon pickup, but we can't always make change."
-        ];
+      switch (service_type) {
+        case this.cfg.DELIVERY: confirm_string_array = ["NOT SUPPORTED"]; break;
+        case this.cfg.PICKUP:
+          if (service_during_dine_in) {
+            var opener = nice_area_code ? "Nice area code! " : "";
+            confirm_string_array = [
+              opener,
+              "We're happy to confirm your pickup order for ",
+              service_time_print,
+              " at the Batch Bar (1417 Elliott Ave W, 98119, the northernmost door).\n\n",
+              this.cfg.NOTE_PICKUP_DURING_DI,
+              " We are a 21 and up establishment, so let us know now if anyone in the party is under 21 so we can make alternate arrangements for pickup. If you have any questions please contact us immediately by responding to this email thread. ",
+              this.cfg.NOTE_PAYMENT
+            ];
+          }
+          else {
+            var opener = nice_area_code ? "Hello, nice area code, and thanks for your order! " : "Hello and thanks for your order! ";
+            confirm_string_array = [
+              opener,
+              "We're happy to confirm your pickup for ",
+              service_time_print,
+              ".\n\n",
+              this.cfg.NOTE_PICKUP_BEFORE_DI,
+              " ",
+              this.cfg.NOTE_PAYMENT
+            ];
+          }
+          break;
+        case this.cfg.DINEIN:
+          var opener = nice_area_code ? "Nice area code! " : "";
+          confirm_string_array = [
+            opener,
+            "We're happy to confirm your order for ",
+            service_time_print,
+            " at the Batch Bar (1417 Elliott Ave W, 98119, the northernmost door).\n\n",
+            this.cfg.NOTE_DI,
+            " We do not reserve seating.",
+            " If anyone in your party is under 21, they will not be able to dine-in, per WA state liquor law. Let us know if this will be an issue immediately. ",
+            this.cfg.NOTE_PAYMENT
+          ];
+          break;
+        default: console.assert(false, "invalid service value"); break;
       }
       return encodeURI(confirm_string_array.join(""));
     };
@@ -1427,7 +1451,6 @@
           };
           var AutomatedInstructionsSetter = function() {
             var confirmation_body = OrderHelper.AutomatedInstructionsBuilder(scope.orderinfo.s.service_type, scope.orderinfo.s.selected_date, scope.orderinfo.s.service_time, scope.orderinfo.s.special_instructions, timing_info.order_placed_during_dining);
-            $j(element).find("span.confirmation-body textarea").val(encodeURI(confirmation_body));
             $j(element).find("span.automated_instructions textarea").val(confirmation_body);
           };
           var ConfirmationSubjectSetter = function() {
