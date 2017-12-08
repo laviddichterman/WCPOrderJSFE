@@ -1,4 +1,3 @@
-  // TODO: auto email response
   // TODO: handle leaving page before submitting (onbeforeunload)
   // TODO: guided menu help/suggestions
   // TODO: tooltip explanations of disabled items
@@ -10,7 +9,6 @@
   // TODO: multiple of same pizza menu guide
   // TODO: move garlic, extra cheese, white sauce to before the pizza name
   // TODO: update abbreviations for toppings
-  // TODO: look for "slice", "cut", "half" in the special instructions and display appropriate blurb
   var $j = jQuery.noConflict();
 
   function ScrollTopJQ() {
@@ -137,7 +135,7 @@
     new WCPTopping("House Sausage", "sausage", 2, idx++, disable_on_chicken_sausage, 1, 1),
     new WCPTopping("Rosemary Chicken Sausage", "chix", 2, idx++, disable_on_pork_sausage, 1, 1),
     new WCPTopping("Pineapple", "pine", 2, idx++, no_restriction, 1, 1),
-    new WCPTopping("Red Bell Pepper", "rbp", 2, idx++, no_restriction, 1, 1),
+    new WCPTopping("Roasted Red Bell Pepper", "rbp", 2, idx++, no_restriction, 1, 1),
     new WCPTopping("Sweet Hot Pepper", "shp", 2, idx++, no_restriction, 1, 1),
     new WCPTopping("Caramelized Onion", "onion", 2, idx++, no_restriction, 1, 1),
     new WCPTopping("Raw Red Onion", "raw_onion", 2, idx++, no_restriction, 1, 1),
@@ -759,7 +757,7 @@
     };
 
     this.AutomatedInstructionsBuilder = function(service_type, date, time, special_instructions, placed_during_dinein) {
-      if (date == null || !Number.isInteger(time)) {
+      if (date == null || isNaN(time)) {
         return "";
       }
       var service_during_dine_in = this.IsDineInHour(date, time);
@@ -767,14 +765,14 @@
 
       var response_time = placed_during_dinein ? "shortly" : "as soon as we're able";
       var special_instructions_note = has_special_instructions ? " " + this.cfg.NOTE_SPECIAL_INSTRUCTIONS : "";
-      var non_delivery_preamble = "We'll get back to you " + response_time + " to confirm your order." + special_instructions_note;
+      var non_delivery_preamble = "We'll get back to you " + response_time + " to confirm your order.";// + special_instructions_note;
 
       switch (service_type) {
         case this.cfg.DELIVERY: return this.cfg.NOTE_DELIVERY_BETA;
         case this.cfg.PICKUP:
-          return non_delivery_preamble + "\n" + (service_during_dine_in ? this.cfg.NOTE_PICKUP_DURING_DI : this.cfg.NOTE_PICKUP_BEFORE_DI) + "\n" + this.cfg.NOTE_PAYMENT;
+          return non_delivery_preamble + "\n";// + (service_during_dine_in ? this.cfg.NOTE_PICKUP_DURING_DI : this.cfg.NOTE_PICKUP_BEFORE_DI) + "\n" + this.cfg.NOTE_PAYMENT;
         case this.cfg.DINEIN:
-          return non_delivery_preamble + "\n" + this.cfg.NOTE_DI + "\n" + this.cfg.NOTE_PAYMENT;
+          return non_delivery_preamble + "\n";// + this.cfg.NOTE_DI + "\n" + this.cfg.NOTE_PAYMENT;
         default: console.assert(false, "invalid service value");
       }
     };
@@ -790,7 +788,7 @@
     };
 
     this.EmailBodyStringBuilder = function(service_type, date, time, phone) {
-      if (date == null || !Number.isInteger(time)) {
+      if (date == null || isNaN(time)) {
         return "";
       }
 
@@ -1196,6 +1194,7 @@
       };
 
       this.ChangedContactInfo = function() {
+        this.s.customer_name = this.s.customer_name.replace(/[\+\t\r\n\v\f]/g, '');
         // resets the submit failed flag as the contact info has changed
         this.s.submit_failed = false;
       };
