@@ -80,9 +80,9 @@
       price: 0,
       enable: no_restriction
     },
-    extra_mozz: {
+    ex_mozz: {
       name: "Extra Mozzarella",
-      shortname: "extra_mozz",
+      shortname: "ex_mozz",
       price: 2,
       enable: no_restriction
     }
@@ -137,7 +137,7 @@
     new WCPTopping("Pineapple", "pine", 2, idx++, no_restriction, 1, 1),
     new WCPTopping("Roasted Red Bell Pepper", "rbp", 2, idx++, no_restriction, 1, 1),
     new WCPTopping("Sweet Hot Pepper", "shp", 2, idx++, no_restriction, 1, 1),
-    new WCPTopping("Caramelized Onion", "onion", 2, idx++, no_restriction, 1, 1),
+    new WCPTopping("Caramelized Onion", "carm_onion", 2, idx++, no_restriction, 1, 1),
     new WCPTopping("Raw Red Onion", "raw_onion", 2, idx++, no_restriction, 1, 1),
     new WCPTopping("Kalamata Olive", "kala", 2, idx++, no_restriction, 1, 1),
     new WCPTopping("Castelvetrano Olive", "castel", 2, idx++, no_restriction, 1, 1),
@@ -478,7 +478,7 @@
       sauces.red,
       [[TOPPING_WHOLE, toppings_dict.pepperoni],
       [TOPPING_WHOLE, toppings_dict.sausage],
-      [TOPPING_WHOLE, toppings_dict.onion],
+      [TOPPING_WHOLE, toppings_dict.carm_onion],
       [TOPPING_WHOLE, toppings_dict.spin]]
     ),
     veggie: new WCPPizza("Veggie",
@@ -487,7 +487,7 @@
       "regular",
       sauces.red,
       [[TOPPING_WHOLE, toppings_dict.rbp],
-      [TOPPING_WHOLE, toppings_dict.onion],
+      [TOPPING_WHOLE, toppings_dict.carm_onion],
       [TOPPING_WHOLE, toppings_dict.mush],
       [TOPPING_WHOLE, toppings_dict.spin]]
     ),
@@ -498,7 +498,7 @@
       sauces.red,
       [[TOPPING_WHOLE, toppings_dict.sausage],
       [TOPPING_WHOLE, toppings_dict.rbp],
-      [TOPPING_WHOLE, toppings_dict.onion],
+      [TOPPING_WHOLE, toppings_dict.carm_onion],
       [TOPPING_WHOLE, toppings_dict.mush]]
     ),
     popeye: new WCPPizza("Popeye",
@@ -555,7 +555,7 @@
       sauces.white,
       [[TOPPING_WHOLE, toppings_dict.bacon],
       [TOPPING_WHOLE, toppings_dict.brussels],
-      [TOPPING_WHOLE, toppings_dict.onion]]
+      [TOPPING_WHOLE, toppings_dict.carm_onion]]
     ),
     blue_pig: new WCPPizza("Blue Pig",
       "B",

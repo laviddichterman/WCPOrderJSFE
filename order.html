@@ -43,11 +43,11 @@
         <div>Cheese:</div>
         <div class="flexitems">
           <div class="flexitem">
-            <input type="checkbox" id="{{pmenuCtrl.cheese_options["extra_mozz"].shortname}}_whole" class="input-whole" ng-model="pmenuCtrl.selection.cheese_option" ng-true-value="'extra_mozz'" ng-false-value="'regular'" ng-change="pmenuCtrl.updateSelection()">
+            <input type="checkbox" id="{{pmenuCtrl.cheese_options["ex_mozz"].shortname}}_whole" class="input-whole" ng-model="pmenuCtrl.selection.cheese_option" ng-true-value="'ex_mozz'" ng-false-value="'regular'" ng-change="pmenuCtrl.updateSelection()">
             <span class="option-circle-container">
-              <label for="{{pmenuCtrl.cheese_options["extra_mozz"].shortname}}_whole" class="option-whole option-circle"></label>
+              <label for="{{pmenuCtrl.cheese_options["ex_mozz"].shortname}}_whole" class="option-whole option-circle"></label>
             </span>
-            <label class="topping_text" for="{{pmenuCtrl.cheese_options["extra_mozz"].shortname}}_whole">{{pmenuCtrl.cheese_options["extra_mozz"].name}}</label>
+            <label class="topping_text" for="{{pmenuCtrl.cheese_options["ex_mozz"].shortname}}_whole">{{pmenuCtrl.cheese_options["ex_mozz"].name}}</label>
           </div>
         </div>
         <div>Toppings&nbsp;(limit&nbsp;5<span ng-if="pmenuCtrl.selection.is_split">&nbsp;per&nbsp;side</span>):</div>
