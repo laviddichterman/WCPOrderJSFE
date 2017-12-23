@@ -102,7 +102,7 @@
                 </td>
                 <td>
                   <div class="grid-flex grid-valign-middle">
-                    <input type="number" class="quantity" min=1 max=99 ng-model="item[0]" ng-blur="orderCtrl.fixQuantities()">
+                    <input type="number" class="quantity" min=1 max=99 ng-model="item[0]" ng-blur="orderCtrl.fixQuantities(true)" ng-change="orderCtrl.fixQuantities(false)">
                     <span class="cart-item-remove">
                       <button name="remove" ng-click="orderCtrl.ScrollTop(); orderCtrl.removePizzaFromOrder($index)" class="button-remove">X</button>
                     </span>
@@ -120,7 +120,7 @@
                 </td>
                 <td>
                   <div class="grid-flex grid-valign-middle">
-                    <input type="number" class="quantity" min=1 max=99 ng-model="item[0]" ng-blur="orderCtrl.fixQuantities()">
+                    <input type="number" class="quantity" min=1 max=99 ng-model="item[0]" ng-blur="orderCtrl.fixQuantities(true)" ng-change="orderCtrl.fixQuantities(false)">
                     <span class="cart-item-remove">
                       <button name="remove" ng-click="orderCtrl.ScrollTop(); orderCtrl.removeExtraFromOrder($index)" class="button-remove">X</button>
                     </span>

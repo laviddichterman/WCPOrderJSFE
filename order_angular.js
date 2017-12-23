@@ -987,11 +987,11 @@
 
   var wcporderhelper = new WCPOrderHelper();
 
-  var FixQuantity = function(val) {
+  var FixQuantity = function(val, clear_if_invalid) {
     if (typeof val === "string" || val instanceof String) {
       val = parseInt(val);
     }
-    if (!Number.isSafeInteger(val) || val < 1 || val > 99) {
+    if (clear_if_invalid && (!Number.isSafeInteger(val) || val < 1 || val > 99)) {
       val = 1;
     }
     return val;
@@ -1249,12 +1249,12 @@
         return val;
       };
 
-      this.fixQuantities = function () {
+      this.fixQuantities = function (clear_if_invalid) {
         for (var item in this.s.cart.pizza) {
-          this.s.cart.pizza[item][0] = FixQuantity(this.s.cart.pizza[item][0]);
+          this.s.cart.pizza[item][0] = FixQuantity(this.s.cart.pizza[item][0], clear_if_invalid);
         }
         for (var j in this.s.cart.extras) {
-          this.s.cart.extras[j][0] = FixQuantity(this.s.cart.extras[j][0]);
+          this.s.cart.extras[j][0] = FixQuantity(this.s.cart.extras[j][0], clear_if_invalid);
         }
         this.PostCartUpdate();
       };
@@ -1336,7 +1336,7 @@
       };
 
       this.fixQuantity = function() {
-        this.quantity = FixQuantity(this.quantity);
+        this.quantity = FixQuantity(this.quantity, true);
       };
     });
 
