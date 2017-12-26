@@ -12,7 +12,6 @@ info:
   termsOfService: 'http://swagger.io/terms/'
   contact:
     email: dave@windycitypie.com
-paths: {}
 externalDocs:
   description: Find out more about Swagger
   url: 'http://swagger.io'
@@ -25,14 +24,18 @@ components:
         load_time:
           type: string
           format: date-time
+          description: User load time, in UTC
         submit_time:
           type: string
           format: date-time
+          description: User submit time, in UTC
         time_selection_time:
           type: string
           format: date-time
+          description: User time selection time, in UTC
         user_agent:
           type: string
+          description: Browser user agent
     WProduct:
       description: A product (good, or service).
       type: object
@@ -46,10 +49,6 @@ components:
         description:
           type: string
           description: Printable description of the product, can be null/empty
-        subproducts:
-          type: array
-          items:
-            $ref: '#/components/schemas/WProduct'
         price:
           type: number
           format: double
@@ -167,127 +166,75 @@ components:
           format: date-time
         client_data:
           $ref: '#/components/schemas/WClientData'
-    Category:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-        name:
-          type: string
-      xml:
-        name: Category
-    User:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-        username:
-          type: string
-        firstName:
-          type: string
-        lastName:
-          type: string
-        email:
-          type: string
-        password:
-          type: string
-        phone:
-          type: string
-        userStatus:
-          type: integer
-          format: int32
-          description: User Status
-      xml:
-        name: User
-    Tag:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-        name:
-          type: string
-      xml:
-        name: Tag
-    Pet:
-      type: object
-      required:
-        - name
-        - photoUrls
-      properties:
-        id:
-          type: integer
-          format: int64
-        category:
-          $ref: '#/components/schemas/Category'
-        name:
-          type: string
-          example: doggie
-        photoUrls:
-          type: array
-          xml:
-            name: photoUrl
-            wrapped: true
-          items:
+paths:
+  /ping:
+    get:
+      summary: Checks if the server is running.
+      tags:
+        - Admin
+      responses:
+        "200":
+          description: Server is running.
+        default:
+          description: No bueno.
+  /order/byid:
+    get:
+      tags:
+        - Orders
+      summary: Gets an order by its ID.
+      parameters:
+        - in: query
+          name: id
+          schema:
             type: string
-        tags:
-          type: array
-          xml:
-            name: tag
-            wrapped: true
-          items:
-            $ref: '#/components/schemas/Tag'
-        status:
-          type: string
-          description: pet status in the store
-          enum:
-            - available
-            - pending
-            - sold
-      xml:
-        name: Pet
-    ApiResponse:
-      type: object
-      properties:
-        code:
-          type: integer
-          format: int32
-        type:
-          type: string
-        message:
-          type: string
-  requestBodies:
-    Pet:
-      content:
-        application/json:
+          required: true
+          description: >
+            the order ID is used to return the matching WOrder, if any
+      operationId: getOrderById
+      responses:
+        "404":
+          description: OK. No orders found.
+        "200":
+          description: OK. Matching order found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WOrder'
+  /order/bydate:
+    get:
+      tags:
+        - Orders
+      summary: >
+        Gets all orders with service time starting between
+        start and end, inclusive.
+      parameters:
+        - in: query
+          name: start
           schema:
-            $ref: '#/components/schemas/Pet'
-        application/xml:
+            type: string
+            format: date-time
+          required: true
+          description: >
+            The start date and time from which to search orders.
+            Timezone is assumed to be UTC.
+        - in: query
+          name: end
           schema:
-            $ref: '#/components/schemas/Pet'
-      description: Pet object that needs to be added to the store
-      required: true
-    UserArray:
-      content:
-        application/json:
-          schema:
-            type: array
-            items:
-              $ref: '#/components/schemas/User'
-      description: List of user object
-      required: true
-  securitySchemes:
-    petstore_auth:
-      type: oauth2
-      flows:
-        implicit:
-          authorizationUrl: 'http://petstore.swagger.io/oauth/dialog'
-          scopes:
-            'write:pets': modify pets in your account
-            'read:pets': read your pets
-    api_key:
-      type: apiKey
-      name: api_key
-      in: header
+            type: string
+            format: date-time
+          required: true
+          description: >
+            The end date and time from which to search orders.
+            Timezone is assumed to be UTC.
+      operationId: getOrdersByStartTime
+      responses:
+        "404":
+          description: OK. No orders found.
+        "200":
+          description: OK. Search successful, yielded results.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WOrder'
