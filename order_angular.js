@@ -930,13 +930,15 @@
       return pushedTime;
     };
 
-    this.GetFirstAvailableTime = function(date, service, size) {
+    this.GetFirstAvailableTime = function(date, service, size, cart_based_lead_time) {
       // param date: the date we're looking for the earliest time
       // param service: the service type enum
       // param size: the order size
+      // param cart_based_lead_time: any minimum preorder times associated with the specific items in the cart
       var blocked_off = this.GetBlockedOffForDate(date, service);
       var minmax = this.cfg.HOURS_BY_SERVICE_TYPE[service][date.getDay()];
-      var leadtime = this.cfg.LEAD_TIME[service] + ((size-1) * this.cfg.ADDITIONAL_PIE_LEAD_TIME);
+      // cart_based_lead_time and service/size lead time don't stack
+      var leadtime = Math.max(this.cfg.LEAD_TIME[service] + ((size-1) * this.cfg.ADDITIONAL_PIE_LEAD_TIME), cart_based_lead_time);
 
       var current_time_plus_leadtime = new Date(timing_info.current_time.getTime() + (leadtime * 60000));
       if (this.IsFirstDatePreviousDayToSecond(date, current_time_plus_leadtime)) {
@@ -953,12 +955,13 @@
       return this.HandleBlockedOffTime(blocked_off, minmax[0]);
     };
 
-    this.DisableExhaustedDates = function(date, service, size) {
+    this.DisableExhaustedDates = function(date, service, size, cart_based_lead_time) {
       // checks if orders can still be placed for the
       // given date, service type, and order size
+      // param cart_based_lead_time: any minimum preorder times associated with the specific items in the cart
       // return: true if orders can still be placed, false otherwise
       var maxtime = this.cfg.HOURS_BY_SERVICE_TYPE[service][date.getDay()][1];
-      return this.GetFirstAvailableTime(date, service, size) <= maxtime;
+      return this.GetFirstAvailableTime(date, service, size, cart_based_lead_time) <= maxtime;
     };
 
     this.DisableFarOutDates = function(date) {
@@ -968,13 +971,13 @@
       return date <= load_time_plus_year;
     };
 
-    this.IsDateActive = function(date, service, size) {
-      return !this.IsPreviousDay(date) && this.DisableExhaustedDates(date, service, size) && this.DisableFarOutDates(date);
+    this.IsDateActive = function(date, service, size, cart_based_lead_time) {
+      return !this.IsPreviousDay(date) && this.DisableExhaustedDates(date, service, size, cart_based_lead_time) && this.DisableFarOutDates(date);
     };
 
-    this.GetStartTimes = function(userDate, service, size) {
+    this.GetStartTimes = function(userDate, service, size, cart_based_lead_time) {
       var times = [];
-      var earliest = this.GetFirstAvailableTime(userDate, service, size);
+      var earliest = this.GetFirstAvailableTime(userDate, service, size, cart_based_lead_time);
       var blockedOff = this.GetBlockedOffForDate(userDate, service);
       var latest = this.cfg.HOURS_BY_SERVICE_TYPE[service][userDate.getDay()][1];
       while (earliest <= latest) {
@@ -998,8 +1001,8 @@
   };
 
   function UpdateLeadTime() {
-    if (wcporderhelper.IsDateActive(timing_info.current_time, wcpconfig.PICKUP, 1)) {
-      var first = wcporderhelper.GetFirstAvailableTime(timing_info.current_time, wcpconfig.PICKUP, 1);
+    if (wcporderhelper.IsDateActive(timing_info.current_time, wcpconfig.PICKUP, 1, 0)) {
+      var first = wcporderhelper.GetFirstAvailableTime(timing_info.current_time, wcpconfig.PICKUP, 1, 0);
       $j("span.leadtime").html("Next available same-day order: " + wcporderhelper.MinutesToPrintTime(first));
     }
     else {
@@ -1042,6 +1045,7 @@
       this.cart = {pizza: [], extras:[]};
       this.cartstring = "";
       this.num_pizza = 0;
+      this.cart_based_lead_time = 0;
       this.shortcartstring = "";
       this.referral = "";
       this.acknowledge_instructions_dialogue = false;
@@ -1128,7 +1132,7 @@
         }
         if (no_longer_meets_service_requirement ||
             isNaN(parsedDate) ||
-            !OrderHelper.IsDateActive(new Date(parsedDate), this.s.service_type, this.s.num_pizza)) {
+            !OrderHelper.IsDateActive(new Date(parsedDate), this.s.service_type, this.s.num_pizza, this.s.cart_based_lead_time)) {
           this.s.date_valid = false;
           this.s.service_times = ["Please select a valid date"];
           this.s.service_time = "Please select a valid date";
@@ -1616,8 +1620,8 @@
         },
         link: function(scope, element, attrs, ctrl) {
           var DateActive = function(date) {
-            var is_active = OrderHelper.IsDateActive(date, scope.orderinfo.s.service_type, scope.orderinfo.s.num_pizza);
-            var tooltip = is_active ? "Currently taking orders for this date" : "We are not taking orders for this date";
+            var is_active = OrderHelper.IsDateActive(date, scope.orderinfo.s.service_type, scope.orderinfo.s.num_pizza, scope.orderinfo.s.cart_based_lead_time);
+            var tooltip = is_active ? "Your order can be placed for this date." : "Your order cannot be placed for this date.";
             return [is_active, "", tooltip];
           };
           $j(element).datepicker({
