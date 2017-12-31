@@ -1145,7 +1145,7 @@
           this.s.date_string = $filter("date")(this.s.selected_date, "EEEE, MMMM dd, yyyy");
           this.s.date_valid = true;
 
-          this.s.service_times = OrderHelper.GetStartTimes(this.s.selected_date, this.s.service_type, this.s.num_pizza);
+          this.s.service_times = OrderHelper.GetStartTimes(this.s.selected_date, this.s.service_type, this.s.num_pizza, this.s.cart_based_lead_time);
 
           if (!old_service_time || this.s.service_times.findIndex(function(elt, idx, arr) { return elt == old_service_time; }) == -1) {
               this.s.service_time = this.s.service_times[0];
@@ -1193,7 +1193,6 @@
 
       this.PostCartUpdate = function() {
         this.s.RecomputeOrderSize();
-        this.rebuildCartString();
         this.ValidateDate();
       };
 

@@ -199,7 +199,7 @@
     </form>
     <div class="order-nav">
       <button type="submit" class="btn scrolltotop" ng-show="orderCtrl.HasPreviousStage()" ng-click="orderCtrl.PreviousStage()">Previous</button>
-      <button type="submit" class="btn scrolltotop" ng-disabled="!orderCtrl.s.date_valid || (orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && (stage3.address.$error.address || stage3.zipcode.$error.zipcode))" ng-show="orderCtrl.HasNextStage()" ng-click="orderCtrl.NextStage()">Next</button>
+      <button type="submit" class="btn scrolltotop" ng-disabled="!orderCtrl.s.date_valid || (orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && (stage3.address.$error.address || stage3.zipcode.$error.zipcode))" ng-show="orderCtrl.HasNextStage()" ng-click="orderCtrl.rebuildCartString(); orderCtrl.NextStage();">Next</button>
     </div>
   </div>
   <div ng-show="orderCtrl.s.stage == 4">
