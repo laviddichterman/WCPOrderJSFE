@@ -413,9 +413,9 @@
             else {
               // menu pizza with add-ons
               var new_name = pizza_menu[menu_compare].name;
-              new_name = (comparison_info.sauce == 2) ? new_name : new_name.concat(" + ", pizza.sauce.name);
-              new_name = (comparison_info.crust == 2) ? new_name : new_name.concat(" + ", crusts[pizza.crust].name);
-              new_name = (comparison_info.cheese == 2) ? new_name : new_name.concat(" + ", cheese_options[pizza.cheese_option].name);
+              new_name = (comparison_info.sauce == 2) ? new_name : pizza.sauce.name.concat(" + ", new_name);
+              new_name = (comparison_info.crust == 2) ? new_name : crusts[pizza.crust].name.concat(" + ", new_name);
+              new_name = (comparison_info.cheese == 2) ? new_name : cheese_options[pizza.cheese_option].name.concat(" + ", new_name);
               for (var i = comparison_info.toppings[idx].length - 1; i >= 0; --i) { // done in reverse for display ordering
                 new_name = (comparison_info.toppings[idx][i] == 2) ? new_name : new_name.concat(" + ", toppings_array[i].name);
               }
