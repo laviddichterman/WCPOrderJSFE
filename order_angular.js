@@ -1058,6 +1058,13 @@
         this.num_pizza = size;
       };
 
+      this.ComputeCartBasedLeadTime = function() {
+        this.cart_based_lead_time = 0;
+        for (var i in this.cart.pizza) {
+          this.cart_based_lead_time = Math.max(this.cart_based_lead_time, this.cart.pizza[i][1].crust.leadtime);
+        }
+      };
+
       this.date_string = "";
       this.date_valid = false;
       this.service_times = ["Please select a valid date"];
@@ -1222,6 +1229,7 @@
 
       this.PostCartUpdate = function() {
         this.s.RecomputeOrderSize();
+        this.s.ComputeCartBasedLeadTime();
         this.ValidateDate();
       };
 
