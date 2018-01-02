@@ -141,7 +141,7 @@
     regular: new WCPCrust("Regular", "regular", 0, no_restriction, crust_flavors.regular, crust_doughs.regular, 0),
     garlic: new WCPCrust("Roasted Garlic", "garlic", 2, no_restriction, crust_flavors.garlic, crust_doughs.regular, 0),
     gf: new WCPCrust("Gluten Free", "gf", 5, disable_on_meatball, crust_flavors.regular, crust_doughs.gf, 1440),
-    gf_garlic: new WCPCrust("Gluten Free Roasted Garlic", "gf_garlic", 7, disable_on_meatball, crust_flavors.garlic, crust_doughs.gf, 1440),
+    gf_garlic: new WCPCrust("Roasted Garlic Gluten Free", "gf_garlic", 7, disable_on_meatball, crust_flavors.garlic, crust_doughs.gf, 1440),
   };
 
   var idx = 0;
@@ -436,7 +436,7 @@
           case 1: // at least other
             if (menu_compare == "byo") {
               // non-menu BYO
-              names[idx] = (comparison_info.dough == 2) ? pizza_menu[menu_compare].name : pizza.crust.dough.name.concat(" + ",  pizza_menu[menu_compare].name);
+              names[idx] = pizza_menu[menu_compare].name;
             }
             else {
               // menu pizza with add-ons
@@ -1334,19 +1334,22 @@
       this.sauces = sauces;
       this.cheese_options = cheese_options;
       this.crusts = crusts;
-      this.message = "";
+      this.messages = [];
       this.suppress_guide = false;
 
       this.PopulateOrderGuide = function() {
         var addon_chz = this.selection.cheese_option != cheese_options.regular.shortname ? 1 : 0;
         var addon_crust = this.selection.crust.flavor.shortname != "regular" ? 1 : 0;
-        this.message = "";
+        this.messages = [];
         if (this.selection) {
-          if (this.selection.bake_count[0] + addon_chz + addon_crust < 2 || this.selection.bake_count[1] + addon_chz + addon_crust < 2) {
-            this.message = "Our pizza is designed as a vehicle for add-ons. We recommend at least two toppings to weigh the crust down during baking. If this is your first time dining with us, we'd suggest ordering a menu pizza without modifications.";
+          if (this.selection.crust.dough == crust_doughs.gf) {
+            this.messages.push("Gluten free pizzas require 24 hour's notice and are baked in a kitchen exposed to wheat flour. While we take very thorough precautions, cross-contamination is a possibility.");
           }
-          else if (this.selection.flavor_count[0] + addon_crust > 5 || this.selection.flavor_count[1] + addon_crust > 5) {
-            this.message = "We love our toppings too, but adding this many flavors can end up detracting from the overall enjoyment. We'd suggest scaling this pizza back a bit. If this is your first time dining with us, we'd suggest ordering a menu pizza without modifications.";
+          if (this.selection.bake_count[0] + addon_chz + addon_crust < 2 || this.selection.bake_count[1] + addon_chz + addon_crust < 2) {
+            this.messages.push("Our pizza is designed as a vehicle for add-ons. We recommend at least two toppings to weigh the crust down during baking. If this is your first time dining with us, we'd suggest ordering a menu pizza without modifications.");
+          }
+          if (this.selection.flavor_count[0] + addon_crust > 5 || this.selection.flavor_count[1] + addon_crust > 5) {
+            this.messages.push("We love our toppings too, but adding this many flavors can end up detracting from the overall enjoyment. We'd suggest scaling this pizza back a bit. If this is your first time dining with us, we'd suggest ordering a menu pizza without modifications.");
           }
         }
       };

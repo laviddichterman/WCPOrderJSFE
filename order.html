@@ -18,7 +18,9 @@
         <wcppizzacartitem pizza="pmenuCtrl.selection" dots="true" price="true"></wcppizzacartitem>
       </div>
       <hr class="separator">
-      <div class="wpcf7-response-output wpcf7-validation-errors" ng-if="!pmenuCtrl.suppress_guide && pmenuCtrl.message">{{pmenuCtrl.message}}</div>
+      <span ng-if="!pmenuCtrl.suppress_guide && pmenuCtrl.messages.length">
+        <div class="wpcf7-response-output wpcf7-validation-errors" ng-repeat="msg in pmenuCtrl.messages">{{msg}}</div>
+      </span>
       <div ng-if="pmenuCtrl.selection">
         <div>Sauce:</div>
         <div class="flexitems">
@@ -30,7 +32,7 @@
             <label class="topping_text" for="{{sauce.shortname}}_whole">{{sauce.name}}</label>
           </div>
         </div>
-        <div>Crust:</div>
+        <div>Crust & Dough:</div>
         <div class="flexitems">
           <div class="flexitem" ng-repeat="crust in pmenuCtrl.crusts">
             <input id="{{crust.shortname}}_whole" class="input-whole" ng-model="pmenuCtrl.selection.crust" ng-value="crust" ng-disabled="!crust.ShowOption(pmenuCtrl.selection)" type="radio" ng-change="pmenuCtrl.updateSelection()">
