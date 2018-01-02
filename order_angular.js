@@ -1,4 +1,4 @@
-  // TODO: handle leaving page before submitting (onbeforeunload)
+// TODO: handle leaving page before submitting (onbeforeunload)
   // TODO: guided menu help/suggestions
   // TODO: tooltip explanations of disabled items
   // TODO: half toppings UI
@@ -34,8 +34,14 @@
   var enable_on_white = function(pizza) {
     return pizza && pizza.sauce.shortname == "white";
   };
+  var disable_on_gf = function(pizza) {
+    return pizza && pizza.crust.dough.shortname == "regular";
+  };
   var disable_on_brussels_sprout = function (pizza) {
     return pizza && pizza.toppings_tracker[toppings_dict.brussels.index] > 0 ? false : true;
+  };
+  var disable_on_meatball = function (pizza) {
+    return pizza && pizza.toppings_tracker[toppings_dict.meatball.index] > 0 ? false : true;
   };
   var disable_on_chicken_sausage = function (pizza) {
     return pizza && pizza.toppings_tracker[toppings_dict.chix.index] > 0 ? false : true;
@@ -58,21 +64,6 @@
   var FLAVOR_MAX = 5;
   var BAKE_MAX = 5;
 
-  var crusts = {
-    regular: {
-      name: "Regular",
-      shortname: "regular",
-      price: 0,
-      enable: no_restriction
-    },
-    garlic: {
-      name: "Roasted Garlic",
-      shortname: "garlic",
-      price: 2,
-      enable: no_restriction
-    }
-  };
-
   var cheese_options = {
     regular: {
       name: "Mozzarella",
@@ -93,6 +84,17 @@
     this.enable = enable_filter;
     this.ShowOption = function(pizza) {
       return pizza && (this.enable(pizza) || pizza.sauce == this.shortname);
+    };
+  };
+
+  var WCPCrust = function(name, shortname, price, enable_filter, flavor, dough, leadtime) {
+    WCPOption.call(this, name, shortname, price);
+    this.enable = enable_filter;
+    this.flavor = flavor;
+    this.dough = dough;
+    this.leadtime = leadtime;
+    this.ShowOption = function(pizza) {
+      return pizza && (this.enable(pizza) || pizza.crust == this.shortname);
     };
   };
 
@@ -125,17 +127,35 @@
     white: new WCPSauce("White Sauce", "white", 2, no_restriction)
   };
 
+  var crust_flavors = {
+    regular: new WCPOption("Regular", "regular", 0),
+    garlic: new WCPOption("Roasted Garlic Crust", "garlic", 2)
+  };
+
+  var crust_doughs = {
+    regular: new WCPOption("Regular", "regular", 0),
+    gf: new WCPOption("Gluten Free Dough", "gf", 5)
+  };
+
+  var crusts = {
+    regular: new WCPCrust("Regular", "regular", 0, no_restriction, crust_flavors.regular, crust_doughs.regular, 0),
+    garlic: new WCPCrust("Roasted Garlic", "garlic", 2, no_restriction, crust_flavors.garlic, crust_doughs.regular, 0),
+    gf: new WCPCrust("Gluten Free", "gf", 5, disable_on_meatball, crust_flavors.regular, crust_doughs.gf, 1440),
+    gf_garlic: new WCPCrust("Gluten Free Roasted Garlic", "gf_garlic", 7, disable_on_meatball, crust_flavors.garlic, crust_doughs.gf, 1440),
+  };
+
   var idx = 0;
   var toppings_array = [
     new WCPTopping("Hot Giardiniera", "giard", 2, idx++, no_restriction, 1, 1),
     new WCPTopping("Bleu", "bleu", 2, idx++, no_restriction, 1, 1),
     new WCPTopping("Candied Bacon", "bacon", 2, idx++, no_restriction, 1, 1),
     new WCPTopping("Brussels Sprout", "brussels", 2, idx++, enable_on_white, 1, 1),
-    new WCPTopping("Meatball", "meatball", 4, idx++, no_restriction, 1, 2),
+    new WCPTopping("Meatball", "meatball", 4, idx++, disable_on_gf, 1, 2),
     new WCPTopping("House Sausage", "sausage", 2, idx++, disable_on_chicken_sausage, 1, 1),
     new WCPTopping("Rosemary Chicken Sausage", "chix", 2, idx++, disable_on_pork_sausage, 1, 1),
     new WCPTopping("Pineapple", "pine", 2, idx++, no_restriction, 1, 1),
     new WCPTopping("Roasted Red Bell Pepper", "rbp", 2, idx++, no_restriction, 1, 1),
+    //new WCPTopping("Green Bell Pepper", "gbp", 2, idx++, no_restriction, 1, 1),
     new WCPTopping("Sweet Hot Pepper", "shp", 2, idx++, no_restriction, 1, 1),
     new WCPTopping("Caramelized Onion", "carm_onion", 2, idx++, no_restriction, 1, 1),
     new WCPTopping("Raw Red Onion", "raw_onion", 2, idx++, no_restriction, 1, 1),
@@ -173,7 +193,7 @@
     // toppings is array<tuple<enum, topping>>
     function ComputePrice(pizza) {
       var val = 19;
-      val = val + crusts[pizza.crust].price;
+      val = val + pizza.crust.price;
       val = val + cheese_options[pizza.cheese_option].price;
       val = val + pizza.sauce.price;
       for (var i in pizza.toppings_tracker) {
@@ -205,8 +225,8 @@
 
     function GetCrustCheeseSauceList(pizza, getter, verbose) {
       var ret = [];
-      if (pizza.crust != "regular") {
-        ret.push(getter(crusts[pizza.crust]));
+      if (pizza.crust.flavor.shortname != "regular") {
+        ret.push(getter(pizza.crust.flavor));
       }
       if (verbose || pizza.cheese_option != cheese_options.regular.shortname ) {
         ret.push(getter(cheese_options[pizza.cheese_option]));
@@ -214,16 +234,22 @@
       if (verbose || pizza.sauce.shortname != sauces.red.shortname ) {
         ret.push(getter(pizza.sauce));
       }
+      if (pizza.crust.dough.shortname != "regular") {
+        ret.push(getter(pizza.crust.dough));
+      }
       return ret;
     }
 
     function BuildCustomShortcode(pizza) {
       var shortcode_builder = "";
-      if (pizza.crust == "regular" && pizza.sauce.shortname == "red") {
+      if (pizza.crust.shortname == crusts.regular && pizza.sauce.shortname == "red") {
         shortcode_builder = "z";
       }
-      if (pizza.crust == "garlic") {
-        shortcode_builder = "g";
+      if (pizza.crust.dough == crust_doughs.gf) {
+        shortcode_builder = "k";
+      }
+      if (pizza.crust.flavor == crust_flavors.garlic) {
+        shortcode_builder = shortcode_builder + "g";
       }
       if (pizza.sauce.shortname == "white") {
         shortcode_builder = shortcode_builder + "w";
@@ -262,8 +288,8 @@
 
       //whole toppings begin
       var whole_toppings = split_toppings.whole.map(function(x) { return toppings_array[x].name; });
-      var crust_cheese_sauce = GetCrustCheeseSauceList(this, function(x) { return x.name; }, true);
-      whole_toppings = whole_toppings.concat(crust_cheese_sauce);
+      var mod_crust_cheese_sauce = GetCrustCheeseSauceList(this, function(x) { return x.name; }, true);
+      whole_toppings = whole_toppings.concat(mod_crust_cheese_sauce);
       toppings_sections.push(["Whole", whole_toppings.join(" + ")]);
       //whole toppings end
 
@@ -299,9 +325,9 @@
     this.ShortOneLineDisplayToppings = function() {
       var split_toppings = this.SplitToppingsList();
       var sections = [];
-      var crust_cheese_sauce = GetCrustCheeseSauceList(this, function(x) { return x.shortname; }, false).reverse();
-      if (crust_cheese_sauce.length > 0) {
-        sections.push(crust_cheese_sauce.join(" + "));
+      var mod_crust_cheese_sauce = GetCrustCheeseSauceList(this, function(x) { return x.shortname; }, false).reverse();
+      if (mod_crust_cheese_sauce.length > 0) {
+        sections.push(mod_crust_cheese_sauce.join(" + "));
       }
       var whole_toppings = split_toppings.whole.reverse().map(function(x) { return toppings_array[x].shortname; });
       if (whole_toppings.length > 0) {
@@ -320,10 +346,11 @@
       // 1 at least
       // 2 exact match
       var sauce_match = this.sauce == other.sauce ? 2 : 1;
-      var crust_match = (this.crust == other.crust) ? 2 : (other.crust == "regular") ? 1 : 0;
+      var crust_match = (this.crust.flavor == other.crust.flavor) ? 2 : (other.crust.flavor.shortname == "regular") ? 1 : 0;
       var cheese_match = this.cheese_option == other.cheese_option ? 2 : (other.cheese_option == "regular" ? 1 : 0);
+      var dough_match = (this.crust.dough == other.crust.dough) ? 2 : (other.crust.dough.shortname == "regular") ? 1 : 0;
       var toppings_match = [[], []];
-      var non_topping_match = Math.min(sauce_match, crust_match, cheese_match);
+      var non_topping_match = Math.min(sauce_match, crust_match, cheese_match, dough_match);
       var is_mirror = this.is_split && other.is_split && non_topping_match == 2;
       var min_topping_match_left = 2;
       var min_topping_match_right = 2;
@@ -372,6 +399,7 @@
         sauce: sauce_match,
         crust: crust_match,
         cheese: cheese_match,
+        dough: dough_match,
         toppings: toppings_match,
         mirror: is_mirror,
         min_non_topping: non_topping_match,
@@ -408,17 +436,18 @@
           case 1: // at least other
             if (menu_compare == "byo") {
               // non-menu BYO
-              names[idx] = pizza_menu[menu_compare].name;
+              names[idx] = (comparison_info.dough == 2) ? pizza_menu[menu_compare].name : pizza.crust.dough.name.concat(" + ",  pizza_menu[menu_compare].name);
             }
             else {
               // menu pizza with add-ons
               var new_name = pizza_menu[menu_compare].name;
+              new_name = (comparison_info.sauce == 2) ? new_name : pizza.sauce.name.concat(" + ", new_name);
+              new_name = (comparison_info.crust == 2) ? new_name : pizza.crust.flavor.name.concat(" + ", new_name);
               new_name = (comparison_info.cheese == 2) ? new_name : cheese_options[pizza.cheese_option].name.concat(" + ", new_name);
-              new_name = (comparison_info.crust == 2) ? new_name : crusts[pizza.crust].name.concat(" + ", new_name);
-              new_name = (comparison_info.sauce == 2) ? new_name : pizza.sauce.name.concat(" + ", new_name);              
               for (var i = comparison_info.toppings[idx].length - 1; i >= 0; --i) { // done in reverse for display ordering
                 new_name = (comparison_info.toppings[idx][i] == 2) ? new_name : new_name.concat(" + ", toppings_array[i].name);
               }
+              new_name = (comparison_info.dough == 2) ? new_name : pizza.crust.dough.name.concat(" + ", new_name);
               names[idx] = new_name;
             }
             has_name[idx] = true;
@@ -473,7 +502,7 @@
   pizza_menu = {
     omnivore: new WCPPizza("Omnivore",
       "O",
-      "garlic",
+      crusts.garlic,
       "regular",
       sauces.red,
       [[TOPPING_WHOLE, toppings_dict.pepperoni],
@@ -483,7 +512,7 @@
     ),
     veggie: new WCPPizza("Veggie",
       "V",
-      "regular",
+      crusts.regular,
       "regular",
       sauces.red,
       [[TOPPING_WHOLE, toppings_dict.rbp],
@@ -493,7 +522,7 @@
     ),
     classic: new WCPPizza("Classic",
       "C",
-      "regular",
+      crusts.regular,
       "regular",
       sauces.red,
       [[TOPPING_WHOLE, toppings_dict.sausage],
@@ -503,7 +532,7 @@
     ),
     popeye: new WCPPizza("Popeye",
       "P",
-      "regular",
+      crusts.regular,
       "regular",
       sauces.red,
       [[TOPPING_WHOLE, toppings_dict.bleu],
@@ -513,7 +542,7 @@
     ),
     sweet_pete: new WCPPizza("Sweet Pete",
       "S",
-      "regular",
+      crusts.regular,
       "regular",
       sauces.red,
       [[TOPPING_WHOLE, toppings_dict.giard],
@@ -523,7 +552,7 @@
     ),
     hot_island: new WCPPizza("Hot Island",
       "H",
-      "garlic",
+      crusts.garlic,
       "regular",
       sauces.red,
       [[TOPPING_WHOLE, toppings_dict.sausage],
@@ -532,7 +561,7 @@
     ),
     meatza: new WCPPizza("Meatza",
       "M",
-      "regular",
+      crusts.regular,
       "regular",
       sauces.red,
       [[TOPPING_WHOLE, toppings_dict.bacon],
@@ -541,7 +570,7 @@
     ),
     tuscany_raider: new WCPPizza("Tuscany Raider",
       "T",
-      "regular",
+      crusts.regular,
       "regular",
       sauces.white,
       [[TOPPING_WHOLE, toppings_dict.chix],
@@ -550,7 +579,7 @@
     ),
     brussels_snout: new WCPPizza("Brussels Snout",
       "R",
-      "regular",
+      crusts.regular,
       "regular",
       sauces.white,
       [[TOPPING_WHOLE, toppings_dict.bacon],
@@ -559,7 +588,7 @@
     ),
     blue_pig: new WCPPizza("Blue Pig",
       "B",
-      "regular",
+      crusts.regular,
       "regular",
       sauces.red,
       [[TOPPING_WHOLE, toppings_dict.bleu],
@@ -567,7 +596,7 @@
     ),
     byo: new WCPPizza("Build-Your-Own",
       "z",
-      "regular",
+      crusts.regular,
       "regular",
       sauces.red,
       []
@@ -757,7 +786,7 @@
     };
 
     this.AutomatedInstructionsBuilder = function(service_type, date, time, special_instructions, placed_during_dinein) {
-      if (date == null || isNaN(time)) {
+      if (date === null || isNaN(time)) {
         return "";
       }
       var service_during_dine_in = this.IsDineInHour(date, time);
@@ -778,7 +807,7 @@
     };
 
     this.EmailSubjectStringBuilder = function(service_type, name, date_string, service_time) {
-      if (!name || name.length == 0 || !date_string || date_string.length == 0) {
+      if (!name || name.length === 0 || !date_string || date_string.length === 0) {
         return "";
       }
       service_type = this.cfg.SERVICE_TYPES[service_type][0];
@@ -788,7 +817,7 @@
     };
 
     this.EmailBodyStringBuilder = function(service_type, date, time, phone) {
-      if (date == null || isNaN(time)) {
+      if (date === null || isNaN(time)) {
         return "";
       }
 
@@ -843,7 +872,7 @@
     };
 
     this.EventTitleStringBuilder = function(service, customer, cart, special_instructions) {
-      if (!customer || cart.pizza.length == 0) {
+      if (!customer || cart.pizza.length === 0) {
         return "";
       }
       customer = customer.replace(/\s/g, "+").replace(/[&]/g, "and");
@@ -1088,9 +1117,9 @@
       this.sauces = sauces;
       this.cheese_options = cheese_options;
       this.crusts = crusts;
-      this.split_toppings = $location.search().split == true;
+      this.split_toppings = $location.search().split === true;
 
-      var enable_delivery = $location.search().delivery == true;
+      var enable_delivery = $location.search().delivery === true;
 
       this.ScrollTop = ScrollTopJQ;
 
@@ -1173,7 +1202,7 @@
           if (item.name == wcpconfig.PIZZA_MENU.byo.name) {
             item_name = item.OneLineDisplayToppings();
             short_item_name = item.ShortOneLineDisplayToppings();
-            short_item_name = short_item_name == "" ? "cheese" : short_item_name;
+            short_item_name = short_item_name === "" ? "cheese" : short_item_name;
           }
           str_builder = str_builder + quantity + "x: " + item_name + "\n";
           short_builder = short_builder + quantity + "x: " + short_item_name + "\n";
@@ -1310,7 +1339,7 @@
 
       this.PopulateOrderGuide = function() {
         var addon_chz = this.selection.cheese_option != cheese_options.regular.shortname ? 1 : 0;
-        var addon_crust = this.selection.crust != "regular" ? 1 : 0;
+        var addon_crust = this.selection.crust.flavor.shortname != "regular" ? 1 : 0;
         this.message = "";
         if (this.selection) {
           if (this.selection.bake_count[0] + addon_chz + addon_crust < 2 || this.selection.bake_count[1] + addon_chz + addon_crust < 2) {
