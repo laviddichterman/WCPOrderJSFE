@@ -223,7 +223,7 @@
       }
     }
 
-    function GetCrustCheeseSauceList(pizza, getter, verbose) {
+    function GetSauceDoughCrustCheeseList(pizza, getter, verbose) {
       var ret = [];
       if (verbose || pizza.sauce.shortname != sauces.red.shortname ) {
         ret.push(getter(pizza.sauce));
@@ -288,8 +288,8 @@
 
       //whole toppings begin
       var whole_toppings = split_toppings.whole.map(function(x) { return toppings_array[x].name; });
-      var mod_crust_cheese_sauce = GetCrustCheeseSauceList(this, function(x) { return x.name; }, true);
-      whole_toppings = whole_toppings.concat(mod_crust_cheese_sauce);
+      var sauce_dough_crust_cheese = GetSauceDoughCrustCheeseList(this, function(x) { return x.name; }, true);
+      whole_toppings = sauce_dough_crust_cheese.concat(whole_toppings);
       toppings_sections.push(["Whole", whole_toppings.join(" + ")]);
       //whole toppings end
 
@@ -309,11 +309,12 @@
     this.OneLineDisplayToppings = function() {
       var split_toppings = this.SplitToppingsList();
       var sections = [];
+      sections.push(GetSauceDoughCrustCheeseList(this, function(x) { return x.name; }, true).join(" + "));
+
       var whole_toppings = split_toppings.whole.map(function(x) { return toppings_array[x].name; });
       if (whole_toppings.length > 0) {
         sections.push(whole_toppings.join(" + "));
       }
-      sections.push(GetCrustCheeseSauceList(this, function(x) { return x.name; }, true).join(" + "));
       if (this.is_split) {
         var left = split_toppings.left.length > 0 ? split_toppings.left.map(function(x) { return toppings_array[x].name; }).join(" + ") : "∅";
         var right = split_toppings.right.length > 0 ? split_toppings.right.map(function(x) { return toppings_array[x].name; }).join(" + ") : "∅";
@@ -325,9 +326,9 @@
     this.ShortOneLineDisplayToppings = function() {
       var split_toppings = this.SplitToppingsList();
       var sections = [];
-      var mod_crust_cheese_sauce = GetCrustCheeseSauceList(this, function(x) { return x.shortname; }, false).reverse();
-      if (mod_crust_cheese_sauce.length > 0) {
-        sections.push(mod_crust_cheese_sauce.join(" + "));
+      var sauce_dough_crust_cheese = GetSauceDoughCrustCheeseList(this, function(x) { return x.shortname; }, false).reverse();
+      if (sauce_dough_crust_cheese.length > 0) {
+        sections.push(sauce_dough_crust_cheese.join(" + "));
       }
       var whole_toppings = split_toppings.whole.reverse().map(function(x) { return toppings_array[x].shortname; });
       if (whole_toppings.length > 0) {
@@ -441,14 +442,13 @@
             else {
               // menu pizza with add-ons
               var new_name = pizza_menu[menu_compare].name;
+              new_name = (comparison_info.sauce == 2) ? new_name : new_name.concat(" + ", pizza.sauce.name);
               new_name = (comparison_info.dough == 2) ? new_name : new_name.concat(" + ", pizza.crust.dough.name);
               new_name = (comparison_info.crust == 2) ? new_name : new_name.concat(" + ", pizza.crust.flavor.name);
-              new_name = (comparison_info.sauce == 2) ? new_name : new_name.concat(" + ", pizza.sauce.name);
               new_name = (comparison_info.cheese == 2) ? new_name : new_name.concat(" + ", cheese_options[pizza.cheese_option].name);
               for (var i = comparison_info.toppings[idx].length - 1; i >= 0; --i) { // done in reverse for display ordering
                 new_name = (comparison_info.toppings[idx][i] == 2) ? new_name : new_name.concat(" + ", toppings_array[i].name);
               }
-
               names[idx] = new_name;
             }
             has_name[idx] = true;
