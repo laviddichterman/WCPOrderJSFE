@@ -18,9 +18,6 @@
         <wcppizzacartitem pizza="pmenuCtrl.selection" dots="true" price="true"></wcppizzacartitem>
       </div>
       <hr class="separator">
-      <span ng-if="!pmenuCtrl.suppress_guide && pmenuCtrl.messages.length">
-        <div class="wpcf7-response-output wpcf7-validation-errors" ng-repeat="msg in pmenuCtrl.messages">{{msg}}</div>
-      </span>
       <div ng-if="pmenuCtrl.selection">
         <div>Sauce:</div>
         <div class="flexitems">
@@ -58,6 +55,9 @@
           </div>
         </div>
       </div>
+      <span ng-if="!pmenuCtrl.suppress_guide && pmenuCtrl.messages.length">
+        <div class="wpcf7-response-output wpcf7-validation-errors" ng-repeat="msg in pmenuCtrl.messages">{{msg}}</div>
+      </span>
       <div class="order-nav">
         <span class="one-fifth">
           <button name="remove" class="btn button-remove scrolltotop" ng-click="pmenuCtrl.unsetPizza()">Cancel</button>
