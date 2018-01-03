@@ -225,17 +225,17 @@
 
     function GetCrustCheeseSauceList(pizza, getter, verbose) {
       var ret = [];
-      if (pizza.crust.flavor.shortname != "regular") {
-        ret.push(getter(pizza.crust.flavor));
-      }
-      if (verbose || pizza.cheese_option != cheese_options.regular.shortname ) {
-        ret.push(getter(cheese_options[pizza.cheese_option]));
-      }
       if (verbose || pizza.sauce.shortname != sauces.red.shortname ) {
         ret.push(getter(pizza.sauce));
       }
       if (pizza.crust.dough.shortname != "regular") {
         ret.push(getter(pizza.crust.dough));
+      }
+      if (pizza.crust.flavor.shortname != "regular") {
+        ret.push(getter(pizza.crust.flavor));
+      }
+      if (verbose || pizza.cheese_option != cheese_options.regular.shortname ) {
+        ret.push(getter(cheese_options[pizza.cheese_option]));
       }
       return ret;
     }
@@ -441,13 +441,14 @@
             else {
               // menu pizza with add-ons
               var new_name = pizza_menu[menu_compare].name;
-              new_name = (comparison_info.sauce == 2) ? new_name : pizza.sauce.name.concat(" + ", new_name);
-              new_name = (comparison_info.crust == 2) ? new_name : pizza.crust.flavor.name.concat(" + ", new_name);
-              new_name = (comparison_info.cheese == 2) ? new_name : cheese_options[pizza.cheese_option].name.concat(" + ", new_name);
+              new_name = (comparison_info.dough == 2) ? new_name : new_name.concat(" + ", pizza.crust.dough.name);
+              new_name = (comparison_info.crust == 2) ? new_name : new_name.concat(" + ", pizza.crust.flavor.name);
+              new_name = (comparison_info.sauce == 2) ? new_name : new_name.concat(" + ", pizza.sauce.name);
+              new_name = (comparison_info.cheese == 2) ? new_name : new_name.concat(" + ", cheese_options[pizza.cheese_option].name);
               for (var i = comparison_info.toppings[idx].length - 1; i >= 0; --i) { // done in reverse for display ordering
                 new_name = (comparison_info.toppings[idx][i] == 2) ? new_name : new_name.concat(" + ", toppings_array[i].name);
               }
-              new_name = (comparison_info.dough == 2) ? new_name : pizza.crust.dough.name.concat(" + ", new_name);
+
               names[idx] = new_name;
             }
             has_name[idx] = true;
