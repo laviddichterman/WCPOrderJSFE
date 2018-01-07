@@ -775,15 +775,122 @@
       return printHour.concat(":").concat(printMinute + meridian);
     };
 
-    this.IsDineInHour = function(date, time) {
-      var minmax = this.cfg.HOURS_BY_SERVICE_TYPE[this.cfg.DINEIN][date.getDay()];
-      return time >= minmax[0] && time <= minmax[1];
-    };
-
     this.IsIllinoisAreaCode = function(phone) {
       var numeric_phone = phone.match(/\d/g);
       numeric_phone = numeric_phone.join("");
       return (numeric_phone.length == 10 && (numeric_phone.slice(0,3)) in this.cfg.AREA_CODES);
+    };
+
+    this.GetBlockedOffForDate = function(date, service) {
+      for (var i in this.cfg.BLOCKED_OFF[service]) {
+        if (this.IsSameDay(this.cfg.BLOCKED_OFF[service][i][0], date)) {
+          return this.cfg.BLOCKED_OFF[service][i][1];
+        }
+      }
+      return [];
+    };
+
+    this.HandleBlockedOffTime = function(blockedOff, time) {
+      // param: blockedOff - the blocked off times for the date/service being processed
+      // param: time - the minutes since the day started
+      // return: time if time isn't blocked off, otherwise the next available time
+      var pushedTime = time;
+      for (var i in blockedOff) {
+        if (blockedOff[i][1] >= pushedTime && blockedOff[i][0] <= pushedTime) {
+            pushedTime = blockedOff[i][1] + this.cfg.TIME_STEP;
+        }
+      }
+      return pushedTime;
+    };
+
+    this.GetServiceIntervalsForDate = function(date, service) {
+      var blocked_off = this.GetBlockedOffForDate(date, service);
+      var minmax = this.cfg.HOURS_BY_SERVICE_TYPE[service][date.getDay()];
+      if (blocked_off.length === 0) {
+        return [minmax];
+      }
+      var earliest = this.HandleBlockedOffTime(blocked_off, minmax[0]);
+      var interval = [earliest, earliest];
+      var intervals = [];
+      while (earliest <= minmax[1]) {
+        var next_time = this.HandleBlockedOffTime(blocked_off, earliest + this.cfg.TIME_STEP);
+        if (next_time != earliest + this.cfg.TIME_STEP || next_time > minmax[1]) {
+          intervals.push(current_interval);
+          current_interval = [next_time, next_time];
+        }
+        else {
+          current_interval[1] = next_time;
+        }
+        earliest = next_time;
+      }
+      return intervals;
+    }
+
+    this.GetFirstAvailableTime = function(date, service, size, cart_based_lead_time) {
+      // param date: the date we're looking for the earliest time
+      // param service: the service type enum
+      // param size: the order size
+      // param cart_based_lead_time: any minimum preorder times associated with the specific items in the cart
+      var blocked_off = this.GetBlockedOffForDate(date, service);
+      var minmax = this.cfg.HOURS_BY_SERVICE_TYPE[service][date.getDay()];
+      // cart_based_lead_time and service/size lead time don't stack
+      var leadtime = Math.max(this.cfg.LEAD_TIME[service] + ((size-1) * this.cfg.ADDITIONAL_PIE_LEAD_TIME), cart_based_lead_time);
+
+      var current_time_plus_leadtime = new Date(timing_info.current_time.getTime() + (leadtime * 60000));
+      if (this.IsFirstDatePreviousDayToSecond(date, current_time_plus_leadtime)) {
+        // if by adding the lead time we've passed the date we're looking for
+        return minmax[1] + this.cfg.TIME_STEP;
+      }
+
+      if (this.IsSameDay(date, current_time_plus_leadtime)) {
+        var current_time_plus_leadtime_mins_from_start = this.DateToMinutes(current_time_plus_leadtime);
+        if (current_time_plus_leadtime_mins_from_start > minmax[0]) {
+          return this.HandleBlockedOffTime(blocked_off, Math.ceil((current_time_plus_leadtime_mins_from_start) / this.cfg.TIME_STEP) * this.cfg.TIME_STEP);
+        }
+      }
+      return this.HandleBlockedOffTime(blocked_off, minmax[0]);
+    };
+
+    this.DisableExhaustedDates = function(date, service, size, cart_based_lead_time) {
+      // checks if orders can still be placed for the
+      // given date, service type, and order size
+      // param cart_based_lead_time: any minimum preorder times associated with the specific items in the cart
+      // return: true if orders can still be placed, false otherwise
+      var maxtime = this.cfg.HOURS_BY_SERVICE_TYPE[service][date.getDay()][1];
+      return this.GetFirstAvailableTime(date, service, size, cart_based_lead_time) <= maxtime;
+    };
+
+    this.DisableFarOutDates = function(date) {
+      // disables dates more than a year out from the current date
+      var load_time_plus_year = new Date(timing_info.current_time);
+      load_time_plus_year.setFullYear(timing_info.load_time.getFullYear() + 1);
+      return date <= load_time_plus_year;
+    };
+
+    this.IsDateActive = function(date, service, size, cart_based_lead_time) {
+      return !this.IsPreviousDay(date) && this.DisableExhaustedDates(date, service, size, cart_based_lead_time) && this.DisableFarOutDates(date);
+    };
+
+    this.GetStartTimes = function(userDate, service, size, cart_based_lead_time) {
+      var times = [];
+      var earliest = this.GetFirstAvailableTime(userDate, service, size, cart_based_lead_time);
+      var blockedOff = this.GetBlockedOffForDate(userDate, service);
+      var latest = this.cfg.HOURS_BY_SERVICE_TYPE[service][userDate.getDay()][1];
+      while (earliest <= latest) {
+        times.push(earliest);
+        earliest = this.HandleBlockedOffTime(blockedOff, earliest + this.cfg.TIME_STEP);
+      }
+      return times;
+    };
+
+    this.IsDineInHour = function(date, time) {
+      var service_intervals = this.GetServiceIntervalsForDate(date, this.cfg.DINEIN);
+      for (var i in service_intervals) {
+        if (time >= service_intervals[i][0] && time <= service_intervals[i][1]) {
+          return true;
+        }
+      }
+      return false;
     };
 
     this.AutomatedInstructionsBuilder = function(service_type, date, time, special_instructions, placed_during_dinein) {
@@ -938,84 +1045,6 @@
       return es;
     };
 
-    this.GetBlockedOffForDate = function(date, service) {
-      for (var i in this.cfg.BLOCKED_OFF[service]) {
-        if (this.IsSameDay(this.cfg.BLOCKED_OFF[service][i][0], date)) {
-          return this.cfg.BLOCKED_OFF[service][i][1];
-        }
-      }
-      return [];
-    };
-
-    this.HandleBlockedOffTime = function(blockedOff, time) {
-      // param: blockedOff - the blocked off times for the date/service being processed
-      // param: time - the minutes since the day started
-      // return: time if time isn't blocked off, otherwise the next available time
-      var pushedTime = time;
-      for (var i in blockedOff) {
-        if (blockedOff[i][1] >= pushedTime && blockedOff[i][0] <= pushedTime) {
-            pushedTime = blockedOff[i][1] + this.cfg.TIME_STEP;
-        }
-      }
-      return pushedTime;
-    };
-
-    this.GetFirstAvailableTime = function(date, service, size, cart_based_lead_time) {
-      // param date: the date we're looking for the earliest time
-      // param service: the service type enum
-      // param size: the order size
-      // param cart_based_lead_time: any minimum preorder times associated with the specific items in the cart
-      var blocked_off = this.GetBlockedOffForDate(date, service);
-      var minmax = this.cfg.HOURS_BY_SERVICE_TYPE[service][date.getDay()];
-      // cart_based_lead_time and service/size lead time don't stack
-      var leadtime = Math.max(this.cfg.LEAD_TIME[service] + ((size-1) * this.cfg.ADDITIONAL_PIE_LEAD_TIME), cart_based_lead_time);
-
-      var current_time_plus_leadtime = new Date(timing_info.current_time.getTime() + (leadtime * 60000));
-      if (this.IsFirstDatePreviousDayToSecond(date, current_time_plus_leadtime)) {
-        // if by adding the lead time we've passed the date we're looking for
-        return minmax[1] + this.cfg.TIME_STEP;
-      }
-
-      if (this.IsSameDay(date, current_time_plus_leadtime)) {
-        var current_time_plus_leadtime_mins_from_start = this.DateToMinutes(current_time_plus_leadtime);
-        if (current_time_plus_leadtime_mins_from_start > minmax[0]) {
-          return this.HandleBlockedOffTime(blocked_off, Math.ceil((current_time_plus_leadtime_mins_from_start) / this.cfg.TIME_STEP) * this.cfg.TIME_STEP);
-        }
-      }
-      return this.HandleBlockedOffTime(blocked_off, minmax[0]);
-    };
-
-    this.DisableExhaustedDates = function(date, service, size, cart_based_lead_time) {
-      // checks if orders can still be placed for the
-      // given date, service type, and order size
-      // param cart_based_lead_time: any minimum preorder times associated with the specific items in the cart
-      // return: true if orders can still be placed, false otherwise
-      var maxtime = this.cfg.HOURS_BY_SERVICE_TYPE[service][date.getDay()][1];
-      return this.GetFirstAvailableTime(date, service, size, cart_based_lead_time) <= maxtime;
-    };
-
-    this.DisableFarOutDates = function(date) {
-      // disables dates more than a year out from the current date
-      var load_time_plus_year = new Date(timing_info.current_time);
-      load_time_plus_year.setFullYear(timing_info.load_time.getFullYear() + 1);
-      return date <= load_time_plus_year;
-    };
-
-    this.IsDateActive = function(date, service, size, cart_based_lead_time) {
-      return !this.IsPreviousDay(date) && this.DisableExhaustedDates(date, service, size, cart_based_lead_time) && this.DisableFarOutDates(date);
-    };
-
-    this.GetStartTimes = function(userDate, service, size, cart_based_lead_time) {
-      var times = [];
-      var earliest = this.GetFirstAvailableTime(userDate, service, size, cart_based_lead_time);
-      var blockedOff = this.GetBlockedOffForDate(userDate, service);
-      var latest = this.cfg.HOURS_BY_SERVICE_TYPE[service][userDate.getDay()][1];
-      while (earliest <= latest) {
-        times.push(earliest);
-        earliest = this.HandleBlockedOffTime(blockedOff, earliest + this.cfg.TIME_STEP);
-      }
-      return times;
-    };
   };
 
   var wcporderhelper = new WCPOrderHelper();

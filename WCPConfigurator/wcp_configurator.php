@@ -194,6 +194,7 @@ function WCP_options_page(  ) {
       }
 
       function CompareIntervals(a, b) {
+        // compares the starting time of two intervals
         return (a[0] < b[0] ? -1 : (a[0] > b[0] ? 1 : 0));
       }
 
