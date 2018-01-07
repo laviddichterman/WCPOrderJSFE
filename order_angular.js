@@ -146,25 +146,25 @@
 
   var idx = 0;
   var toppings_array = [
-    new WCPTopping("Hot Giardiniera", "giard", 2, idx++, no_restriction, 1, 1),
-    new WCPTopping("Bleu", "bleu", 2, idx++, no_restriction, 1, 1),
-    new WCPTopping("Candied Bacon", "bacon", 2, idx++, no_restriction, 1, 1),
-    new WCPTopping("Brussels Sprout", "brussels", 2, idx++, enable_on_white, 1, 1),
-    new WCPTopping("Meatball", "meatball", 4, idx++, disable_on_gf, 1, 2),
-    new WCPTopping("House Sausage", "sausage", 2, idx++, disable_on_chicken_sausage, 1, 1),
-    new WCPTopping("Rosemary Chicken Sausage", "chix", 2, idx++, disable_on_pork_sausage, 1, 1),
-    new WCPTopping("Pineapple", "pine", 2, idx++, no_restriction, 1, 1),
-    new WCPTopping("Roasted Red Bell Pepper", "rbp", 2, idx++, no_restriction, 1, 1),
-    //new WCPTopping("Green Bell Pepper", "gbp", 2, idx++, no_restriction, 1, 1),
-    new WCPTopping("Sweet Hot Pepper", "shp", 2, idx++, no_restriction, 1, 1),
-    new WCPTopping("Caramelized Onion", "carm_onion", 2, idx++, no_restriction, 1, 1),
-    new WCPTopping("Raw Red Onion", "raw_onion", 2, idx++, no_restriction, 1, 1),
-    new WCPTopping("Kalamata Olive", "kala", 2, idx++, no_restriction, 1, 1),
-    new WCPTopping("Castelvetrano Olive", "castel", 2, idx++, no_restriction, 1, 1),
-    new WCPTopping("Mushroom", "mush", 2, idx++, no_restriction, 1, 1),
-    new WCPTopping("Jalapeño", "jala", 2, idx++, no_restriction, 1, 1),
+    new WCPTopping("Pepperoni", "pepperoni", 2, idx++, no_restriction, 1, 1),
     new WCPTopping("Spinach", "spin", 2, idx++, no_restriction, 1, 1),
-    new WCPTopping("Pepperoni", "pepperoni", 2, idx++, no_restriction, 1, 1)
+    new WCPTopping("Jalapeño", "jala", 2, idx++, no_restriction, 1, 1),
+    new WCPTopping("Mushroom", "mush", 2, idx++, no_restriction, 1, 1),
+    new WCPTopping("Castelvetrano Olive", "castel", 2, idx++, no_restriction, 1, 1),
+    new WCPTopping("Kalamata Olive", "kala", 2, idx++, no_restriction, 1, 1),
+    new WCPTopping("Raw Red Onion", "raw_onion", 2, idx++, no_restriction, 1, 1),
+    new WCPTopping("Caramelized Onion", "carm_onion", 2, idx++, no_restriction, 1, 1),
+    new WCPTopping("Sweet Hot Pepper", "shp", 2, idx++, no_restriction, 1, 1),
+    //new WCPTopping("Green Bell Pepper", "gbp", 2, idx++, no_restriction, 1, 1),
+    new WCPTopping("Roasted Red Bell Pepper", "rbp", 2, idx++, no_restriction, 1, 1),
+    new WCPTopping("Pineapple", "pine", 2, idx++, no_restriction, 1, 1),
+    new WCPTopping("Rosemary Chicken Sausage", "chix", 2, idx++, disable_on_pork_sausage, 1, 1),
+    new WCPTopping("House Sausage", "sausage", 2, idx++, disable_on_chicken_sausage, 1, 1),
+    new WCPTopping("Meatball", "meatball", 4, idx++, disable_on_gf, 1, 2),
+    new WCPTopping("Brussels Sprout", "brussels", 2, idx++, enable_on_white, 1, 1),
+    new WCPTopping("Candied Bacon", "bacon", 2, idx++, no_restriction, 1, 1),
+    new WCPTopping("Bleu", "bleu", 2, idx++, no_restriction, 1, 1),
+    new WCPTopping("Hot Giardiniera", "giard", 2, idx++, no_restriction, 1, 1),
   ];
   function initializeToppingsDict() {
     for (var i in toppings_array) {
@@ -330,13 +330,13 @@
       if (sauce_dough_crust_cheese.length > 0) {
         sections.push(sauce_dough_crust_cheese.join(" + "));
       }
-      var whole_toppings = split_toppings.whole.reverse().map(function(x) { return toppings_array[x].shortname; });
+      var whole_toppings = split_toppings.whole.map(function(x) { return toppings_array[x].shortname; });
       if (whole_toppings.length > 0) {
         sections.push(whole_toppings.join(" + "));
       }
       if (this.is_split) {
-        var left = split_toppings.left.length > 0 ? split_toppings.left.reverse().map(function(x) { return toppings_array[x].shortname; }).join(" + ") : "∅";
-        var right = split_toppings.right.length > 0 ? split_toppings.right.reverse().map(function(x) { return toppings_array[x].shortname; }).join(" + ") : "∅";
+        var left = split_toppings.left.length > 0 ? split_toppings.left.map(function(x) { return toppings_array[x].shortname; }).join(" + ") : "∅";
+        var right = split_toppings.right.length > 0 ? split_toppings.right.map(function(x) { return toppings_array[x].shortname; }).join(" + ") : "∅";
         sections.push("(" + [left, right].join(" | ") + ")");
       }
       return sections.join(" + ");
