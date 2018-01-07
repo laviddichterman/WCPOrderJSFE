@@ -1,4 +1,4 @@
-<div class="orderform" ng-app="WCPOrder" ng-controller="OrderController as orderCtrl">
+<div ng-cloak class="orderform" ng-app="WCPOrder" ng-controller="OrderController as orderCtrl">
   <span id="ordertop"></span>
   <div ng-show="orderCtrl.s.stage == 0 || orderCtrl.s.stage == 1" ng-controller="PizzaMenuController as pmenuCtrl">
     <div class="ordering-menu menu-list menu-list__dotted" ng-show="orderCtrl.s.stage == 0 && !pmenuCtrl.selection">
