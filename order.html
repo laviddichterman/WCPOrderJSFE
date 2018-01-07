@@ -7,7 +7,7 @@
       <ul class="flexitems menu-list__items">
         <li class="flexitem menu-list__item" ng-repeat="pizza in pmenuCtrl.pizza_menu">
           <div class="offer-link" ng-click="orderCtrl.ScrollTop(); pmenuCtrl.setPizza(pizza)">
-            <wcppizzacartitem pizza="pizza" dots="true" price="true"></wcppizzacartitem>
+            <wcppizzacartitem pizza="pizza" description="true" dots="true" price="true"></wcppizzacartitem>
           </div>
         </li>
       </ul>
@@ -15,7 +15,7 @@
     <div class="customizer menu-list__items" ng-show="pmenuCtrl.selection">
       <h3 class="flush--top"><strong>Customize your pizza</strong></h3>
       <div class="menu-list__item">
-        <wcppizzacartitem pizza="pmenuCtrl.selection" dots="true" price="true"></wcppizzacartitem>
+        <wcppizzacartitem pizza="pmenuCtrl.selection" description="false" dots="true" price="true"></wcppizzacartitem>
       </div>
       <hr class="separator">
       <div ng-if="pmenuCtrl.selection">
@@ -98,7 +98,7 @@
                 <td>
                   <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
                     <div class="menu-list__item">
-                      <wcppizzacartitem pizza="item[1]" dots="false" price="false"></wcppizzacartitem>
+                      <wcppizzacartitem pizza="item[1]" description="true" dots="false" price="false"></wcppizzacartitem>
                     </div>
                   </div>
                 </td>
@@ -249,7 +249,7 @@
                 <td class="cart-item-description">
                   <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
                     <div class="menu-list__item">
-                      <wcppizzacartitem pizza="item[1]" dots="false" price="false"></wcppizzacartitem>
+                      <wcppizzacartitem pizza="item[1]" description="true" dots="false" price="false"></wcppizzacartitem>
                     </div>
                   </div>
                 </td>

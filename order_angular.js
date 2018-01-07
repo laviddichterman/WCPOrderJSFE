@@ -1,13 +1,12 @@
-// TODO: handle leaving page before submitting (onbeforeunload)
+  // TODO: make before load less ugly
+  // TODO: handle leaving page before submitting (onbeforeunload)
   // TODO: guided menu help/suggestions
   // TODO: tooltip explanations of disabled items
   // TODO: half toppings UI
-  // TODO: half pizza naming conventions
   // TODO: notice about cancellation
   // TODO: intercept back/forward button
   // TODO: add privacy notice
   // TODO: multiple of same pizza menu guide
-  // TODO: move garlic, extra cheese, white sauce to before the pizza name
   // TODO: update abbreviations for toppings
   var $j = jQuery.noConflict();
 
@@ -323,23 +322,27 @@
       return sections.join(" + ");
     };
 
-    this.ShortOneLineDisplayToppings = function() {
-      var split_toppings = this.SplitToppingsList();
-      var sections = [];
-      var sauce_dough_crust_cheese = GetSauceDoughCrustCheeseList(this, function(x) { return x.shortname; }, false).reverse();
-      if (sauce_dough_crust_cheese.length > 0) {
-        sections.push(sauce_dough_crust_cheese.join(" + "));
+    this.ShortOneLineName = function() {
+      if (this.name == wcpconfig.PIZZA_MENU.byo.name) {
+        var split_toppings = this.SplitToppingsList();
+        var sections = [];
+        var sauce_dough_crust_cheese = GetSauceDoughCrustCheeseList(this, function(x) { return x.shortname; }, false).reverse();
+        if (sauce_dough_crust_cheese.length > 0) {
+          sections.push(sauce_dough_crust_cheese.join(" + "));
+        }
+        var whole_toppings = split_toppings.whole.map(function(x) { return toppings_array[x].shortname; });
+        if (whole_toppings.length > 0) {
+          sections.push(whole_toppings.join(" + "));
+        }
+        if (this.is_split) {
+          var left = split_toppings.left.length > 0 ? split_toppings.left.map(function(x) { return toppings_array[x].shortname; }).join(" + ") : "∅";
+          var right = split_toppings.right.length > 0 ? split_toppings.right.map(function(x) { return toppings_array[x].shortname; }).join(" + ") : "∅";
+          sections.push("(" + [left, right].join(" | ") + ")");
+        }
+        var short_item_name = sections.join(" + ");
+        return short_item_name === "" ? "cheese" : short_item_name;
       }
-      var whole_toppings = split_toppings.whole.map(function(x) { return toppings_array[x].shortname; });
-      if (whole_toppings.length > 0) {
-        sections.push(whole_toppings.join(" + "));
-      }
-      if (this.is_split) {
-        var left = split_toppings.left.length > 0 ? split_toppings.left.map(function(x) { return toppings_array[x].shortname; }).join(" + ") : "∅";
-        var right = split_toppings.right.length > 0 ? split_toppings.right.map(function(x) { return toppings_array[x].shortname; }).join(" + ") : "∅";
-        sections.push("(" + [left, right].join(" | ") + ")");
-      }
-      return sections.join(" + ");
+      return this.name;
     };
 
     this.Compare = function(other) {
@@ -420,9 +423,16 @@
 
     this.RecomputeName = function() {
       var byo_shortcode = BuildCustomShortcode(this);
+      var shortcodes = [byo_shortcode, byo_shortcode];
+
       var has_name = [false, false];
       var names = ["", ""];
-      var shortcodes = [byo_shortcode, byo_shortcode];
+      var name_components = {sauce: null, cheese: null, dough: null, crust: null};
+      var toppings_name_tracker = [];
+      for (var i in toppings_array) {
+        toppings_name_tracker.push([0, 0]);
+      }
+
 
       function ComputeForSide(pizza, idx, comparison, menu_compare) {
         if (has_name[idx]) {
@@ -435,24 +445,24 @@
             has_name[idx] = true;
             break;
           case 1: // at least other
-            if (menu_compare == "byo") {
-              // non-menu BYO
-              names[idx] = pizza_menu[menu_compare].name;
-            }
-            else {
-              // menu pizza with add-ons
-              var new_name = pizza_menu[menu_compare].name;
-              new_name = (comparison_info.sauce == 2) ? new_name : new_name.concat(" + ", pizza.sauce.name);
-              new_name = (comparison_info.dough == 2) ? new_name : new_name.concat(" + ", pizza.crust.dough.name);
-              new_name = (comparison_info.crust == 2) ? new_name : new_name.concat(" + ", pizza.crust.flavor.name);
-              new_name = (comparison_info.cheese == 2) ? new_name : new_name.concat(" + ", cheese_options[pizza.cheese_option].name);
-              for (var i = comparison_info.toppings[idx].length - 1; i >= 0; --i) { // done in reverse for display ordering
-                new_name = (comparison_info.toppings[idx][i] == 2) ? new_name : new_name.concat(" + ", toppings_array[i].name);
+            // menu pizza with add-ons
+            //names[idx] = menu_compare == "byo" ? "" : pizza_menu[menu_compare].name;
+            names[idx] = pizza_menu[menu_compare].name;
+
+            // first pull out any sauce, dough, crust, cheese differences
+            name_components.sauce = (comparison_info.sauce == 2) ? name_components.sauce : pizza.sauce;
+            name_components.dough = (comparison_info.dough == 2) ? name_components.dough : pizza.crust.dough;
+            name_components.crust = (comparison_info.crust == 2) ? name_components.crust : pizza.crust.flavor;
+            name_components.cheese = (comparison_info.cheese == 2) ? name_components.cheese : cheese_options[pizza.cheese_option];
+
+            // determine what toppings are additions for the matching pizza
+            for (var i in comparison_info.toppings[idx]) {
+              if (comparison_info.toppings[idx][i] === 1) {
+                toppings_name_tracker[i][idx] = 1;
               }
-              names[idx] = new_name;
             }
-            has_name[idx] = true;
-            break;
+          has_name[idx] = true;
+          break;
           default: // no match, no need to create any name
         }
       }
@@ -466,12 +476,71 @@
         ComputeForSide(this, 0, comparison_left, menu_pizza);
         ComputeForSide(this, 1, comparison_right, menu_pizza);
         if (has_name[0] && has_name[1]) {
-          // finished, determine full name and assign shortcode
-          this.name = this.is_split ? names.join(" | ") : names[0];
+          // finished, assign shortcode (easy), then determine full name (harder)
           this.shortcode = this.is_split ? shortcodes.join("|") : shortcodes[0];
+
+          // split out toppings into left additions, right additions, and whole additions
+          var additional_toppings = {left: [], right: [], whole: []};
+          for (var i in toppings_name_tracker) {
+            if (toppings_name_tracker[i][0] == 1 && toppings_name_tracker[i][1] == 1) {
+              additional_toppings.whole.push(toppings_array[i]);
+            }
+            else if (toppings_name_tracker[i][0] == 1 && toppings_name_tracker[i][1] == 0) {
+              additional_toppings.left.push(toppings_array[i]);
+            }
+            else if (toppings_name_tracker[i][0] == 0 && toppings_name_tracker[i][1] == 1) {
+              additional_toppings.right.push(toppings_array[i]);
+            }
+          }
+          var split_toppings = ["∅", "∅"];
+          if (additional_toppings.left.length) {
+            split_toppings[0] = additional_toppings.left.map(function(x) { return x.name; }).join(" + ");
+          }
+          if (additional_toppings.right.length) {
+            split_toppings[1] = additional_toppings.right.map(function(x) { return x.name; }).join(" + ");
+          }
+
+          var name_components_list = [];
+          if (name_components.sauce) {
+            name_components_list.push(name_components.sauce.name);
+          }
+          if (name_components.dough) {
+            name_components_list.push(name_components.dough.name);
+          }
+          if (name_components.crust) {
+            name_components_list.push(name_components.crust.name);
+          }
+          if (name_components.cheese) {
+            name_components_list.push(name_components.cheese.name);
+          }
+          name_components_list = name_components_list.concat(additional_toppings.whole.map(function(x) { return x.name; }));
+
+          if (this.is_split) {
+            if (names[0] == names[1]) {
+              name_components_list.unshift(names[0]);
+              name_components_list.push("(" + split_toppings.join(" | ") + ")");
+            }
+            else {
+              if (additional_toppings.left.length) {
+                names[0] = names[0] + " + " + split_toppings[0];
+              }
+              if (additional_toppings.right.length) {
+                names[1] = names[1] + " + " + split_toppings[1];
+              }
+              name_components_list.push("(" + names.join(" | ") + ")");
+            }
+          }
+          else {
+            combined_menu_name = names[0];
+            name_components_list.unshift(combined_menu_name);
+          }
+          this.name = name_components_list.join(" + ");
+
           return;
         }
       }
+
+
     };
 
     this.UpdatePie = function() {
@@ -1234,12 +1303,10 @@
           var quantity = this.s.cart.pizza[i][0];
           var item = this.s.cart.pizza[i][1];
           var item_name = item.name;
-          var short_item_name = item.name;
+          var short_item_name = item.ShortOneLineName();
           // if we need to identify this by its ingredients and not a "name"
           if (item.name == wcpconfig.PIZZA_MENU.byo.name) {
             item_name = item.OneLineDisplayToppings();
-            short_item_name = item.ShortOneLineDisplayToppings();
-            short_item_name = short_item_name === "" ? "cheese" : short_item_name;
           }
           str_builder = str_builder + quantity + "x: " + item_name + "\n";
           short_builder = short_builder + quantity + "x: " + short_item_name + "\n";
@@ -1423,6 +1490,7 @@
           pizza: "=pizza",
           dots: "=dots",
           price: "=price",
+          description: "=description"
         },
         controller: function () {
         },
@@ -1431,8 +1499,8 @@
         template:
         '<h4 class="menu-list__item-title"><span class="item_title">{{ctrl.pizza.name}}</span><span ng-if="ctrl.dots" class="dots"></span></h4>'+
         '<p ng-repeat="topping_section in ctrl.pizza.toppings_sections" class="menu-list__item-desc">'+
-          '<span class="desc__content">'+
-            '<span ng-if="ctrl.pizza.is_split"><strong>{{topping_section[0]}}:</strong></span>'+
+          '<span ng-if="ctrl.description" class="desc__content">'+
+            '<span ng-if="ctrl.pizza.is_split"><strong>{{topping_section[0]}}: </strong></span>'+
             '<span>{{topping_section[1]}}</span>'+
           '</span>'+
         '</p>'+
