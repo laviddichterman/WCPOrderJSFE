@@ -1,4 +1,3 @@
-  // TODO: make before load less ugly
   // TODO: handle leaving page before submitting (onbeforeunload)
   // TODO: guided menu help/suggestions
   // TODO: tooltip explanations of disabled items
@@ -427,12 +426,11 @@
 
       var has_name = [false, false];
       var names = ["", ""];
-      var name_components = {sauce: null, cheese: null, dough: null, crust: null};
+      var name_components = {sauce: null, cheese: null, dough: null, crust: null, split: null, whole: null};
       var toppings_name_tracker = [];
       for (var i in toppings_array) {
         toppings_name_tracker.push([0, 0]);
       }
-
 
       function ComputeForSide(pizza, idx, comparison, menu_compare) {
         if (has_name[idx]) {
@@ -450,10 +448,10 @@
             names[idx] = pizza_menu[menu_compare].name;
 
             // first pull out any sauce, dough, crust, cheese differences
-            name_components.sauce = (comparison_info.sauce == 2) ? name_components.sauce : pizza.sauce;
-            name_components.dough = (comparison_info.dough == 2) ? name_components.dough : pizza.crust.dough;
-            name_components.crust = (comparison_info.crust == 2) ? name_components.crust : pizza.crust.flavor;
-            name_components.cheese = (comparison_info.cheese == 2) ? name_components.cheese : cheese_options[pizza.cheese_option];
+            name_components.sauce = (comparison_info.sauce == 1 || menu_compare == "byo") ? pizza.sauce : name_components.sauce;
+            name_components.dough = (comparison_info.dough == 1) ? pizza.crust.dough : name_components.dough;
+            name_components.crust = (comparison_info.crust == 1) ? pizza.crust.flavor : name_components.crust;
+            name_components.cheese = (comparison_info.cheese == 1 || menu_compare == "byo") ? cheese_options[pizza.cheese_option] : name_components.cheese;
 
             // determine what toppings are additions for the matching pizza
             for (var i in comparison_info.toppings[idx]) {
@@ -477,7 +475,7 @@
         ComputeForSide(this, 1, comparison_right, menu_pizza);
         if (has_name[0] && has_name[1]) {
           // finished, assign shortcode (easy), then determine full name (harder)
-          this.shortcode = this.is_split ? shortcodes.join("|") : shortcodes[0];
+          this.shortcode = this.is_split && shortcodes[0] != shortcodes[1] ? shortcodes.join("|") : shortcodes[0];
 
           // split out toppings into left additions, right additions, and whole additions
           var additional_toppings = {left: [], right: [], whole: []};
@@ -1223,7 +1221,7 @@
       this.sauces = sauces;
       this.cheese_options = cheese_options;
       this.crusts = crusts;
-      this.split_toppings = $location.search().split === true;
+      this.split_toppings = true;//$location.search().split === true;
 
       var enable_delivery = $location.search().delivery === true;
 
