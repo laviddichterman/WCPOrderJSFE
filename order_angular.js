@@ -818,8 +818,9 @@
     };
     this.NOTE_SPECIAL_INSTRUCTIONS = "Since you specified special instructions, we will let you know if we can accommodate your request. We may need your confirmation if your instructions will incur an additional cost or we cannot accommodate them, so please watch your email.";
     this.NOTE_KEEP_LEVEL = "Be sure to travel with your pizza as flat as possible, on the floor or in the trunk. Seats are generally not a level surface.";
-    this.NOTE_PICKUP_BEFORE_DI = "We won't be open for dine-in at the time of your pickup. Our door will be locked. Please text 206.486.4743 or respond to this email thread when you've arrived at the northernmost door of 1417 Elliott Ave W, 98119, facing Elliott Ave W so we can let you in. Please let us know if you have any additional questions about the pickup process.";
+    this.NOTE_PICKUP_BEFORE_DI = "We won't be open for dine-in at the time of your pickup. Our door may be locked. Please text 206.486.4743 or respond to this email thread when you've arrived at the northernmost door of 1417 Elliott Ave W, 98119, facing Elliott Ave W so we can let you in. Please let us know if you have any additional questions about the pickup process.";
     this.NOTE_PICKUP_DURING_DI = "We'll be open for dining service so please come to the Windy City Pie counter inside the Batch Bar and inform us the name under which the order was placed.";
+    this.NOTE_PICKUP_AFTER_DI = "We'll be ending our dine-in service at the time of your pickup. Please come to the Windy City Pie counter inside the Batch Bar and inform us the name under which the order was placed.";
     this.NOTE_DI = "Please come to our counter and let us know the name under which your order was placed. Please arrive promptly so your pizza is as fresh as possible and you have time to get situated and get beverages from the Batch Bar.";
     this.NOTE_DELIVERY_BETA = "Our catering offering is current in a limited beta. We'll reach out shortly to determine our availability for the requested time and to get a better idea of your needs.";
     this.NOTE_PAYMENT = "We happily accept any major credit card or cash for payment upon arrival.";
@@ -984,21 +985,24 @@
       return times;
     };
 
-    this.IsDineInHour = function(date, time) {
+    this.RelationshipToDineInHour = function(date, time) {
+      // return:
+      //  0: before dine-in
+      //  1: during dine-in
+      //  2: after dine-in
       var service_intervals = this.GetServiceIntervalsForDate(date, this.cfg.DINEIN);
       for (var i in service_intervals) {
         if (time >= service_intervals[i][0] && time <= service_intervals[i][1]) {
-          return true;
+          return 1;
         }
       }
-      return false;
+      return service_intervals.length && service_intervals[service_intervals.length-1][1] < time ? 2 : 0;
     };
 
     this.AutomatedInstructionsBuilder = function(service_type, date, time, special_instructions, placed_during_dinein) {
       if (date === null || isNaN(time)) {
         return "";
       }
-      var service_during_dine_in = this.IsDineInHour(date, time);
       var has_special_instructions = special_instructions && special_instructions.length > 0;
 
       var response_time = placed_during_dinein ? "shortly" : "as soon as we're able";
@@ -1030,26 +1034,14 @@
         return "";
       }
 
-      var service_during_dine_in = this.IsDineInHour(date, time);
+      var service_during_dine_in = this.RelationshipToDineInHour(date, time);
       var service_time_print = this.MinutesToPrintTime(time);
       var nice_area_code = this.IsIllinoisAreaCode(phone);
       var confirm_string_array = [];
       switch (service_type) {
         case this.cfg.DELIVERY: confirm_string_array = ["NOT SUPPORTED"]; break;
         case this.cfg.PICKUP:
-          if (service_during_dine_in) {
-            var opener = nice_area_code ? "Nice area code! " : "";
-            confirm_string_array = [
-              opener,
-              "We're happy to confirm your pickup order for ",
-              service_time_print,
-              " at the Batch Bar (1417 Elliott Ave W, 98119, the northernmost door).\n\n",
-              this.cfg.NOTE_PICKUP_DURING_DI,
-              " We are a 21 and up establishment, so let us know now if anyone in the party is under 21 so we can make alternate arrangements for pickup. If you have any questions please contact us immediately by responding to this email thread. ",
-              this.cfg.NOTE_PAYMENT
-            ];
-          }
-          else {
+          if (service_during_dine_in === 0) {
             var opener = nice_area_code ? "Hello, nice area code, and thanks for your order! " : "Hello and thanks for your order! ";
             confirm_string_array = [
               opener,
@@ -1058,6 +1050,18 @@
               ".\n\n",
               this.cfg.NOTE_PICKUP_BEFORE_DI,
               " ",
+              this.cfg.NOTE_PAYMENT
+            ];
+          }
+          else {
+            var opener = nice_area_code ? "Nice area code! " : "";
+            confirm_string_array = [
+              opener,
+              "We're happy to confirm your pickup order for ",
+              service_time_print,
+              " at the Batch Bar (1417 Elliott Ave W, 98119, the northernmost door).\n\n",
+              service_during_dine_in === 1 ? this.cfg.NOTE_PICKUP_DURING_DI : this.cfg.NOTE_PICKUP_AFTER_DI,
+              " We are a 21 and up establishment, so let us know now if anyone in the party is under 21 so we can make alternate arrangements for pickup. If you have any questions please contact us immediately by responding to this email thread. ",
               this.cfg.NOTE_PAYMENT
             ];
           }
@@ -1728,7 +1732,7 @@
               timing_info.load_time_diff = time_diff;
             }
             timing_info.current_time = new Date(timing_info.load_time.getTime() + timing_info.load_time_diff);
-            timing_info.order_placed_during_dining = OrderHelper.IsDineInHour(timing_info.current_time, OrderHelper.DateToMinutes(timing_info.current_time));
+            timing_info.order_placed_during_dining = OrderHelper.RelationshipToDineInHour(timing_info.current_time, OrderHelper.DateToMinutes(timing_info.current_time));
             UpdateLeadTime();
             SlowSubmitterCheck();
             AutomatedInstructionsSetter();
