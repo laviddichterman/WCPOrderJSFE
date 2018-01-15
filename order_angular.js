@@ -400,7 +400,6 @@
       // TODO: this logic lacks elegance. Fix that.
       var byo_shortcode = BuildCustomShortcode(this);
       var shortcodes = [byo_shortcode, byo_shortcode];
-
       var menu_match = [null, null];
       var shortname_components = {sauce: null, cheese: null, dough: null, crust: null};
       var name_components = {sauce: null, cheese: null, dough: null, crust: null};
@@ -455,6 +454,9 @@
         console.assert(menu_match[0] !== null && menu_match[1] !== null, "We should have both names determined by now.");
         // assign shortcode (easy)
         pizza.shortcode = pizza.is_split && shortcodes[0] !== shortcodes[1] ? shortcodes.join("|") : shortcodes[0];
+
+        // set byo flag
+        pizza.is_byo = menu_match[0] === pizza_menu["byo"] || menu_match[1] === pizza_menu["byo"];
 
         // split out toppings into left additions, right additions, and whole additions
         var additional_toppings = {left: [], right: [], whole: []};
@@ -577,6 +579,8 @@
     this.toppings_sections = [];
     this.bake_count = [0, 0];
     this.flavor_count = [0, 0];
+    this.shortname = "undef";
+    this.is_byo = false;
     for (var i in toppings_array) {
       this.toppings_tracker.push(0);
     }
@@ -1521,7 +1525,7 @@
         template:
         '<h4 class="menu-list__item-title"><span class="item_title">{{ctrl.pizza.name}}</span><span ng-if="ctrl.dots" class="dots"></span></h4>'+
         '<p ng-repeat="topping_section in ctrl.pizza.toppings_sections" class="menu-list__item-desc">'+
-          '<span ng-if="ctrl.description" class="desc__content">'+
+          '<span ng-if="ctrl.description && !ctrl.pizza.is_byo" class="desc__content">'+
             '<span ng-if="ctrl.pizza.is_split"><strong>{{topping_section[0]}}: </strong></span>'+
             '<span>{{topping_section[1]}}</span>'+
           '</span>'+
