@@ -425,6 +425,7 @@
       var shortcodes = [byo_shortcode, byo_shortcode];
 
       var menu_match = [null, null];
+      var shortname_components = {sauce: null, cheese: null, dough: null, crust: null, split: null, whole: null};
       var name_components = {sauce: null, cheese: null, dough: null, crust: null, split: null, whole: null};
       var toppings_name_tracker = [];
       for (var i in toppings_array) {
@@ -444,10 +445,22 @@
             // menu pizza with add-ons
 
             // first pull out any sauce, dough, crust, cheese differences
-            name_components.sauce = (comparison_info.sauce === 1 || menu_compare === "byo") ? pizza.sauce : name_components.sauce;
-            name_components.dough = (comparison_info.dough === 1) ? pizza.crust.dough : name_components.dough;
-            name_components.crust = (comparison_info.crust === 1) ? pizza.crust.flavor : name_components.crust;
-            name_components.cheese = (comparison_info.cheese === 1 || menu_compare === "byo") ? cheese_options[pizza.cheese_option] : name_components.cheese;
+            if (menu_compare === "byo") {
+              name_components.sauce = pizza.sauce;
+              name_components.cheese = cheese_options[pizza.cheese_option];
+            }
+            if (comparison_info.sauce === 1) {
+              shortname_components.sauce = name_components.sauce = pizza.sauce;
+            }
+            if (comparison_info.dough === 1) {
+              shortname_components.dough = name_components.dough = pizza.crust.dough;
+            }
+            if (comparison_info.crust === 1) {
+              shortname_components.crust = name_components.crust = pizza.crust.flavor;
+            }
+            if (comparison_info.cheese === 1) {
+              shortname_components.cheese = name_components.cheese = cheese_options[pizza.cheese_option];
+            }
 
             // determine what toppings are additions for the matching pizza
             for (var i in comparison_info.toppings[idx]) {
@@ -480,11 +493,14 @@
           }
         }
         var split_toppings = ["∅", "∅"];
+        var short_split_toppings = ["∅", "∅"];
         if (additional_toppings.left.length) {
           split_toppings[0] = additional_toppings.left.map(function(x) { return x.name; }).join(" + ");
+          short_split_toppings[0] = additional_toppings.left.map(function(x) { return x.shortname; }).join(" + ");
         }
         if (additional_toppings.right.length) {
           split_toppings[1] = additional_toppings.right.map(function(x) { return x.name; }).join(" + ");
+          short_split_toppings[1] = additional_toppings.right.map(function(x) { return x.shortname; }).join(" + ");
         }
 
         function BuildNameComponentsList() {
