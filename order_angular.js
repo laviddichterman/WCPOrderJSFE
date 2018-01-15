@@ -598,6 +598,16 @@
       [TOPPING_WHOLE, toppings_dict.carm_onion],
       [TOPPING_WHOLE, toppings_dict.spin]]
     ),
+    four_pepper: new WCPPizza("4 Pepper",
+      "F",
+      crusts.garlic,
+      "regular",
+      sauces.red,
+      [[TOPPING_WHOLE, toppings_dict.rbp],
+      [TOPPING_WHOLE, toppings_dict.greenbp],
+      [TOPPING_WHOLE, toppings_dict.shp],
+      [TOPPING_WHOLE, toppings_dict.jala]]
+    ),
     veggie: new WCPPizza("Veggie",
       "V",
       crusts.regular,
@@ -645,16 +655,6 @@
       sauces.red,
       [[TOPPING_WHOLE, toppings_dict.sausage],
       [TOPPING_WHOLE, toppings_dict.pine],
-      [TOPPING_WHOLE, toppings_dict.jala]]
-    ),
-    four_pepper: new WCPPizza("4 Pepper",
-      "F",
-      crusts.garlic,
-      "regular",
-      sauces.red,
-      [[TOPPING_WHOLE, toppings_dict.rbp],
-      [TOPPING_WHOLE, toppings_dict.greenbp],
-      [TOPPING_WHOLE, toppings_dict.shp],
       [TOPPING_WHOLE, toppings_dict.jala]]
     ),
     meatza: new WCPPizza("Meatza",
