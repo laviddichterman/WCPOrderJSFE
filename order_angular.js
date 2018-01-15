@@ -320,29 +320,6 @@
       return sections.join(" + ");
     };
 
-    this.ShortOneLineName = function() {
-      if (this.name == wcpconfig.PIZZA_MENU.byo.name) {
-        var split_toppings = this.SplitToppingsList();
-        var sections = [];
-        var sauce_dough_crust_cheese = GetSauceDoughCrustCheeseList(this, function(x) { return x.shortname; }, false).reverse();
-        if (sauce_dough_crust_cheese.length > 0) {
-          sections.push(sauce_dough_crust_cheese.join(" + "));
-        }
-        var whole_toppings = split_toppings.whole.map(function(x) { return toppings_array[x].shortname; });
-        if (whole_toppings.length > 0) {
-          sections.push(whole_toppings.join(" + "));
-        }
-        if (this.is_split) {
-          var left = split_toppings.left.length > 0 ? split_toppings.left.map(function(x) { return toppings_array[x].shortname; }).join(" + ") : "∅";
-          var right = split_toppings.right.length > 0 ? split_toppings.right.map(function(x) { return toppings_array[x].shortname; }).join(" + ") : "∅";
-          sections.push("(" + [left, right].join(" | ") + ")");
-        }
-        var short_item_name = sections.join(" + ");
-        return short_item_name === "" ? "cheese" : short_item_name;
-      }
-      return this.name;
-    };
-
     this.Compare = function(other) {
       // 0 no match
       // 1 at least
@@ -425,8 +402,8 @@
       var shortcodes = [byo_shortcode, byo_shortcode];
 
       var menu_match = [null, null];
-      var shortname_components = {sauce: null, cheese: null, dough: null, crust: null, split: null, whole: null};
-      var name_components = {sauce: null, cheese: null, dough: null, crust: null, split: null, whole: null};
+      var shortname_components = {sauce: null, cheese: null, dough: null, crust: null};
+      var name_components = {sauce: null, cheese: null, dough: null, crust: null};
       var toppings_name_tracker = [];
       for (var i in toppings_array) {
         toppings_name_tracker.push([0, 0]);
@@ -503,56 +480,70 @@
           short_split_toppings[1] = additional_toppings.right.map(function(x) { return x.shortname; }).join(" + ");
         }
 
-        function BuildNameComponentsList() {
+        function BuildComponentsList(source, getter) {
           var lst = [];
-          if (name_components.sauce) {
-            lst.push(name_components.sauce.name);
+          if (source.sauce) {
+            lst.push(getter(source.sauce));
           }
-          if (name_components.dough) {
-            lst.push(name_components.dough.name);
+          if (source.dough) {
+            lst.push(getter(source.dough));
           }
-          if (name_components.crust) {
-            lst.push(name_components.crust.name);
+          if (source.crust) {
+            lst.push(getter(source.crust));
           }
-          if (name_components.cheese) {
-            lst.push(name_components.cheese.name);
+          if (source.cheese) {
+            lst.push(getter(source.cheese));
           }
-          return lst.concat(additional_toppings.whole.map(function(x) { return x.name; }));
+          return lst.concat(additional_toppings.whole.map(function(x) { return getter(x); }));
         }
 
         var name_components_list = null;
+        var shortname_components_list = null;
         if (pizza.is_split) {
-          name_components_list = BuildNameComponentsList();
+          name_components_list = BuildComponentsList(name_components, function(x) { return x.name; });
+          shortname_components_list = BuildComponentsList(shortname_components, function(x) { return x.shortname; });
           if (menu_match[0].name == menu_match[1].name) {
             if (menu_match[0] !== pizza_menu["byo"]) {
               name_components_list.unshift(menu_match[0].name);
+              shortname_components_list.unshift(menu_match[0].name);
             }
             name_components_list.push("(" + split_toppings.join(" | ") + ")");
+            shortname_components_list.push("(" + short_split_toppings.join(" | ") + ")");
           }
           else {
             var names = [(menu_match[0] !== pizza_menu["byo"]) ? [menu_match[0].name] : [], (menu_match[1] !== pizza_menu["byo"]) ? [menu_match[1].name] : []];
+            var shortnames = [names[0], names[1]];
             if (additional_toppings.left.length) {
-              names[0].push(split_toppings[0]);
+              names[0] = names[0].concat(split_toppings[0]);
+              shortnames[0] = shortnames[0].concat(short_split_toppings[0]);
             }
             if (additional_toppings.right.length) {
-              names[1].push(split_toppings[1]);
+              names[1] = names[1].concat(split_toppings[1]);
+              shortnames[1] = shortnames[1].concat(short_split_toppings[1]);
             }
             names[0].length ? 0 : names[0].push("∅");
             names[1].length ? 0 : names[1].push("∅");
             name_components_list.push("(" + names[0].join(" + ") + " | " + names[1].join(" + ") + ")");
+            shortnames[0].length ? 0 : shortnames[0].push("∅");
+            shortnames[1].length ? 0 : shortnames[1].push("∅");
+            shortname_components_list.push("(" + shortnames[0].join(" + ") + " | " + shortnames[1].join(" + ") + ")");
           }
         }
         else if (menu_match[0] === pizza_menu["byo"]) {
           // we've got a build your own pizza, make sure sauce and cheese name components are present
           name_components.sauce = name_components.sauce !== null ? name_components.sauce : menu_match[0].sauce;
           name_components.cheese = name_components.cheese !== null ? name_components.cheese : cheese_options[menu_match[0].cheese_option];
-          name_components_list = BuildNameComponentsList();
+          name_components_list = BuildComponentsList(name_components, function(x) { return x.name; });
+          shortname_components_list = BuildComponentsList(shortname_components, function(x) { return x.shortname; });
         }
         else {
-          name_components_list = BuildNameComponentsList();
+          name_components_list = BuildComponentsList(name_components, function(x) { return x.name; });
+          shortname_components_list = BuildComponentsList(shortname_components, function(x) { return x.shortname; });
           name_components_list.unshift(menu_match[0].name);
+          shortname_components_list.unshift(menu_match[0].name);
         }
         pizza.name = name_components_list.join(" + ");
+        pizza.shortname = shortname_components_list.length === 0 ? "cheese" : shortname_components_list.join(" + ");
       }
 
       // iterate through menu, until has_left and has_right are true
@@ -1260,7 +1251,7 @@
       this.sauces = sauces;
       this.cheese_options = cheese_options;
       this.crusts = crusts;
-      this.split_toppings = true;//$location.search().split === true;
+      this.split_toppings = $location.search().split === true;
 
       var enable_delivery = $location.search().delivery === true;
 
@@ -1339,14 +1330,8 @@
         for (var i in this.s.cart.pizza) {
           var quantity = this.s.cart.pizza[i][0];
           var item = this.s.cart.pizza[i][1];
-          var item_name = item.name;
-          var short_item_name = item.ShortOneLineName();
-          // if we need to identify this by its ingredients and not a "name"
-          if (item.name == wcpconfig.PIZZA_MENU.byo.name) {
-            item_name = item.OneLineDisplayToppings();
-          }
-          str_builder = str_builder + quantity + "x: " + item_name + "\n";
-          short_builder = short_builder + quantity + "x: " + short_item_name + "\n";
+          str_builder = str_builder + quantity + "x: " + item.name + "\n";
+          short_builder = short_builder + quantity + "x: " + item.shortname + "\n";
         }
 
         // process cart for extras
