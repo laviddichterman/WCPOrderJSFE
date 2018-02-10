@@ -217,11 +217,11 @@
       while (earliest <= minmax[1]) {
         var next_time = this.HandleBlockedOffTime(blocked_off, earliest + this.cfg.TIME_STEP);
         if (next_time != earliest + this.cfg.TIME_STEP || next_time > minmax[1]) {
-          intervals.push(current_interval);
-          current_interval = [next_time, next_time];
+          intervals.push(interval);
+          interval = [next_time, next_time];
         }
         else {
-          current_interval[1] = next_time;
+          interval[1] = next_time;
         }
         earliest = next_time;
       }
