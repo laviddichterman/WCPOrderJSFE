@@ -29,27 +29,29 @@
             <label class="topping_text" for="{{sauce.shortname}}_whole">{{sauce.name}}</label>
           </div>
         </div>
-        <div>Crust & Dough:</div>
-        <div class="flexitems">
-          <div class="flexitem" ng-repeat="crust in pmenuCtrl.crusts">
-            <input id="{{crust.shortname}}_whole" class="input-whole" ng-model="pmenuCtrl.selection.crust" ng-value="crust" ng-disabled="!crust.ShowOption(pmenuCtrl.selection)" type="radio" ng-change="pmenuCtrl.updateSelection()">
-            <span class="option-circle-container">
-              <label for="{{crust.shortname}}_whole" class="option-whole option-circle"></label>
-            </span>
-            <label class="topping_text" for="{{crust.shortname}}_whole">{{crust.name}}</label>
+        <span ng-if="orderCtrl.CONFIG.MULTI_CRUST">
+          <div>Crust & Dough:</div>
+          <div class="flexitems">
+            <div class="flexitem" ng-repeat="crust in pmenuCtrl.crusts">
+              <input id="{{crust.shortname}}_whole" class="input-whole" ng-model="pmenuCtrl.selection.crust" ng-value="crust" ng-disabled="!crust.ShowOption(pmenuCtrl.selection)" type="radio" ng-change="pmenuCtrl.updateSelection()">
+              <span class="option-circle-container">
+                <label for="{{crust.shortname}}_whole" class="option-whole option-circle"></label>
+              </span>
+              <label class="topping_text" for="{{crust.shortname}}_whole">{{crust.name}}</label>
+            </div>
           </div>
-        </div>
+        </span>
         <div>Cheese:</div>
         <div class="flexitems">
           <div class="flexitem">
-            <input type="checkbox" id="{{pmenuCtrl.cheese_options["ex_mozz"].shortname}}_whole" class="input-whole" ng-model="pmenuCtrl.selection.cheese_option" ng-true-value="'ex_mozz'" ng-false-value="'regular'" ng-change="pmenuCtrl.updateSelection()">
+            <input type="checkbox" id="{{pmenuCtrl.cheese_options["ex_chz"].shortname}}_whole" class="input-whole" ng-model="pmenuCtrl.selection.cheese_option" ng-true-value="'ex_chz'" ng-false-value="'regular'" ng-change="pmenuCtrl.updateSelection()">
             <span class="option-circle-container">
-              <label for="{{pmenuCtrl.cheese_options["ex_mozz"].shortname}}_whole" class="option-whole option-circle"></label>
+              <label for="{{pmenuCtrl.cheese_options["ex_chz"].shortname}}_whole" class="option-whole option-circle"></label>
             </span>
-            <label class="topping_text" for="{{pmenuCtrl.cheese_options["ex_mozz"].shortname}}_whole">{{pmenuCtrl.cheese_options["ex_mozz"].name}}</label>
+            <label class="topping_text" for="{{pmenuCtrl.cheese_options["ex_chz"].shortname}}_whole">{{pmenuCtrl.cheese_options["ex_chz"].name}}</label>
           </div>
         </div>
-        <div>Toppings&nbsp;(limit&nbsp;5<span ng-if="pmenuCtrl.selection.is_split">&nbsp;per&nbsp;side</span>):</div>
+        <div>Toppings&nbsp;(limit&nbsp;{{pmenuCtrl.BAKE_MAX}}<span ng-if="pmenuCtrl.selection.is_split">&nbsp;per&nbsp;side</span>):</div>
         <div class="flexitems">
           <div class="flexitem" wcptoppingdir ng-repeat="topping in pmenuCtrl.toppings" selection="pmenuCtrl.selection" pmenuctrl="pmenuCtrl" topping="topping" config="orderCtrl.CONFIG" split="orderCtrl.split_toppings">
           </div>
@@ -172,7 +174,7 @@
     <form novalidate name="stage3">
     <div class="flexitems">
       <div class="flexitem" ng-repeat="service in orderCtrl.CONFIG.SERVICE_TYPES track by $index">
-        <label ng-if="orderCtrl.s.service_type_functors[$index](orderCtrl.s)"><input type="radio" ng-change="orderCtrl.ValidateDate(); orderCtrl.ClearAddress(); orderCtrl.ComputeDeliveryFee()" ng-model="orderCtrl.s.service_type" ng-value="service[1]">
+        <label ng-if="orderCtrl.s.service_type_functors[$index](orderCtrl.s)"><input type="radio" ng-change="orderCtrl.ValidateDate(); orderCtrl.ClearAddress(); orderCtrl.ComputeDeliveryFee(); orderCtrl.ClearSlicing()" ng-model="orderCtrl.s.service_type" ng-value="service[1]">
         {{service[0]}}</label>
       </div>
     </div>
@@ -197,6 +199,11 @@
     </legend>
     <span ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY" class="wpcf7-form-control-wrap zipcode">
       <input type="text" name="zipcode" size="40" ng-model="orderCtrl.s.delivery_zipcode" ng-change="orderCtrl.ComputeDeliveryFee()" zipcode>
+    </span>
+    <span ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.PICKUP && orderCtrl.CONFIG.ALLOW_SLICING">
+      <br /><label><input type="checkbox" ng-model="orderCtrl.s.slice_pizzas" ng-change="orderCtrl.rebuildCartString()">
+      Please slice my pizzas (not recommended)</label>
+      <span ng-show="orderCtrl.s.slice_pizzas">Crust, like any good bread, should be given time to rest after baking. Slicing your pizzas as they come out of the oven also causes the trapped moisture at the top of the pizza to permiate the crust itself. If you do stick with this option, we'd recommend crisping up your slice on a hot skillet, as needed.</span>
     </span>
     </form>
     <div class="order-nav">
@@ -324,7 +331,7 @@
     <div class="order-nav">
       <button type="submit" class="btn scrolltotop" ng-show="orderCtrl.HasPreviousStage()" ng-click="orderCtrl.PreviousStage()">Previous</button>
       <span ng-click="orderCtrl.Submit()" cf7bridge class="cf7bridge scrolltotop" orderinfo="orderCtrl">
-        [contact-form-7 id="28805" title="Order Form Bridge"]
+        [contact-form-7 id="5" title="Order Form Bridge"]
       </span>
     </div>
   </div>
@@ -338,4 +345,4 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.11/angular.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mailcheck/1.1.2/mailcheck.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.maskedinput/1.4.1/jquery.maskedinput.min.js"></script>
-<script src="https://www.windycitypie.com/wp-includes/js/WCPMenu.js"></script>
+<script src="https://www.breezytownpizza.com/wp-includes/js/BTPMenu4.js"></script>

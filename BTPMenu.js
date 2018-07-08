@@ -6,20 +6,14 @@ var no_restriction = function(pizza) {
 var enable_on_white = function(pizza) {
   return pizza && pizza.sauce.shortname == "white";
 };
-var disable_on_gf = function(pizza) {
-  return pizza && pizza.crust.dough.shortname == "regular";
-};
-var disable_on_brussels_sprout = function (pizza) {
-  return pizza && pizza.toppings_tracker[toppings_dict.brussels.index] > 0 ? false : true;
-};
 var disable_on_meatball = function (pizza) {
   return pizza && pizza.toppings_tracker[toppings_dict.meatball.index] > 0 ? false : true;
 };
 var disable_on_chicken_sausage = function (pizza) {
   return pizza && pizza.toppings_tracker[toppings_dict.chix.index] > 0 ? false : true;
 };
-var disable_on_pork_sausage = function (pizza) {
-  return pizza && pizza.toppings_tracker[toppings_dict.sausage.index] > 0 ? false : true;
+var disable_on_ital_sausage = function (pizza) {
+  return pizza && pizza.toppings_tracker[toppings_dict.ital.index] > 0 ? false : true;
 };
 
 var WCPOption = function(name, shortname, price) {
@@ -34,18 +28,18 @@ var TOPPING_LEFT = 1;
 var TOPPING_RIGHT = 2;
 var TOPPING_WHOLE = 3;
 var FLAVOR_MAX = 5;
-var BAKE_MAX = 5;
+var BAKE_MAX = 4;
 
 var cheese_options = {
   regular: {
-    name: "Mozzarella",
+    name: "Wisconsin Brick & Mozzarella Cheese",
     shortname: "regular",
     price: 0,
     enable: no_restriction
   },
-  ex_mozz: {
-    name: "Extra Mozzarella",
-    shortname: "ex_mozz",
+  ex_chz: {
+    name: "Extra Wisconsin Brick & Mozzarella Cheese",
+    shortname: "ex_chz",
     price: 2,
     enable: no_restriction
   }
@@ -95,8 +89,8 @@ var WCPTopping = function(name, shortname, price, index, enable_filter, flavor_f
 };
 
 var sauces = {
-  red: new WCPSauce("Red Sauce", "red", 0, disable_on_brussels_sprout),
-  white: new WCPSauce("White Sauce", "white", 2, no_restriction)
+  red: new WCPSauce("Red Sauce", "red", 0, no_restriction),
+//  white: new WCPSauce("White Sauce", "white", 2, no_restriction)
 };
 
 var crust_flavors = {
@@ -111,32 +105,37 @@ var crust_doughs = {
 
 var crusts = {
   regular: new WCPCrust("Regular", "regular", 0, no_restriction, crust_flavors.regular, crust_doughs.regular, 0),
-  garlic: new WCPCrust("Roasted Garlic", "garlic", 2, no_restriction, crust_flavors.garlic, crust_doughs.regular, 0),
+//  garlic: new WCPCrust("Roasted Garlic", "garlic", 2, no_restriction, crust_flavors.garlic, crust_doughs.regular, 0),
 //  gf: new WCPCrust("Gluten Free", "gf", 5, disable_on_meatball, crust_flavors.regular, crust_doughs.gf, 1440),
 //  gf_garlic: new WCPCrust("Roasted Garlic Gluten Free", "gf_garlic", 7, disable_on_meatball, crust_flavors.garlic, crust_doughs.gf, 1440),
 };
 
 var idx = 0;
 var toppings_array = [
-  new WCPTopping("Pepperoni", "pepperoni", 2, idx++, no_restriction, 1, 1),
+  new WCPTopping("Pepperoni Below", "pepp_bottom", 2, idx++, no_restriction, 1, 1),
   new WCPTopping("Spinach", "spin", 2, idx++, no_restriction, 1, 1),
   new WCPTopping("Jalapeño", "jala", 2, idx++, no_restriction, 1, 1),
-  new WCPTopping("Mushroom", "mush", 2, idx++, no_restriction, 1, 1),
+  new WCPTopping("Red Bell Pepper", "rbp", 2, idx++, no_restriction, 1, 1),
+  new WCPTopping("Raw Red Onion", "raw_onion", 2, idx++, no_restriction, 1, 1),
+  new WCPTopping("Crimini Mushroom", "crimini", 2, idx++, no_restriction, 1, 1),
   new WCPTopping("Castelvetrano Olive", "castel", 2, idx++, no_restriction, 1, 1),
   new WCPTopping("Kalamata Olive", "kala", 2, idx++, no_restriction, 1, 1),
-  new WCPTopping("Raw Red Onion", "raw_onion", 2, idx++, no_restriction, 1, 1),
-  new WCPTopping("Caramelized Onion", "carm_onion", 2, idx++, no_restriction, 1, 1),
+  //new WCPTopping("Caramelized Onion", "carm_onion", 2, idx++, no_restriction, 1, 1),
   new WCPTopping("Sweet Hot Pepper", "shp", 2, idx++, no_restriction, 1, 1),
-  new WCPTopping("Green Bell Pepper", "greenbp", 2, idx++, no_restriction, 1, 1),
-  new WCPTopping("Roasted Red Bell Pepper", "rbp", 2, idx++, no_restriction, 1, 1),
-  new WCPTopping("Pineapple", "pine", 2, idx++, no_restriction, 1, 1),
-  new WCPTopping("Rosemary Chicken Sausage", "chix", 2, idx++, disable_on_pork_sausage, 1, 1),
-  new WCPTopping("House Sausage", "sausage", 2, idx++, disable_on_chicken_sausage, 1, 1),
-  new WCPTopping("Meatball", "meatball", 4, idx++, disable_on_gf, 1, 2),
-  new WCPTopping("Brussels Sprout", "brussels", 2, idx++, enable_on_white, 1, 1),
-  new WCPTopping("Candied Bacon", "bacon", 2, idx++, no_restriction, 1, 1),
-  new WCPTopping("Bleu", "bleu", 2, idx++, no_restriction, 1, 1),
-  new WCPTopping("Hot Giardiniera", "giard", 2, idx++, no_restriction, 1, 1),
+  new WCPTopping("Artichoke Heart", "art", 2, idx++, no_restriction, 1, 1),
+  //new WCPTopping("Green Bell Pepper", "greenbp", 2, idx++, no_restriction, 1, 1),
+  //new WCPTopping("Pineapple", "pine", 2, idx++, no_restriction, 1, 1),
+  new WCPTopping("Crispy Pepperoni", "pepp_top", 2, idx++, no_restriction, 1, 1),
+  new WCPTopping("Rosemary Chicken Sausage", "chix", 2, idx++, disable_on_ital_sausage, 1, 1),
+  //new WCPTopping("House Sausage", "sausage", 2, idx++, disable_on_chicken_sausage, 1, 1),
+  new WCPTopping("Italian Sausage", "ital", 2, idx++, disable_on_chicken_sausage, 1, 1),
+  new WCPTopping("Meatball", "meatball", 4, idx++, no_restriction, 1, 2),
+  //new WCPTopping("Brussels Sprout", "brussels", 2, idx++, enable_on_white, 1, 1),
+  //new WCPTopping("Candied Bacon", "bacon", 2, idx++, no_restriction, 1, 1),
+  new WCPTopping("Chèvre", "chev", 2, idx++, no_restriction, 1, 0),
+  new WCPTopping("Bleu", "bleu", 2, idx++, no_restriction, 1, 0),
+  new WCPTopping("Hot Giardiniera", "giard", 2, idx++, no_restriction, 1, 0),
+  new WCPTopping("Fresh Basil", "basil", 2, idx++, no_restriction, 1, 0),
 ];
 function initializeToppingsDict() {
   for (var i in toppings_array) {
@@ -164,7 +163,7 @@ var WCPPizza = function(name, shortcode, crust, cheese, sauce, toppings) {
   // topping enum is 0: none, 1: left, 2: right, 3: both
   // toppings is array<tuple<enum, topping>>
   function ComputePrice(pizza) {
-    var val = 19;
+    var val = 17;
     val = val + pizza.crust.price;
     val = val + cheese_options[pizza.cheese_option].price;
     val = val + pizza.sauce.price;
@@ -567,109 +566,49 @@ var WCPPizza = function(name, shortcode, crust, cheese, sauce, toppings) {
 };
 
 pizza_menu = {
-  omnivore: new WCPPizza("Omnivore",
-    "O",
-    crusts.garlic,
-    "regular",
-    sauces.red,
-    [[TOPPING_WHOLE, toppings_dict.pepperoni],
-    [TOPPING_WHOLE, toppings_dict.sausage],
-    [TOPPING_WHOLE, toppings_dict.carm_onion],
-    [TOPPING_WHOLE, toppings_dict.spin]]
-  ),
-  four_pepper: new WCPPizza("4 Pepper",
-    "F",
-    crusts.garlic,
-    "regular",
-    sauces.red,
-    [[TOPPING_WHOLE, toppings_dict.rbp],
-    [TOPPING_WHOLE, toppings_dict.greenbp],
-    [TOPPING_WHOLE, toppings_dict.shp],
-    [TOPPING_WHOLE, toppings_dict.jala]]
-  ),
-  veggie: new WCPPizza("Veggie",
-    "V",
-    crusts.regular,
-    "regular",
-    sauces.red,
-    [[TOPPING_WHOLE, toppings_dict.rbp],
-    [TOPPING_WHOLE, toppings_dict.carm_onion],
-    [TOPPING_WHOLE, toppings_dict.mush],
-    [TOPPING_WHOLE, toppings_dict.spin]]
-  ),
-  classic: new WCPPizza("Classic",
-    "C",
-    crusts.regular,
-    "regular",
-    sauces.red,
-    [[TOPPING_WHOLE, toppings_dict.sausage],
-    [TOPPING_WHOLE, toppings_dict.rbp],
-    [TOPPING_WHOLE, toppings_dict.carm_onion],
-    [TOPPING_WHOLE, toppings_dict.mush]]
-  ),
-  popeye: new WCPPizza("Popeye",
+  pepp: new WCPPizza("Pepperoni Paint Job",
     "P",
     crusts.regular,
     "regular",
     sauces.red,
-    [[TOPPING_WHOLE, toppings_dict.bleu],
-    [TOPPING_WHOLE, toppings_dict.kala],
-    [TOPPING_WHOLE, toppings_dict.mush],
-    [TOPPING_WHOLE, toppings_dict.spin]]
+    [[TOPPING_WHOLE, toppings_dict.pepp_top],
+    [TOPPING_WHOLE, toppings_dict.pepp_bottom]],
   ),
-  sweet_pete: new WCPPizza("Sweet Pete",
-    "S",
-    crusts.regular,
-    "regular",
-    sauces.red,
-    [[TOPPING_WHOLE, toppings_dict.giard],
-    [TOPPING_WHOLE, toppings_dict.bacon],
-    [TOPPING_WHOLE, toppings_dict.sausage],
-    [TOPPING_WHOLE, toppings_dict.pine]]
-  ),
-  hot_island: new WCPPizza("Hot Island",
-    "H",
-    crusts.garlic,
-    "regular",
-    sauces.red,
-    [[TOPPING_WHOLE, toppings_dict.sausage],
-    [TOPPING_WHOLE, toppings_dict.pine],
-    [TOPPING_WHOLE, toppings_dict.jala]]
-  ),
-  meatza: new WCPPizza("Meatza",
-    "M",
-    crusts.regular,
-    "regular",
-    sauces.red,
-    [[TOPPING_WHOLE, toppings_dict.bacon],
-    [TOPPING_WHOLE, toppings_dict.pepperoni],
-    [TOPPING_WHOLE, toppings_dict.sausage]]
-  ),
-  tuscany_raider: new WCPPizza("Tuscany Raider",
-    "T",
-    crusts.regular,
-    "regular",
-    sauces.white,
-    [[TOPPING_WHOLE, toppings_dict.chix],
-    [TOPPING_WHOLE, toppings_dict.shp],
-    [TOPPING_WHOLE, toppings_dict.spin]]
-  ),
-  brussels_snout: new WCPPizza("Brussels Snout",
-    "R",
-    crusts.regular,
-    "regular",
-    sauces.white,
-    [[TOPPING_WHOLE, toppings_dict.bacon],
-    [TOPPING_WHOLE, toppings_dict.brussels],
-    [TOPPING_WHOLE, toppings_dict.carm_onion]]
-  ),
-  blue_pig: new WCPPizza("Blue Pig",
+  bluto: new WCPPizza("Bluto",
     "B",
     crusts.regular,
     "regular",
     sauces.red,
     [[TOPPING_WHOLE, toppings_dict.bleu],
-    [TOPPING_WHOLE, toppings_dict.bacon]]
+    [TOPPING_WHOLE, toppings_dict.castel],
+    [TOPPING_WHOLE, toppings_dict.crimini],
+    [TOPPING_WHOLE, toppings_dict.spin]]
+  ),
+  jj: new WCPPizza("JJ",
+    "J",
+    crusts.regular,
+    "regular",
+    sauces.red,
+    [[TOPPING_WHOLE, toppings_dict.chev],
+    [TOPPING_WHOLE, toppings_dict.shp],
+    [TOPPING_WHOLE, toppings_dict.raw_onion],
+    [TOPPING_WHOLE, toppings_dict.spin]]
+  ),
+  spicy_mb: new WCPPizza("Spicy Meatball",
+    "S",
+    crusts.regular,
+    "regular",
+    sauces.red,
+    [[TOPPING_WHOLE, toppings_dict.giard],
+    [TOPPING_WHOLE, toppings_dict.meatball],
+    [TOPPING_WHOLE, toppings_dict.shp]]
+  ),
+  toddler: new WCPPizza("Toddler",
+    "T",
+    crusts.regular,
+    "regular",
+    sauces.red,
+    [[TOPPING_WHOLE, toppings_dict.basil]]
   ),
   byo: new WCPPizza("Build-Your-Own",
     "z",
