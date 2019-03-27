@@ -15,6 +15,9 @@ var disable_on_chicken_sausage = function (pizza) {
 var disable_on_ital_sausage = function (pizza) {
   return pizza && pizza.toppings_tracker[toppings_dict.ital.index] > 0 ? false : true;
 };
+var disable_on_dairy = function (pizza) {
+  return disable_on_meatball(pizza) && pizza.sauce.shortname != "white";
+};
 
 var WCPOption = function(name, shortname, price) {
   this.name = name;
@@ -32,16 +35,22 @@ var BAKE_MAX = 4;
 
 var cheese_options = {
   regular: {
-    name: "Wisconsin Brick & Mozzarella Cheese",
+    name: "Wisconsin Brick & Mozzarella Blend",
     shortname: "regular",
     price: 0,
     enable: no_restriction
   },
   ex_chz: {
-    name: "Extra Wisconsin Brick & Mozzarella Cheese",
+    name: "Extra Wisconsin Brick & Mozzarella Blend",
     shortname: "ex_chz",
     price: 2,
     enable: no_restriction
+  },
+  vegan_chz: {
+    name: "Vegan Cheese Blend",
+    shortname: "vegan_chz",
+    price: 4,
+    enable: disable_on_dairy
   }
 };
 
@@ -90,12 +99,12 @@ var WCPTopping = function(name, shortname, price, index, enable_filter, flavor_f
 
 var sauces = {
   red: new WCPSauce("Red Sauce", "red", 0, no_restriction),
-//  white: new WCPSauce("White Sauce", "white", 2, no_restriction)
+  white: new WCPSauce("White Sauce", "white", 2, no_restriction)
 };
 
 var crust_flavors = {
   regular: new WCPOption("Regular", "regular", 0),
-  garlic: new WCPOption("Roasted Garlic Crust", "garlic", 2)
+//  garlic: new WCPOption("Roasted Garlic Crust", "garlic", 2)
 };
 
 var crust_doughs = {
@@ -112,20 +121,20 @@ var crusts = {
 
 var idx = 0;
 var toppings_array = [
-  new WCPTopping("Pepperoni Below", "pepp_bottom", 2, idx++, no_restriction, 1, 1),
+  new WCPTopping("Baked-In Pepperoni", "pepp_bottom", 2, idx++, no_restriction, 1, 1),
   new WCPTopping("Spinach", "spin", 2, idx++, no_restriction, 1, 1),
   new WCPTopping("Jalapeño", "jala", 2, idx++, no_restriction, 1, 1),
   new WCPTopping("Red Bell Pepper", "rbp", 2, idx++, no_restriction, 1, 1),
-  new WCPTopping("Raw Red Onion", "raw_onion", 2, idx++, no_restriction, 1, 1),
-  new WCPTopping("Crimini Mushroom", "crimini", 2, idx++, no_restriction, 1, 1),
-  new WCPTopping("Castelvetrano Olive", "castel", 2, idx++, no_restriction, 1, 1),
-  new WCPTopping("Kalamata Olive", "kala", 2, idx++, no_restriction, 1, 1),
+  new WCPTopping("Red Onion", "raw_onion", 2, idx++, no_restriction, 1, 1),
+  new WCPTopping("Crispy Pepperoni", "pepp_top", 2, idx++, no_restriction, 1, 1),
+  new WCPTopping("Crimini Mushroom", "crim", 2, idx++, no_restriction, 1, 1),
+  new WCPTopping("Castelvetrano Olive", "cast", 2, idx++, no_restriction, 1, 1),
+  //new WCPTopping("Kalamata Olive", "kala", 2, idx++, no_restriction, 1, 1),
   //new WCPTopping("Caramelized Onion", "carm_onion", 2, idx++, no_restriction, 1, 1),
   new WCPTopping("Sweet Hot Pepper", "shp", 2, idx++, no_restriction, 1, 1),
   new WCPTopping("Artichoke Heart", "art", 2, idx++, no_restriction, 1, 1),
   //new WCPTopping("Green Bell Pepper", "greenbp", 2, idx++, no_restriction, 1, 1),
-  //new WCPTopping("Pineapple", "pine", 2, idx++, no_restriction, 1, 1),
-  new WCPTopping("Crispy Pepperoni", "pepp_top", 2, idx++, no_restriction, 1, 1),
+  new WCPTopping("Pineapple", "pine", 2, idx++, no_restriction, 1, 1),
   new WCPTopping("Rosemary Chicken Sausage", "chix", 2, idx++, disable_on_ital_sausage, 1, 1),
   //new WCPTopping("House Sausage", "sausage", 2, idx++, disable_on_chicken_sausage, 1, 1),
   new WCPTopping("Italian Sausage", "ital", 2, idx++, disable_on_chicken_sausage, 1, 1),
@@ -580,8 +589,8 @@ pizza_menu = {
     "regular",
     sauces.red,
     [[TOPPING_WHOLE, toppings_dict.bleu],
-    [TOPPING_WHOLE, toppings_dict.castel],
-    [TOPPING_WHOLE, toppings_dict.crimini],
+    [TOPPING_WHOLE, toppings_dict.cast],
+    [TOPPING_WHOLE, toppings_dict.crim],
     [TOPPING_WHOLE, toppings_dict.spin]]
   ),
   jj: new WCPPizza("JJ",
@@ -602,6 +611,15 @@ pizza_menu = {
     [[TOPPING_WHOLE, toppings_dict.giard],
     [TOPPING_WHOLE, toppings_dict.meatball],
     [TOPPING_WHOLE, toppings_dict.shp]]
+  ),
+  famiglia: new WCPPizza("La famiglia",
+    "L",
+    crusts.regular,
+    "regular",
+    sauces.red,
+    [[TOPPING_WHOLE, toppings_dict.ital],
+    [TOPPING_WHOLE, toppings_dict.crim],
+    [TOPPING_WHOLE, toppings_dict.basil]]
   ),
   toddler: new WCPPizza("Toddler",
     "T",
@@ -630,9 +648,9 @@ salad_menu = {
     6,
     "Baby Spinach + Chèvre + Candied Pecan + Roasted Red Bell Pepper Vinaigrette + Pickled Red Onion"
   ),
-  caesar: new WCPSalad("Caesar Salad",
+  caesar: new WCPSalad("All Kale Caesar!",
     "Cz",
-    6,
-    "Romaine Heart + Parmigiano Reggiano + Caesar Dressing + Garlic Crouton + Lemon Wedge"
+    7,
+    "Kale + Parmigiano Reggiano + Caesar Dressing + Garlic Crouton + Lemon Wedge"
   ),
 };
