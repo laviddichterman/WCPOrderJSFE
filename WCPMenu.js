@@ -111,13 +111,14 @@ var crust_doughs = {
 
 var crusts = {
   regular: new WCPCrust("Regular", "regular", 0, no_restriction, crust_flavors.regular, crust_doughs.regular, 0),
-  garlic: new WCPCrust("Roasted Garlic", "garlic", 2, no_restriction, crust_flavors.garlic, crust_doughs.regular, 0),
+//  garlic: new WCPCrust("Roasted Garlic", "garlic", 2, no_restriction, crust_flavors.garlic, crust_doughs.regular, 0),
 //  gf: new WCPCrust("Gluten Free", "gf", 5, disable_on_meatball, crust_flavors.regular, crust_doughs.gf, 1440),
 //  gf_garlic: new WCPCrust("Roasted Garlic Gluten Free", "gf_garlic", 7, disable_on_meatball, crust_flavors.garlic, crust_doughs.gf, 1440),
 };
 
 var idx = 0;
 var toppings_array = [
+  new WCPTopping("Roasted Garlic", "garlic", 2, idx++, no_restriction, 1, 0),
   new WCPTopping("Pepperoni", "pepperoni", 2, idx++, no_restriction, 1, 1),
   new WCPTopping("Spinach", "spin", 2, idx++, no_restriction, 1, 1),
   new WCPTopping("Jalapeño", "jala", 2, idx++, no_restriction, 1, 1),
@@ -134,11 +135,13 @@ var toppings_array = [
   new WCPTopping("Rosemary Chicken Sausage", "chix", 2, idx++, disable_on_pork_sausage, 1, 1),
   new WCPTopping("House Sausage", "sausage", 2, idx++, disable_on_chicken_sausage, 1, 1),
   new WCPTopping("Meatball", "meatball", 4, idx++, disable_on_gf, 1, 2),
-  new WCPTopping("Braised Beef", "beef", 4, idx++, no_restriction, 1, 2),
+//  new WCPTopping("Braised Beef", "beef", 4, idx++, no_restriction, 1, 2),
   new WCPTopping("Brussels Sprout", "brussels", 2, idx++, enable_on_white, 1, 1),
   new WCPTopping("Candied Bacon", "bacon", 2, idx++, no_restriction, 1, 1),
   new WCPTopping("Bleu", "bleu", 2, idx++, no_restriction, 1, 1),
   new WCPTopping("Hot Giardiniera", "giard", 2, idx++, no_restriction, 1, 1),
+  new WCPTopping("Sport Pepper", "sport", 2, idx++, no_restriction, 1, 1),
+
 ];
 function initializeToppingsDict() {
   for (var i in toppings_array) {
@@ -571,23 +574,35 @@ var WCPPizza = function(name, shortcode, crust, cheese, sauce, toppings) {
 pizza_menu = {
   omnivore: new WCPPizza("Omnivore",
     "O",
-    crusts.garlic,
+    crusts.regular,
     "regular",
     sauces.red,
     [[TOPPING_WHOLE, toppings_dict.pepperoni],
     [TOPPING_WHOLE, toppings_dict.sausage],
     [TOPPING_WHOLE, toppings_dict.carm_onion],
-    [TOPPING_WHOLE, toppings_dict.spin]]
+    [TOPPING_WHOLE, toppings_dict.spin],
+    [TOPPING_WHOLE, toppings_dict.garlic]]
   ),
+  mamma_mia: new WCPPizza("Mamma Mia",
+    "A",
+    crusts.regular,
+    "regular",
+    sauces.red,
+    [[TOPPING_WHOLE, toppings_dict.sport],
+    [TOPPING_WHOLE, toppings_dict.meatball],
+    [TOPPING_WHOLE, toppings_dict.garlic]]
+  ),
+
   four_pepper: new WCPPizza("4 Pepper",
     "F",
-    crusts.garlic,
+    crusts.regular,
     "regular",
     sauces.red,
     [[TOPPING_WHOLE, toppings_dict.rbp],
     [TOPPING_WHOLE, toppings_dict.greenbp],
     [TOPPING_WHOLE, toppings_dict.shp],
-    [TOPPING_WHOLE, toppings_dict.jala]]
+    [TOPPING_WHOLE, toppings_dict.jala],
+    [TOPPING_WHOLE, toppings_dict.garlic]]
   ),
   veggie: new WCPPizza("Veggie",
     "V",
@@ -631,12 +646,13 @@ pizza_menu = {
   ),
   hot_island: new WCPPizza("Hot Island",
     "H",
-    crusts.garlic,
+    crusts.regular,
     "regular",
     sauces.red,
     [[TOPPING_WHOLE, toppings_dict.sausage],
     [TOPPING_WHOLE, toppings_dict.pine],
-    [TOPPING_WHOLE, toppings_dict.jala]]
+    [TOPPING_WHOLE, toppings_dict.jala],
+    [TOPPING_WHOLE, toppings_dict.garlic]]
   ),
   meatza: new WCPPizza("Meatza",
     "M",
@@ -688,14 +704,9 @@ salad_menu = {
     7,
     "Arugula + Roasted Beet + Roasted Pistachio + Bleu + Tarragon Vinaigrette"
   ),
-  spinach: new WCPSalad("Spinach Salad",
-    "Sp",
-    6,
-    "Baby Spinach + Chèvre + Candied Pecan + Roasted Red Bell Pepper Vinaigrette + Pickled Red Onion"
-  ),
-  caesar: new WCPSalad("Caesar Salad",
+  caesar: new WCPSalad("All Kale Caesar!",
     "Cz",
-    6,
-    "Romaine Heart + Parmigiano Reggiano + Caesar Dressing + Garlic Crouton + Lemon Wedge"
-  ),
+    7,
+    "Marinated Kale + Parmigiano Reggiano + Caesar Dressing + Garlic Crouton + Lemon Wedge"
+  )
 };

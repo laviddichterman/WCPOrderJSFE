@@ -48,23 +48,23 @@
     this.BLOCKED_OFF = [WCP_time_off];
 
     this.PICKUP_HOURS = [
-      [11*60, 22*60], //sunday
-      [16*60, 22*60], //monday
-      [16*60, 22*60], //tuesday
+      [16*60, 22*60], //sunday
+      [1*60, 0*60], //monday
+      [1*60, 0*60], //tuesday
       [16*60, 22*60], //wednesday
       [16*60, 22*60], //thursday
-      [11*60, 23*60], //friday
-      [11*60, 23*60]  //saturday
+      [16*60, 23*60], //friday
+      [16*60, 23*60]  //saturday
     ];
 
     this.DINEIN_HOURS = [
-      [12*60, 21.5*60], //sunday
-      [16*60, 21.5*60], //monday
-      [16*60, 21.5*60], //tuesday
+      [16*60, 21.5*60], //sunday
+      [1*60, 0*60], //monday
+      [1*60, 0*60], //tuesday
       [16*60, 21.5*60], //wednesday
       [16*60, 21.5*60], //thursday
       [16*60, 22.5*60], //friday
-      [12*60, 22.5*60]  //saturday
+      [16*60, 22.5*60]  //saturday
     ];
 
     this.DELIVERY_HOURS = [
@@ -118,16 +118,16 @@
     };
     this.NOTE_SPECIAL_INSTRUCTIONS = "Since you specified special instructions, we will let you know if we can accommodate your request. We may need your confirmation if your instructions will incur an additional cost or we cannot accommodate them, so please watch your email.";
     this.NOTE_KEEP_LEVEL = "Be sure to travel with your pizza as flat as possible, on the floor or in the trunk. Seats are generally not a level surface.";
-    this.NOTE_PICKUP_BEFORE_DI = "We won't be open for dine-in at the time of your pickup. Our door may be locked. Please text 206.486.4743 or respond to this email thread when you've arrived at the northernmost door of 1417 Elliott Ave W, 98119, facing Elliott Ave W so we can let you in. Please let us know if you have any additional questions about the pickup process.";
-    this.NOTE_PICKUP_DURING_DI = "We'll be open for dining service so please come to the Windy City Pie counter inside the Batch Bar and inform us the name under which the order was placed.";
-    this.NOTE_PICKUP_AFTER_DI = "We'll be ending our dine-in service at the time of your pickup. Please come to the Windy City Pie counter inside the Batch Bar and inform us the name under which the order was placed.";
-    this.NOTE_DI = "Please come to our counter and let us know the name under which your order was placed. Please arrive promptly so your pizza is as fresh as possible and you have time to get situated and get beverages from the Batch Bar.";
+    this.NOTE_PICKUP_BEFORE_DI = "We won't be open for dine-in at the time of your pickup. Our door may be locked. Please text 206.486.4743 or respond to this email thread when you've arrived. Please let us know if you have any additional questions about the pickup process.";
+    this.NOTE_PICKUP_DURING_DI = "Come to the counter and let us know your name and that you have a pre-order.";
+    this.NOTE_PICKUP_AFTER_DI = "We'll be ending our dine-in service at the time of your pickup. Please come to the bar and inform us the name under which the order was placed.";
+    this.NOTE_DI = "Dine-ins get you to the front of the table queue. We don't reserve seating. Please arrive promptly so your pizza is as fresh as possible and you have time to get situated and get beverages! ";
     this.NOTE_DELIVERY_BETA = "Our catering offering is current in a limited beta. We'll reach out shortly to determine our availability for the requested time and to get a better idea of your needs.";
     this.NOTE_PAYMENT = "We happily accept any major credit card or cash for payment upon arrival.";
 
     this.REQUEST_SLICING = "In order to ensure the quality of our pizzas, we will not slice them. We'd recommend bringing anything from a bench scraper to a butter knife to slice the pizza. Slicing the whole pizza when it's hot inhibits the crust from properly setting, and can cause the crust to get soggy both during transit and as the pie is eaten. We want your pizza to be the best possible and bringing a tool with which to slice the pie will make a big difference.";
     this.REQUEST_VEGAN = "Our pizzas cannot be made vegan or without cheese. If you're looking for a vegan option, our Beets By Schrute salad can be made vegan by omitting the bleu cheese.";
-    this.REQUEST_HALF = "While half toppings are not on the menu, we can do them (with the exception of half roasted garlic crust or half red sauce, half white sauce) but they are charged the same as full toppings. As such, we recommend against them as they're not a good value for the customer and an imbalance of toppings will cause uneven baking of your pizza.";
+    this.REQUEST_HALF = "While half toppings are not on the menu, we can do them (with the exception of half roasted garlic or half red sauce, half white sauce) but they are charged the same as full toppings. As such, we recommend against them as they're not a good value for the customer and an imbalance of toppings will cause uneven baking of your pizza.";
     // END user messaging
 
     //END WCP store config
@@ -341,44 +341,27 @@
       switch (service_type) {
         case this.cfg.DELIVERY: confirm_string_array = ["NOT SUPPORTED"]; break;
         case this.cfg.PICKUP:
-          if (service_during_dine_in === 0) {
-            var opener = nice_area_code ? "Hello, nice area code, and thanks for your order! " : "Hello and thanks for your order! ";
-            confirm_string_array = [
-              opener,
-              "We're happy to confirm your pickup for ",
-              service_time_print,
-              ".\n\n",
-              this.cfg.NOTE_PICKUP_BEFORE_DI,
-              " ",
-              this.cfg.NOTE_PAYMENT
-            ];
-          }
-          else {
-            var opener = nice_area_code ? "Nice area code! " : "";
-            confirm_string_array = [
-              opener,
-              "We're happy to confirm your pickup order for ",
-              service_time_print,
-              " at the Batch Bar (1417 Elliott Ave W, 98119, the northernmost door).\n\n",
-              service_during_dine_in === 1 ? this.cfg.NOTE_PICKUP_DURING_DI : this.cfg.NOTE_PICKUP_AFTER_DI,
-              " We are a 21 and up establishment, so let us know now if anyone in the party is under 21 so we can make alternate arrangements for pickup. If you have any questions please contact us immediately by responding to this email thread. ",
-              this.cfg.NOTE_PAYMENT
-            ];
-          }
-          break;
-        case this.cfg.DINEIN:
           var opener = nice_area_code ? "Nice area code! " : "";
           confirm_string_array = [
             opener,
-            "We're happy to confirm your order for ",
+            "We're happy to confirm your pickup order for ",
             service_time_print,
-            " at the Batch Bar (1417 Elliott Ave W, 98119, the northernmost door).\n\n",
-            this.cfg.NOTE_DI,
-            " We do not reserve seating.",
-            " If anyone in your party is under 21, they will not be able to dine-in, per WA state liquor law. Let us know if this will be an issue immediately. ",
+          " at our new Phinney Ridge home (5918 Phinney Ave N, 98103).\n\n",
+            service_during_dine_in === 1 ? this.cfg.NOTE_PICKUP_DURING_DI : this.cfg.NOTE_PICKUP_AFTER_DI,
             this.cfg.NOTE_PAYMENT
           ];
-          break;
+        break;
+      case this.cfg.DINEIN:
+        var opener = nice_area_code ? "Nice area code! " : "";
+        confirm_string_array = [
+          opener,
+          "We're happy to confirm your order for ",
+          service_time_print,
+          " at our new Phinney Ridge home (5918 Phinney Ave N, 98103).\n\n",
+          this.cfg.NOTE_DI,
+          this.cfg.NOTE_PAYMENT
+        ];
+        break;
         default: console.assert(false, "invalid service value"); break;
       }
       return encodeURI(confirm_string_array.join(""));
