@@ -975,6 +975,8 @@
             var selected_date_string = $filter("date")(scope.orderinfo.s.selected_date, "EEEE, MMMM dd, yyyy");
             $j(element).find("span.service-date input").val(selected_date_string);
             $j(element).find("span.additional_message input").val(scope.orderinfo.s.additional_message);
+            var eventdate = OrderHelper.EventDateTimeStringBuilder(scope.orderinfo.s.selected_date, scope.orderinfo.s.service_time);
+            $j(element).find("span.eventdate input").val(eventdate);
             ConfirmationSubjectSetter();
             ConfirmationBodySetter();
             AutomatedInstructionsSetter();
