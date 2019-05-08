@@ -1,4 +1,4 @@
-  // TODO: handle leaving page before submitting (onbeforeunload)
+// TODO: handle leaving page before submitting (onbeforeunload)
   // TODO: guided menu help/suggestions (advanced, suggest meatza + giard, etc)
   // TODO: tooltip explanations of disabled items
   // TODO: half toppings UI
@@ -341,6 +341,19 @@
       switch (service_type) {
         case this.cfg.DELIVERY: confirm_string_array = ["NOT SUPPORTED"]; break;
         case this.cfg.PICKUP:
+        if (service_during_dine_in === 0) {
+          var opener = nice_area_code ? "Hello, nice area code, and thanks for your order! " : "Hello and thanks for your order! ";
+          confirm_string_array = [
+            opener,
+            "We're happy to confirm your pickup for ",
+            service_time_print,
+            ".\n\n",
+            this.cfg.NOTE_PICKUP_BEFORE_DI,
+            " ",
+            this.cfg.NOTE_PAYMENT
+          ];
+        }
+        else {
           var opener = nice_area_code ? "Nice area code! " : "";
           confirm_string_array = [
             opener,
@@ -350,6 +363,7 @@
             service_during_dine_in === 1 ? this.cfg.NOTE_PICKUP_DURING_DI : this.cfg.NOTE_PICKUP_AFTER_DI,
             this.cfg.NOTE_PAYMENT
           ];
+        }
         break;
       case this.cfg.DINEIN:
         var opener = nice_area_code ? "Nice area code! " : "";
