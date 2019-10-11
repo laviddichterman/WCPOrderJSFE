@@ -8,6 +8,8 @@
   // TODO: multiple of same pizza menu guide
   var $j = jQuery.noConflict();
 
+  var EMAIL_REGEX = new RegExp("^[_A-Za-z0-9-]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$");
+
   function ScrollTopJQ() {
     $j("html, body").animate({
         scrollTop: $j("#ordertop").offset().top - 150
@@ -48,23 +50,23 @@
     this.BLOCKED_OFF = [WCP_time_off];
 
     this.PICKUP_HOURS = [
-      [16*60, 22*60], //sunday
+      [12*60, 22*60], //sunday
       [1*60, 0*60], //monday
       [1*60, 0*60], //tuesday
       [16*60, 22*60], //wednesday
       [16*60, 22*60], //thursday
       [16*60, 23*60], //friday
-      [16*60, 23*60]  //saturday
+      [12*60, 23*60]  //saturday
     ];
 
     this.DINEIN_HOURS = [
-      [16*60, 21.5*60], //sunday
+      [12*60, 21.5*60], //sunday
       [1*60, 0*60], //monday
       [1*60, 0*60], //tuesday
       [16*60, 21.5*60], //wednesday
       [16*60, 21.5*60], //thursday
       [16*60, 22.5*60], //friday
-      [16*60, 22.5*60]  //saturday
+      [12*60, 22.5*60]  //saturday
     ];
 
     this.DELIVERY_HOURS = [
@@ -119,9 +121,9 @@
     this.NOTE_SPECIAL_INSTRUCTIONS = "Since you specified special instructions, we will let you know if we can accommodate your request. We may need your confirmation if your instructions will incur an additional cost or we cannot accommodate them, so please watch your email.";
     this.NOTE_KEEP_LEVEL = "Be sure to travel with your pizza as flat as possible, on the floor or in the trunk. Seats are generally not a level surface.";
     this.NOTE_PICKUP_BEFORE_DI = "We won't be open for dine-in at the time of your pickup. Our door may be locked. Please text 206.486.4743 or respond to this email thread when you've arrived. Please let us know if you have any additional questions about the pickup process.";
-    this.NOTE_PICKUP_DURING_DI = "Come to the counter and let us know your name and that you have a pre-order.";
+    this.NOTE_PICKUP_DURING_DI = "Come to the host stand and let us know your first name and that you have a pre-order.";
     this.NOTE_PICKUP_AFTER_DI = "We'll be ending our dine-in service at the time of your pickup. Please come to the bar and inform us the name under which the order was placed.";
-    this.NOTE_DI = "Dine-ins get you to the front of the table queue. We don't reserve seating. Please arrive promptly so your pizza is as fresh as possible and you have time to get situated and get beverages! ";
+    this.NOTE_DI = "Dine-ins get you to the front of the table queue. We don't reserve seating. Please arrive slightly before your selected time so your pizza is as fresh as possible and you have time to get situated and get beverages! ";
     this.NOTE_DELIVERY_BETA = "Our catering offering is current in a limited beta. We'll reach out shortly to determine our availability for the requested time and to get a better idea of your needs.";
     this.NOTE_PAYMENT = "We happily accept any major credit card or cash for payment upon arrival.";
 
@@ -523,6 +525,7 @@
       this.enable_split_toppings = false;
       this.enable_delivery = enable_delivery;
       this.delivery_fee = 0;
+      this.EMAIL_REGEX = EMAIL_REGEX;
 
       this.service_type_functors = [
         // PICKUP
@@ -584,7 +587,7 @@
       };
 
       this.ComputeDeliveryFee = function() {
-        this.s.delivery_fee = this.s.delivery_zipcode && this.s.delivery_zipcode.length > 0 ? 5 : 0;
+        this.s.delivery_fee = this.s.delivery_zipcode && this.s.delivery_zipcode.length > 0 ? 30 : 0;
       };
 
       this.ValidateDate = function() {
@@ -739,7 +742,7 @@
       this.SlowSubmitterTrigger = function() {
         // set flag for user notification that too much time passed
         this.s.selected_time_timeout = true;
-        // set stage to 2 (time selection)
+        // set stage to 3 (time selection)
         this.s.stage = 3;
       };
 
@@ -891,7 +894,7 @@
     });
 
 
-    app.directive("cf7bridge", ["OrderHelper", "$filter", "$interval", function(OrderHelper, $filter, $interval) {
+    app.directive("cf7bridge", ["OrderHelper", "$filter", "$interval", "$window", function(OrderHelper, $filter, $interval, $window) {
       return {
         restrict: "A",
         scope: {
@@ -933,10 +936,10 @@
             $j(element).find("span.confirmation-body textarea").val(confirmation_body);
           };
           var SlowSubmitterCheck = function() {
-            // TODO: make sure no one is in the middle of customizing a pizza
             var old_time = scope.orderinfo.s.service_time;
             scope.orderinfo.ValidateDate();
-            if (old_time != scope.orderinfo.s.service_time && scope.orderinfo.s.stage <= 3) {
+            // only bump someone to the time selection page if they're already at least that far
+            if (old_time != scope.orderinfo.s.service_time && scope.orderinfo.s.stage >= 2) {
               scope.orderinfo.SlowSubmitterTrigger();
             }
           };
@@ -1039,7 +1042,7 @@
           UpdateCurrentTime();
           UpdateLeadTime();
           var time_updater = $interval(UpdateCurrentTime, 60000);
-
+          $window.document.onvisibilitychange = UpdateCurrentTime;
           element.on("$destroy", function(){
             $interval.cancel(time_updater);
           });
@@ -1112,7 +1115,8 @@
         restrict: "A",
         require: "ngModel",
         link: function(scope, element, attrs, ctrl) {
-          $j(element).mask("(999) 999-9999");
+          $j.mask.definitions['8'] = "[2-9]";
+          $j(element).mask("(899) 999-9999");
         }
       };
     });
