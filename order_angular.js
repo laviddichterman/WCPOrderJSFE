@@ -10,6 +10,8 @@
 
   var EMAIL_REGEX = new RegExp("^[_A-Za-z0-9-]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$");
 
+  var DATE_STRING_INTERNAL_FORMAT = "YYYYMMDDZZ";
+
   function ScrollTopJQ() {
     $j("html, body").animate({
         scrollTop: $j("#ordertop").offset().top - 150
@@ -17,9 +19,9 @@
   }
 
   var TimingInfo = function() {
-    this.load_time = new Date([WCP_blog_epoch_time]);
+    this.load_time = moment(new Date([WCP_blog_epoch_time]));
     this.current_time = this.load_time;
-    this.browser_load_time = new Date();
+    this.browser_load_time = moment();
     this.load_time_diff = 0;
     this.order_placed_during_dining = false;
   };
@@ -104,19 +106,19 @@
 
     // user messaging
     this.AREA_CODES = {
-      "217": "Central Illinois, running west from the Illinois-Indiana border through Danville, Effingham, Champaign–Urbana, Decatur, Springfield, Quincy until Illinois' western border with Iowa.",
-      "309": "Central-Western Illinois including Bloomington–Normal, Peoria, and all the way west to the Illinois part of the Quad Cities including Moline, and Rock Island.",
-      "312": "Chicago, the central city area including the Chicago Loop and the Near North Side.",
-      "630": "West suburbs of Chicago in DuPage County and Kane County including Wheaton, Naperville, and Aurora.",
-      "331": "West suburbs of Chicago in DuPage County and Kane County including Wheaton, Naperville, and Aurora.",
-      "618": "Southern Illinois, including Carbondale and most of the Metro East region of St. Louis suburbs in Illinois",
-      "708": "South suburbs and inner west suburbs of Chicago, including the Chicago Southland and most west and south suburbs in Cook County such as Oak Park, Oak Lawn, Chicago Heights, and Orland Park.",
-      "773": "Chicago, covers most of the geographical area of Chicago except the downtown Chicago Loop, which is in area code 312.",
-      "815": "Northern Illinois outside of the immediate Chicago area including Joliet, Kankakee, LaSalle, DeKalb, and Rockford.",
-      "779": "Northern Illinois outside of the immediate Chicago area including Joliet, Kankakee, LaSalle, DeKalb, and Rockford.",
-      "847": "North and northwest suburbs of Chicago including all of Lake County, part of McHenry County, northern Cook County, and northeastern Kane County.",
-      "224": "North and northwest suburbs of Chicago including all of Lake County, part of McHenry County, northern Cook County, and northeastern Kane County.",
-      "872": "City of Chicago, overlaying area codes 312 and 773."
+      "217": true,
+      "309": true,
+      "312": true,
+      "630": true,
+      "331": true,
+      "618": true,
+      "708": true,
+      "773": true,
+      "815": true,
+      "779": true,
+      "847": true,
+      "224": true,
+      "872": true
     };
     this.NOTE_SPECIAL_INSTRUCTIONS = "Since you specified special instructions, we will let you know if we can accommodate your request. We may need your confirmation if your instructions will incur an additional cost or we cannot accommodate them, so please watch your email.";
     this.NOTE_KEEP_LEVEL = "Be sure to travel with your pizza as flat as possible, on the floor or in the trunk. Seats are generally not a level surface.";
@@ -132,29 +134,38 @@
     this.REQUEST_HALF = "While half toppings are not on the menu, we can do them (with the exception of half roasted garlic or half red sauce, half white sauce) but they are charged the same as full toppings. As such, we recommend against them as they're not a good value for the customer and an imbalance of toppings will cause uneven baking of your pizza.";
     // END user messaging
 
+    this.UpdateBlockedOff = (bo) => {
+      this.BLOCKED_OFF = bo;
+    }
     //END WCP store config
   };
 
   var wcpconfig = new WCPStoreConfig();
+
+  function FixOldBlockedOff() {
+    for (var i in wcpconfig.BLOCKED_OFF) {
+      for (var j in wcpconfig.BLOCKED_OFF[i]) {
+          if(typeof wcpconfig.BLOCKED_OFF[i][j][0] != "String") {
+            wcpconfig.BLOCKED_OFF[i][j][0] = moment(wcpconfig.BLOCKED_OFF[i][j][0]).format(DATE_STRING_INTERNAL_FORMAT);
+            console.log(wcpconfig.BLOCKED_OFF[i][j][0]);
+          }
+      }
+    }
+  }
+  FixOldBlockedOff();
 
   var WCPOrderHelper = function() {
     // HELPER FUNCTIONS
     this.cfg = wcpconfig;
 
     this.IsFirstDatePreviousDayToSecond = function(first, second) {
-      var st = new Date(first);
-      var nd = new Date(second);
-      st.setHours(0, 0, 0, 0, 0);
-      nd.setHours(0, 0, 0, 0, 0);
-      return st < nd;
+      //takes moments
+      return first.isBefore(second, 'day');
     };
 
     this.IsPreviousDay = function(date) {
+      // dateis a moment
       return this.IsFirstDatePreviousDayToSecond(date, timing_info.current_time);
-    };
-
-    this.IsSameDay = function(date1, date2) {
-      return date1.getDate() == date2.getDate() && date1.getFullYear() == date2.getFullYear() && date1.getMonth() == date2.getMonth();
     };
 
     this.MinutesToHMS = function(time) {
@@ -164,7 +175,8 @@
     };
 
     this.DateToMinutes = function(date) {
-      return date.getHours() * 60 + date.getMinutes();
+      // passed date is a moment
+      return date.hours() * 60 + date.minutes();
     };
 
     this.MinutesToPrintTime = function(minutes) {
@@ -186,8 +198,9 @@
     };
 
     this.GetBlockedOffForDate = function(date, service) {
+    // date is passed as DATE_STRING_INTERNAL_FORMAT
       for (var i in this.cfg.BLOCKED_OFF[service]) {
-        if (this.IsSameDay(this.cfg.BLOCKED_OFF[service][i][0], date)) {
+        if (this.cfg.BLOCKED_OFF[service][i][0] === date) {
           return this.cfg.BLOCKED_OFF[service][i][1];
         }
       }
@@ -208,8 +221,10 @@
     };
 
     this.GetServiceIntervalsForDate = function(date, service) {
-      var blocked_off = this.GetBlockedOffForDate(date, service);
-      var minmax = this.cfg.HOURS_BY_SERVICE_TYPE[service][date.getDay()];
+      // date is passed as moment
+      const internal_formatted_date = date.format(DATE_STRING_INTERNAL_FORMAT);
+      var blocked_off = this.GetBlockedOffForDate(internal_formatted_date, service);
+      var minmax = this.cfg.HOURS_BY_SERVICE_TYPE[service][date.day()];
       if (blocked_off.length === 0) {
         return [minmax];
       }
@@ -231,22 +246,23 @@
     }
 
     this.GetFirstAvailableTime = function(date, service, size, cart_based_lead_time) {
-      // param date: the date we're looking for the earliest time
+      // param date: the date we're looking for the earliest time, as a moment
       // param service: the service type enum
       // param size: the order size
       // param cart_based_lead_time: any minimum preorder times associated with the specific items in the cart
-      var blocked_off = this.GetBlockedOffForDate(date, service);
-      var minmax = this.cfg.HOURS_BY_SERVICE_TYPE[service][date.getDay()];
+      const internal_formatted_date = date.format(DATE_STRING_INTERNAL_FORMAT);
+      var blocked_off = this.GetBlockedOffForDate(internal_formatted_date, service);
+      var minmax = this.cfg.HOURS_BY_SERVICE_TYPE[service][date.day()];
       // cart_based_lead_time and service/size lead time don't stack
       var leadtime = Math.max(this.cfg.LEAD_TIME[service] + ((size-1) * this.cfg.ADDITIONAL_PIE_LEAD_TIME), cart_based_lead_time);
 
-      var current_time_plus_leadtime = new Date(timing_info.current_time.getTime() + (leadtime * 60000));
+      const current_time_plus_leadtime = moment(timing_info.current_time).add(leadtime, 'm');
       if (this.IsFirstDatePreviousDayToSecond(date, current_time_plus_leadtime)) {
         // if by adding the lead time we've passed the date we're looking for
         return minmax[1] + this.cfg.TIME_STEP;
       }
 
-      if (this.IsSameDay(date, current_time_plus_leadtime)) {
+      if (internal_formatted_date === current_time_plus_leadtime.format(DATE_STRING_INTERNAL_FORMAT)) {
         var current_time_plus_leadtime_mins_from_start = this.DateToMinutes(current_time_plus_leadtime);
         if (current_time_plus_leadtime_mins_from_start > minmax[0]) {
           return this.HandleBlockedOffTime(blocked_off, Math.ceil((current_time_plus_leadtime_mins_from_start) / this.cfg.TIME_STEP) * this.cfg.TIME_STEP);
@@ -257,29 +273,31 @@
 
     this.DisableExhaustedDates = function(date, service, size, cart_based_lead_time) {
       // checks if orders can still be placed for the
-      // given date, service type, and order size
+      // given date (moment), service type, and order size
       // param cart_based_lead_time: any minimum preorder times associated with the specific items in the cart
       // return: true if orders can still be placed, false otherwise
-      var maxtime = this.cfg.HOURS_BY_SERVICE_TYPE[service][date.getDay()][1];
+      var maxtime = this.cfg.HOURS_BY_SERVICE_TYPE[service][date.day()][1];
       return this.GetFirstAvailableTime(date, service, size, cart_based_lead_time) <= maxtime;
     };
 
     this.DisableFarOutDates = function(date) {
       // disables dates more than a year out from the current date
-      var load_time_plus_year = new Date(timing_info.current_time);
-      load_time_plus_year.setFullYear(timing_info.load_time.getFullYear() + 1);
-      return date <= load_time_plus_year;
+      const load_time_plus_year = moment(timing_info.current_time).add(1, 'y');
+      return date.isBefore(load_time_plus_year, 'day');
     };
 
     this.IsDateActive = function(date, service, size, cart_based_lead_time) {
+      // date is a moment
       return !this.IsPreviousDay(date) && this.DisableExhaustedDates(date, service, size, cart_based_lead_time) && this.DisableFarOutDates(date);
     };
 
     this.GetStartTimes = function(userDate, service, size, cart_based_lead_time) {
+      // userDate is a moment
       var times = [];
+      const internal_formatted_date = userDate.format(DATE_STRING_INTERNAL_FORMAT);
       var earliest = this.GetFirstAvailableTime(userDate, service, size, cart_based_lead_time);
-      var blockedOff = this.GetBlockedOffForDate(userDate, service);
-      var latest = this.cfg.HOURS_BY_SERVICE_TYPE[service][userDate.getDay()][1];
+      var blockedOff = this.GetBlockedOffForDate(internal_formatted_date, service);
+      var latest = this.cfg.HOURS_BY_SERVICE_TYPE[service][userDate.day()][1];
       while (earliest <= latest) {
         times.push(earliest);
         earliest = this.HandleBlockedOffTime(blockedOff, earliest + this.cfg.TIME_STEP);
@@ -292,6 +310,7 @@
       //  0: before dine-in
       //  1: during dine-in
       //  2: after dine-in
+      //  date is a moment
       var service_intervals = this.GetServiceIntervalsForDate(date, this.cfg.DINEIN);
       for (var i in service_intervals) {
         if (time >= service_intervals[i][0] && time <= service_intervals[i][1]) {
@@ -302,7 +321,8 @@
     };
 
     this.AutomatedInstructionsBuilder = function(service_type, date, time, special_instructions, placed_during_dinein) {
-      if (date === null || isNaN(time)) {
+      // date is a moment
+      if (!date || !date.isValid() || isNaN(time)) {
         return "";
       }
       var has_special_instructions = special_instructions && special_instructions.length > 0;
@@ -361,7 +381,7 @@
             opener,
             "We're happy to confirm your pickup order for ",
             service_time_print,
-          " at our new Phinney Ridge home (5918 Phinney Ave N, 98103).\n\n",
+          " at our Phinney Ridge home (5918 Phinney Ave N, 98103).\n\n",
             service_during_dine_in === 1 ? this.cfg.NOTE_PICKUP_DURING_DI : this.cfg.NOTE_PICKUP_AFTER_DI,
             this.cfg.NOTE_PAYMENT
           ];
@@ -373,7 +393,7 @@
           opener,
           "We're happy to confirm your order for ",
           service_time_print,
-          " at our new Phinney Ridge home (5918 Phinney Ave N, 98103).\n\n",
+          " at our Phinney Ridge home (5918 Phinney Ave N, 98103).\n\n",
           this.cfg.NOTE_DI,
           this.cfg.NOTE_PAYMENT
         ];
@@ -422,10 +442,10 @@
     };
 
     this.EventDateTimeStringBuilder = function(date, time) {
-      if(isNaN(date) || isNaN(time) || time < 0) {
+      if(!date || !date.isValid() || isNaN(time) || time < 0) {
         return "";
       }
-      var dateString = String(date.getFullYear()) + (date.getMonth() < 9 ? "0" : "") + String(date.getMonth()+1) + (date.getDate() < 10 ? "0" : "") + String(date.getDate()) + "T";
+      var dateString = String(date.year()) + (date.month() < 9 ? "0" : "") + String(date.month()+1) + (date.date() < 10 ? "0" : "") + String(date.date()) + "T";
       var timeString;
       time = String(time).split(",");
       if (time.length == 1) {
@@ -475,15 +495,40 @@
 
   (function() {
 
-    var app = angular.module("WCPOrder", []);
+    var app = angular.module("WCPOrder", ['btford.socket-io']);
 
     app.filter("MinutesToPrintTime", function() {
       return wcporderhelper.MinutesToPrintTime;
     });
 
+    app.factory('socket', function ($rootScope) {
+      var socket = io.connect("https://wario.windycitypie.com/nsRO");
+      return {
+        on: function (eventName, callback) {
+          socket.on(eventName, function () {
+            var args = arguments;
+            $rootScope.$apply(function () {
+              callback.apply(socket, args);
+            });
+          });
+        },
+        emit: function (eventName, data, callback) {
+          socket.emit(eventName, data, function () {
+            var args = arguments;
+            $rootScope.$apply(function () {
+              if (callback) {
+                callback.apply(socket, args);
+              }
+            });
+          })
+        }
+      };
+    });
+
     app.service("OrderHelper", WCPOrderHelper);
 
     var WCPOrderState = function(cfg, enable_delivery, enable_split_toppings) {
+
       this.RecomputeOrderSize = function() {
         var size = 0;
         for (var i in this.cart.pizza) {
@@ -499,13 +544,13 @@
         }
       };
 
-      this.date_string = "";
+      this.date_string = ""; // friendly version of the date, for the UI
       this.date_valid = false;
       this.service_times = ["Please select a valid date"];
       this.debug_info = {};
 
       this.service_type = cfg.PICKUP;
-      this.selected_date = "";
+      this.selected_date = ""; // the moment object of the selected date
       this.service_time = "Please select a valid date";
       this.customer_name = "";
       this.phone_number = "";
@@ -552,7 +597,11 @@
       this.selected_time_timeout = false;
     };
 
-    app.controller("OrderController", ["OrderHelper", "$filter", "$location", function(OrderHelper, $filter, $location) {
+    app.controller("OrderController", ["OrderHelper", "$filter", "$location", "socket", function(OrderHelper, $filter, $location, $socket) {
+      $socket.on("WCP_BLOCKED_OFF", (message) => {
+        this.CONFIG.UpdateBlockedOff(message);
+        this.SlowSubmitterCheck();
+      } );
       this.ORDER_HELPER = OrderHelper;
       this.CONFIG = wcpconfig;
       this.toppings = toppings_array;
@@ -567,13 +616,14 @@
 
       this.s = new WCPOrderState(this.CONFIG, enable_delivery, this.split_toppings);
 
+
       this.Reset = function() {
         this.s = new WCPOrderState(this.CONFIG, enable_delivery, this.split_toppings);
       };
 
       this.ServiceTimeChanged = function() {
         // time has changed so log the selection time and clear the timeout flag
-        this.s.debug_info["time-selection-time"] = new Date(timing_info.current_time);
+        this.s.debug_info["time-selection-time"] = moment(timing_info.current_time);
         this.s.selected_time_timeout = false;
       };
 
@@ -603,7 +653,7 @@
         }
         if (no_longer_meets_service_requirement ||
             isNaN(parsedDate) ||
-            !OrderHelper.IsDateActive(new Date(parsedDate), this.s.service_type, this.s.num_pizza, this.s.cart_based_lead_time)) {
+            !OrderHelper.IsDateActive(moment(parsedDate), this.s.service_type, this.s.num_pizza, this.s.cart_based_lead_time)) {
           this.s.date_valid = false;
           this.s.service_times = ["Please select a valid date"];
           this.s.service_time = "Please select a valid date";
@@ -612,8 +662,8 @@
           // grab the old service_time the date was valid then one must have been selected
           var old_service_time = this.s.date_valid ? this.s.service_time : null;
 
-          this.s.selected_date = new Date(parsedDate);
-          this.s.date_string = $filter("date")(this.s.selected_date, "EEEE, MMMM dd, yyyy");
+          this.s.selected_date = moment(parsedDate);
+          this.s.date_string = this.s.selected_date.format("dddd, MMMM DD, Y");
           this.s.date_valid = true;
 
           this.s.service_times = OrderHelper.GetStartTimes(this.s.selected_date, this.s.service_type, this.s.num_pizza, this.s.cart_based_lead_time);
@@ -624,7 +674,7 @@
           }
         }
 
-        if (this.s.date_valid && !this.ORDER_HELPER.IsSameDay(this.s.selected_date, timing_info.current_time)) {
+        if (this.s.date_valid && !this.s.selected_date.isSame(timing_info.current_time, 'day')) {
           this.s.additional_message = "\nDOUBLE CHECK THIS IS FOR TODAY BEFORE MAKING THE BOX\n";
         }
 
@@ -746,6 +796,14 @@
         this.s.stage = 3;
       };
 
+      this.SlowSubmitterCheck = function() {
+        var old_time = this.s.service_time;
+        this.ValidateDate();
+        // only bump someone to the time selection page if they're already at least that far
+        if (old_time != this.s.service_time && this.s.stage >= 2) {
+          this.SlowSubmitterTrigger();
+        }
+      };
       this.NextStage = function() {
         this.s.stage = this.s.stage + 1;
       };
@@ -912,7 +970,7 @@
           });
 
           // set load time field once
-          $j(element).find("span.load-time input").val($filter("date")(timing_info.load_time, "HH:mm:ss"));
+          $j(element).find("span.load-time input").val(timing_info.load_time.format("H:mm:ss"));
 
           var EventTitleSetter = function() {
             var event_title = OrderHelper.EventTitleStringBuilder(scope.orderinfo.s.service_type, scope.orderinfo.s.customer_name, scope.orderinfo.s.cart, scope.orderinfo.s.special_instructions);
@@ -927,7 +985,7 @@
             $j(element).find("span.automated_instructions textarea").val(confirmation_body);
           };
           var ConfirmationSubjectSetter = function() {
-            var selected_date_string = $filter("date")(scope.orderinfo.s.selected_date, "EEEE, MMMM dd, yyyy");
+            var selected_date_string = scope.orderinfo.s.selected_date ? scope.orderinfo.s.selected_date.format("dddd, MMMM DD, Y") : "";
             var confirmation_subject = OrderHelper.EmailSubjectStringBuilder(scope.orderinfo.s.service_type, scope.orderinfo.s.customer_name, selected_date_string, scope.orderinfo.s.service_time);
             $j(element).find("span.confirmation-subject textarea").val(confirmation_subject);
           };
@@ -935,31 +993,24 @@
             var confirmation_body = OrderHelper.EmailBodyStringBuilder(scope.orderinfo.s.service_type, scope.orderinfo.s.selected_date, scope.orderinfo.s.service_time, scope.orderinfo.s.phone_number);
             $j(element).find("span.confirmation-body textarea").val(confirmation_body);
           };
-          var SlowSubmitterCheck = function() {
-            var old_time = scope.orderinfo.s.service_time;
-            scope.orderinfo.ValidateDate();
-            // only bump someone to the time selection page if they're already at least that far
-            if (old_time != scope.orderinfo.s.service_time && scope.orderinfo.s.stage >= 2) {
-              scope.orderinfo.SlowSubmitterTrigger();
-            }
-          };
 
           var ParseSpecialInstructionsAndPopulateResponses = function() {
             scope.orderinfo.s.special_instructions_responses = [];
-            var special_instructions_lower = scope.orderinfo.s.special_instructions.toLowerCase();
-            if (special_instructions_lower.indexOf("split") >= 0 || special_instructions_lower.indexOf("half") >= 0 || special_instructions_lower.indexOf("1/2") >= 0) {
+            var special_instructions_lower = scope.orderinfo.s.special_instructions ? scope.orderinfo.s.special_instructions.toLowerCase() : "";
+            if (wcpconfig.REQUEST_HALF && special_instructions_lower.indexOf("split") >= 0 || special_instructions_lower.indexOf("half") >= 0 || special_instructions_lower.indexOf("1/2") >= 0) {
               scope.orderinfo.s.special_instructions_responses.push(wcpconfig.REQUEST_HALF);
+
             }
-            if (special_instructions_lower.indexOf("slice") >= 0 || special_instructions_lower.indexOf("cut") >= 0) {
+            if (wcpconfig.REQUEST_SLICING && special_instructions_lower.indexOf("slice") >= 0 || special_instructions_lower.indexOf("cut") >= 0) {
               scope.orderinfo.s.special_instructions_responses.push(wcpconfig.REQUEST_SLICING);
             }
-            if (special_instructions_lower.indexOf("no cheese") >= 0 || special_instructions_lower.indexOf("vegan") >= 0 || special_instructions_lower.indexOf("without cheese") >= 0) {
+            if (wcpconfig.REQUEST_VEGAN && special_instructions_lower.indexOf("no cheese") >= 0 || special_instructions_lower.indexOf("vegan") >= 0 || special_instructions_lower.indexOf("without cheese") >= 0) {
               scope.orderinfo.s.special_instructions_responses.push(wcpconfig.REQUEST_VEGAN);
             }
           };
 
           scope.$watch("orderinfo.s.debug_info", function() {
-            $j(element).find("span.time-selection-time input").val($filter("date")(scope.orderinfo.s.debug_info["time-selection-time"], "HH:mm:ss"));
+            $j(element).find("span.time-selection-time input").val(scope.orderinfo.s.debug_info["time-selection-time"] ? scope.orderinfo.s.debug_info["time-selection-time"].format("H:mm:ss"):"");
           }, true);
 
           scope.$watch("orderinfo.s.service_type", function() {
@@ -975,7 +1026,7 @@
             ConfirmationSubjectSetter();
           }, true);
           scope.$watch("orderinfo.s.selected_date", function() {
-            var selected_date_string = $filter("date")(scope.orderinfo.s.selected_date, "EEEE, MMMM dd, yyyy");
+            var selected_date_string = scope.orderinfo.s.selected_date ? scope.orderinfo.s.selected_date.format("dddd, MMMM DD, Y") : "";
             $j(element).find("span.service-date input").val(selected_date_string);
             $j(element).find("span.additional_message input").val(scope.orderinfo.s.additional_message);
             var eventdate = OrderHelper.EventDateTimeStringBuilder(scope.orderinfo.s.selected_date, scope.orderinfo.s.service_time);
@@ -1025,7 +1076,7 @@
           }, true);
 
           function UpdateCurrentTime() {
-            var time_diff = new Date().getTime() - timing_info.browser_load_time.getTime();
+            var time_diff = moment().valueOf() - timing_info.browser_load_time.valueOf();
             if (time_diff < timing_info.load_time_diff) {
               // cheater cheater
               location.reload();
@@ -1033,10 +1084,10 @@
             else {
               timing_info.load_time_diff = time_diff;
             }
-            timing_info.current_time = new Date(timing_info.load_time.getTime() + timing_info.load_time_diff);
+            timing_info.current_time = moment(timing_info.load_time.valueOf() + timing_info.load_time_diff);
             timing_info.order_placed_during_dining = OrderHelper.RelationshipToDineInHour(timing_info.current_time, OrderHelper.DateToMinutes(timing_info.current_time));
             UpdateLeadTime();
-            SlowSubmitterCheck();
+            scope.orderinfo.SlowSubmitterCheck();
             AutomatedInstructionsSetter();
           }
           UpdateCurrentTime();
@@ -1092,7 +1143,7 @@
         },
         link: function(scope, element, attrs, ctrl) {
           var DateActive = function(date) {
-            var is_active = OrderHelper.IsDateActive(date, scope.orderinfo.s.service_type, scope.orderinfo.s.num_pizza, scope.orderinfo.s.cart_based_lead_time);
+            var is_active = OrderHelper.IsDateActive(moment(date), scope.orderinfo.s.service_type, scope.orderinfo.s.num_pizza, scope.orderinfo.s.cart_based_lead_time);
             var tooltip = is_active ? "Your order can be placed for this date." : "Your order cannot be placed for this date.";
             return [is_active, "", tooltip];
           };

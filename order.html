@@ -228,7 +228,7 @@
         </tr>
         <tr>
           <td>Service</td>
-          <td>{{orderCtrl.CONFIG.SERVICE_TYPES[orderCtrl.s.service_type][0]}} on {{orderCtrl.s.selected_date | date:'EEEE, MMMM dd, yyyy'}} at {{orderCtrl.s.service_time | MinutesToPrintTime}}</td>
+          <td>{{orderCtrl.CONFIG.SERVICE_TYPES[orderCtrl.s.service_type][0]}} on {{orderCtrl.s.date_string}} at {{orderCtrl.s.service_time | MinutesToPrintTime}}</td>
         </tr>
         <tr ng-if="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY">
           <td>Address</td>
@@ -331,7 +331,7 @@
     <div class="order-nav">
       <button type="submit" class="btn scrolltotop" ng-show="orderCtrl.HasPreviousStage()" ng-click="orderCtrl.PreviousStage()">Previous</button>
       <span ng-click="orderCtrl.Submit()" cf7bridge class="cf7bridge scrolltotop" orderinfo="orderCtrl">
-        [contact-form-7 id="5" title="Order Form Bridge"]
+        [contact-form-7 id="28805" title="Order Form Bridge"]
       </span>
     </div>
   </div>
@@ -345,4 +345,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.11/angular.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mailcheck/1.1.2/mailcheck.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.maskedinput/1.4.1/jquery.maskedinput.min.js"></script>
-<script src="https://www.breezytownpizza.com/wp-includes/js/BTPMenu4.js"></script>
+<script src="https://www.windycitypie.com/wp-includes/js/socket.io.js"></script>
+<script src="https://www.windycitypie.com/wp-includes/js/socket.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
+<script src="https://www.windycitypie.com/wp-includes/js/WCPMenu_new_5.js"></script>
