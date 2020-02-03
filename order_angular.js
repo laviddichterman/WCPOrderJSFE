@@ -134,8 +134,12 @@
     this.REQUEST_HALF = "While half toppings are not on the menu, we can do them (with the exception of half roasted garlic or half red sauce, half white sauce) but they are charged the same as full toppings. As such, we recommend against them as they're not a good value for the customer and an imbalance of toppings will cause uneven baking of your pizza.";
     // END user messaging
 
-    this.UpdateBlockedOff = (bo) => {
+    this.UpdateBlockedOffVal = function(bo) {
       this.BLOCKED_OFF = bo;
+    }
+
+    this.UpdateLeadTimeVal = function(lt) {
+      this.LEAD_TIME = lt;
     }
     //END WCP store config
   };
@@ -147,7 +151,6 @@
       for (var j in wcpconfig.BLOCKED_OFF[i]) {
           if(typeof wcpconfig.BLOCKED_OFF[i][j][0] != "String") {
             wcpconfig.BLOCKED_OFF[i][j][0] = moment(wcpconfig.BLOCKED_OFF[i][j][0]).format(DATE_STRING_INTERNAL_FORMAT);
-            console.log(wcpconfig.BLOCKED_OFF[i][j][0]);
           }
       }
     }
@@ -598,10 +601,6 @@
     };
 
     app.controller("OrderController", ["OrderHelper", "$filter", "$location", "socket", function(OrderHelper, $filter, $location, $socket) {
-      $socket.on("WCP_BLOCKED_OFF", (message) => {
-        this.CONFIG.UpdateBlockedOff(message);
-        this.SlowSubmitterCheck();
-      } );
       this.ORDER_HELPER = OrderHelper;
       this.CONFIG = wcpconfig;
       this.toppings = toppings_array;
@@ -615,7 +614,6 @@
       this.ScrollTop = ScrollTopJQ;
 
       this.s = new WCPOrderState(this.CONFIG, enable_delivery, this.split_toppings);
-
 
       this.Reset = function() {
         this.s = new WCPOrderState(this.CONFIG, enable_delivery, this.split_toppings);
@@ -668,7 +666,8 @@
 
           this.s.service_times = OrderHelper.GetStartTimes(this.s.selected_date, this.s.service_type, this.s.num_pizza, this.s.cart_based_lead_time);
 
-          if (!old_service_time || this.s.service_times.findIndex(function(elt, idx, arr) { return elt == old_service_time; }) == -1) {
+          // don't use findindex here because of IE(all)
+          if (!old_service_time || !this.s.service_times.some(function(elt, idx, arr) { return elt == old_service_time; })) {
               this.s.service_time = this.s.service_times[0];
               this.ServiceTimeChanged();
           }
@@ -806,6 +805,7 @@
       };
       this.NextStage = function() {
         this.s.stage = this.s.stage + 1;
+        this.s.selected_time_timeout = false;
       };
       this.PreviousStage = function() {
         this.s.stage = this.s.stage - 1;
@@ -816,6 +816,23 @@
       this.HasNextStage = function() {
         return this.s.stage < 4;
       };
+
+      // this binding means we need to have this block here.
+      var UpdateBlockedOffFxn = function(message) {
+        this.CONFIG.UpdateBlockedOffVal(message);
+        this.SlowSubmitterCheck();
+        UpdateLeadTime();
+      };
+      var UpdateBlockedOffFxn = UpdateBlockedOffFxn.bind(this);
+      $socket.on("WCP_BLOCKED_OFF", UpdateBlockedOffFxn);
+      const UpdateLeadTimeFxn = function(message) {
+        this.CONFIG.UpdateLeadTimeVal(message);
+        this.SlowSubmitterCheck();
+        UpdateLeadTime();
+      };
+      const BoundUpdateLeadTimeFxn = UpdateLeadTimeFxn.bind(this);
+      $socket.on("WCP_LEAD_TIMES", BoundUpdateLeadTimeFxn);
+
     }]);
 
     app.controller("PizzaMenuController", function() {
