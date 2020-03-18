@@ -1,6 +1,6 @@
   <div ng-cloak class="orderform" ng-app="WCPOrder" ng-controller="OrderController as orderCtrl">
     <span id="ordertop"></span>
-    <div ng-show="orderCtrl.s.stage === 0 || orderCtrl.s.stage === 1" ng-controller="PizzaMenuController as pmenuCtrl">
+    <div ng-show="orderCtrl.s.stage === 0 || orderCtrl.s.stage === 1 || orderCtrl.s.stage === 2" ng-controller="PizzaMenuController as pmenuCtrl">
       <div class="ordering-menu menu-list menu-list__dotted" ng-show="orderCtrl.s.stage === 0 && !pmenuCtrl.selection">
         <h3 class="flush--top" ng-if="orderCtrl.s.cart.pizza.length === 0"><strong>Click a pizza below to get started</strong></h3>
         <h3 class="flush--top" ng-if="orderCtrl.s.cart.pizza.length > 0"><strong>Click a pizza below or next to continue</strong></h3>
@@ -72,6 +72,21 @@
           </li>
         </ul>
       </div>
+      <div class="ordering-menu menu-list menu-list__dotted" ng-show="orderCtrl.s.stage === 2">
+        <h3 class="flush--top"><strong>Add beer or wine to your order or click next to continue</strong></h3>
+        <ul class="menu-list__items">
+          <li class="menu-list__item" ng-repeat="bev in pmenuCtrl.beverage_menu">
+            <div class="offer-link" ng-click="orderCtrl.ScrollTop(); orderCtrl.addBeverageToOrder(bev)">
+              <h4 class="menu-list__item-title"><span class="item_title">{{bev.name}}</span><span class="dots"></span></h4>
+              <p class="menu-list__item-desc">
+                <span class="desc__content">{{bev.description}}</span>
+              </p>
+              <span class="dots"></span>
+              <span class="menu-list__item-price">{{bev.price}}</span>
+            </div>
+          </li>
+        </ul>
+      </div>
       <div class="cart" ng-if="orderCtrl.s.cart.pizza.length > 0 || orderCtrl.s.cart.extras.length > 0">
         <hr class="separator">
         <h3 class="flush">Current Order</h3>
@@ -119,6 +134,24 @@
                     </div>
                   </td>
                 </tr>
+                <tr ng-repeat="item in orderCtrl.s.cart.beverages" class="cart-item">
+                  <td>
+                    <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
+                      <div class="menu-list__item">
+                        <h4 class="menu-list__item-title"><span class="item_title">{{item[1].name}}</span></h4>
+                        <p class="menu-list__item-desc"><span class="desc__content">{{item[1].description}}</span></p>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="grid-flex grid-valign-middle">
+                      <input type="number" class="quantity" min=1 max=99 ng-model="item[0]" ng-blur="orderCtrl.fixQuantities(true)" ng-change="orderCtrl.fixQuantities(false)">
+                      <span class="cart-item-remove">
+                        <button name="remove" ng-click="orderCtrl.ScrollTop(); orderCtrl.removeBeverageFromOrder($index)" class="button-remove">X</button>
+                      </span>
+                    </div>
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -129,7 +162,7 @@
         <button type="submit" class="btn scrolltotop" ng-disabled="orderCtrl.s.cart.pizza.length < 1" ng-show="orderCtrl.HasNextStage() && orderCtrl.s.cart.pizza.length >= 1" ng-click="pmenuCtrl.unsetPizza(); orderCtrl.NextStage()">Next</button>
       </div>
     </div>
-    <div ng-show="orderCtrl.s.stage === 2">
+    <div ng-show="orderCtrl.s.stage === 3">
       <h3 class="flush--top">Tell us a little about you.</h3>
       <div class="wpcf7-response-output wpcf7-mail-sent-ng" ng-if="orderCtrl.s.submit_failed">There was an error submitting your order. This is generally caused by a bad email address. Please check your information and try again.</div>
       <form novalidate name="stage2">
@@ -156,10 +189,10 @@
         <button type="submit" class="btn scrolltotop" ng-disabled="!stage2.$valid || orderCtrl.s.submit_failed" ng-show="orderCtrl.HasNextStage()" ng-click="orderCtrl.NextStage()">Next</button>
       </div>
     </div>
-    <div ng-show="orderCtrl.s.stage === 3">
+    <div ng-show="orderCtrl.s.stage === 4">
       <h3 class="flush--top">How and when would you like your order?</h3>
       <span>Requested Service:</span>
-      <form novalidate name="stage3">
+      <form novalidate name="stage4">
       <div class="flexitems">
         <div class="flexitem" ng-repeat="service in orderCtrl.CONFIG.SERVICE_TYPES track by $index">
           <label ng-if="orderCtrl.s.service_type_functors[$index](orderCtrl.s)"><input type="radio" ng-change="orderCtrl.ValidateDate(); orderCtrl.ClearAddress();" ng-model="orderCtrl.s.service_type" ng-value="service[1]">
@@ -188,7 +221,7 @@
       <span ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && !orderCtrl.s.is_address_validated" class="wpcf7-form-control-wrap zipcode">
         <input type="text" name="zipcode" size="40" ng-model="orderCtrl.s.delivery_zipcode" zipcode>
       </span>
-      <button type="submit" class="btn" ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && !(stage3.address.$error.address || stage3.zipcode.$error.zipcode) && !orderCtrl.s.is_address_validated" ng-click="orderCtrl.ValidateDeliveryAddress()">Validate Delivery Address</button>
+      <button type="submit" class="btn" ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && !(stage4.address.$error.address || stage4.zipcode.$error.zipcode) && !orderCtrl.s.is_address_validated" ng-click="orderCtrl.ValidateDeliveryAddress()">Validate Delivery Address</button>
       </form>
       <span ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && orderCtrl.s.validated_delivery_address" class="">
         <div class="wpcf7-response-output wpcf7-mail-sent-ok" ng-show="orderCtrl.s.is_address_validated">
@@ -203,7 +236,7 @@
         <button type="submit" class="btn scrolltotop" ng-disabled="!orderCtrl.s.date_valid || (orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && (!orderCtrl.s.is_address_validated))" ng-show="orderCtrl.HasNextStage()" ng-click="orderCtrl.rebuildCartString(); orderCtrl.NextStage();">Next</button>
       </div>
     </div>
-    <div ng-show="orderCtrl.s.stage === 4">
+    <div ng-show="orderCtrl.s.stage === 5">
         <h3 class="flush--top">Everything look right?</h3>
         <table>
           <tr>
@@ -279,6 +312,24 @@
                   </td>
                   <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{item[1].price * item[0] | number:2}}</span></td>
                 </tr>
+                <tr ng-repeat="item in orderCtrl.s.cart.beverages" class="cart-item">
+                  <td class="cart-item-description">
+                    <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
+                      <div class="menu-list__item">
+                        <h4 class="menu-list__item-title"><span class="item_title">{{item[1].name}}</span></h4>
+                        <p class="menu-list__item-desc"><span class="desc__content">{{item[1].description}}</span></p>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="cart-item-quantity-price no-wrap">
+                    <div class="grid-flex grid-valign-middle">
+                      <span class="column no-shrink menu-list__item-price">{{item[0]}}</span>
+                      <span class="column no-shrink">×</span>
+                      <span class="column no-shrink menu-list__item-price">{{item[1].price}}</span>
+                    </div>
+                  </td>
+                  <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{item[1].price * item[0] | number:2}}</span></td>
+                </tr>
                 <tr class="cart-item" ng-if="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY">
                   <td class="cart-item-description">
                     <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
@@ -290,7 +341,7 @@
                   <td class="cart-item-quantity-price no-wrap"></td>
                   <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price"><strike>{{5 | number:2}}</strike></span></td>
                 </tr>
-                <tr class="cart-item" ng-if="orderCtrl.s.autograt >= 0">
+                <tr class="cart-item" ng-hide="orderCtrl.s.autograt === 0">
                   <td class="cart-item-description">
                     <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
                       <div class="cart-item-title-subtitle column menu-list__item">
@@ -337,12 +388,12 @@
           [contact-form-7 id="28805" title="Order Form Bridge"]
         </span>
       </div>
-      <div ng-if="orderCtrl.s.autograt >= 0">* Autogratuity is distributed to the staff that worked on the day services are rendered </div>
+      <div ng-hide="orderCtrl.s.autograt === 0">* Autogratuity is distributed to the staff that worked on the day services are rendered </div>
     </div>
-    <div ng-show="orderCtrl.s.stage === 5">
+    <div ng-show="orderCtrl.s.stage === 6">
       <div class="wpcf7 wpcf7-response-output wpcf7-mail-sent-ok">Submitting order! This can take between 5-15 seconds.<span class="ajax-loader is-active"></span></div>
     </div>
-    <div class="submitsuccess wpcf7-response-output wpcf7-mail-sent-ok" ng-show="orderCtrl.s.stage === 6">
+    <div class="submitsuccess wpcf7-response-output wpcf7-mail-sent-ok" ng-show="orderCtrl.s.stage === 7">
       Order submitted successfully! Please check your email.
     </div>
   </div>
@@ -352,4 +403,4 @@
   <script src="https://www.windycitypie.com/wp-includes/js/socket.io.js"></script>
   <script src="https://www.windycitypie.com/wp-includes/js/socket.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
-  <script src="https://www.windycitypie.com/wp-includes/js/WCPMenu_0.js"></script>
+  <script src="https://www.windycitypie.com/wp-includes/js/WCPMenu_1.js"></script>

@@ -98,6 +98,7 @@ var WCPStoreConfig = function() {
   // menu related
   this.EXTRAS_MENU = salad_menu;
   this.PIZZA_MENU = pizza_menu;
+  this.BEVERAGE_MENU = beverage_menu;
   this.TOPPINGS = toppings_array;
   this.SAUCES = sauces;
   this.CHEESE_OPTIONS = cheese_options;
@@ -449,10 +450,19 @@ var WCPOrderHelper = function() {
       var shortcode = cart.extras[j][1].shortcode;
       extras_shortcodes = extras_shortcodes + "+" + quantity.toString(10) + "x" + shortcode;
     }
+
+    var beverage_shortcodes = "";
+    for (var k in cart.beverages) {
+      var quantity = cart.beverages[k][0];
+      var shortcode = cart.beverages[k][1].shortcode;
+      beverage_shortcodes = beverage_shortcodes + "+" + quantity.toString(10) + "x" + shortcode;
+    }
+
     var customer_encoded = encodeURI(customer);
     var pizzas_title = num_pizzas + "x" + pizza_shortcodes;
     var extras_title = extras_shortcodes.length > 0 ? "+Extras" + extras_shortcodes : "";
-    return service_string + "+" + customer_encoded + "+" + pizzas_title + extras_title + (has_special_instructions ? "+%2A" : "");
+    var beverages_title = beverage_shortcodes.length > 0 ? "+Bev" + beverage_shortcodes : "";
+    return service_string + "+" + customer_encoded + "+" + pizzas_title + extras_title + beverages_title + (has_special_instructions ? "+%2A" : "");
   };
 
   this.EventDateTimeStringBuilder = function(date, time) {
@@ -563,8 +573,8 @@ function UpdateLeadTime() {
       for (var j in this.cart.extras) {
         val += this.cart.extras[j][0] * this.cart.extras[j][1].price;
       }
-      for (var j in this.cart.beverages) {
-        val += this.cart.beverages[j][0] * this.cart.beverages[j][1].price;
+      for (var k in this.cart.beverages) {
+        val += this.cart.beverages[k][0] * this.cart.beverages[k][1].price;
       }
       return val;
     }
@@ -622,11 +632,12 @@ function UpdateLeadTime() {
 
     // stage 0: menu/cart controller: cart display // pie selection // customize pie, add to cart
     // stage 1: salads
-    // stage 2: customer name, phone, email address, address , referral info
-    // stage 3: select service_type date/time
-    // stage 4: review order, special instructions
-    // stage 5: pressed submit, waiting validation
-    // stage 6: submitted successfully
+    // stage 2: beverages
+    // stage 3: customer name, phone, email address, address , referral info
+    // stage 4: select service_type date/time
+    // stage 5: review order, special instructions
+    // stage 6: pressed submit, waiting validation
+    // stage 7: submitted successfully
     this.stage = 0;
 
     // flag for when submitting fails according to submission backend
@@ -762,6 +773,14 @@ function UpdateLeadTime() {
         short_builder = short_builder + quantity + "x: " + item_name + "\n";
       }
 
+      // process cart for beverages
+      for (var k in this.s.cart.beverages) {
+        var quantity = this.s.cart.beverages[k][0];
+        var item_name = this.s.cart.beverages[k][1].name;
+        str_builder = str_builder + quantity + "x: " + item_name + "\n";
+        short_builder = short_builder + quantity + "x: " + item_name + "\n";
+      }
+
       if (this.s.validated_delivery_address) {
         str_builder = str_builder + "\n Delivery Address: " + this.s.validated_delivery_address;
       }
@@ -852,34 +871,37 @@ function UpdateLeadTime() {
       for (var j in this.s.cart.extras) {
         this.s.cart.extras[j][0] = FixQuantity(this.s.cart.extras[j][0], clear_if_invalid);
       }
+      for (var k in this.s.cart.extras) {
+        this.s.cart.beverages[k][0] = FixQuantity(this.s.cart.beverages[k][0], clear_if_invalid);
+      }
       this.PostCartUpdate();
     };
 
     this.Submit = function() {
-      this.s.stage = 5;
+      this.s.stage = 6;
     };
 
     this.CF7SubmitFailed = function() {
       this.s.submit_failed = true;
-      this.s.stage = 2;
+      this.s.stage = 3;
     };
 
     this.CF7SubmitSuccess = function() {
-      this.s.stage = 6;
+      this.s.stage = 7;
     };
 
     this.SlowSubmitterTrigger = function() {
       // set flag for user notification that too much time passed
       this.s.selected_time_timeout = true;
-      // set stage to 3 (time selection)
-      this.s.stage = 3;
+      // set stage to 4 (time selection)
+      this.s.stage = 4;
     };
 
     this.SlowSubmitterCheck = function() {
       var old_time = this.s.service_time;
       this.ValidateDate();
       // only bump someone to the time selection page if they're already at least that far
-      if (old_time != this.s.service_time && this.s.stage >= 3) {
+      if (old_time != this.s.service_time && this.s.stage >= 4) {
         this.SlowSubmitterTrigger();
       }
     };
@@ -891,10 +913,10 @@ function UpdateLeadTime() {
       this.s.stage = this.s.stage - 1;
     };
     this.HasPreviousStage = function() {
-      return this.s.stage > 0 && this.s.stage <= 4;
+      return this.s.stage > 0 && this.s.stage <= 5;
     };
     this.HasNextStage = function() {
-      return this.s.stage < 4;
+      return this.s.stage < 5;
     };
 
     // this binding means we need to have this block here.
