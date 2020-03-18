@@ -52,13 +52,13 @@ var WCPStoreConfig = function() {
   this.BLOCKED_OFF = [WCP_time_off];
 
   this.PICKUP_HOURS = [
-    [12 * 60, 22 * 60], //sunday
+    [12 * 60, 21 * 60], //sunday
     [1 * 60, 0 * 60], //monday
     [1 * 60, 0 * 60], //tuesday
-    [16 * 60, 22 * 60], //wednesday
-    [16 * 60, 22 * 60], //thursday
-    [16 * 60, 23 * 60], //friday
-    [12 * 60, 23 * 60] //saturday
+    [16 * 60, 21 * 60], //wednesday
+    [16 * 60, 21 * 60], //thursday
+    [12 * 60, 22 * 60], //friday
+    [12 * 60, 22 * 60] //saturday
   ];
 
   this.DINEIN_HOURS = [
@@ -72,13 +72,13 @@ var WCPStoreConfig = function() {
   ];
 
   this.DELIVERY_HOURS = [
-    [11 * 60, 22 * 60], //sunday
-    [11 * 60, 22 * 60], //monday
-    [11 * 60, 22 * 60], //tuesday
-    [11 * 60, 22 * 60], //wednesday
-    [11 * 60, 22 * 60], //thursday
-    [11 * 60, 22 * 60], //friday
-    [11 * 60, 22 * 60] //saturday
+    [12 * 60, 21 * 60], //sunday
+    [1 * 60, 0 * 60], //monday
+    [1 * 60, 0 * 60], //tuesday
+    [16 * 60, 21 * 60], //wednesday
+    [16 * 60, 21 * 60], //thursday
+    [12 * 60, 22 * 60], //friday
+    [12 * 60, 22 * 60] //saturday
   ];
 
   this.HOURS_BY_SERVICE_TYPE = [
@@ -126,9 +126,10 @@ var WCPStoreConfig = function() {
   this.NOTE_PICKUP_DURING_DI = "Come to the host stand and let us know your first name and that you have a pre-order.";
   this.NOTE_PICKUP_AFTER_DI = "We'll be ending our dine-in service at the time of your pickup. Please come to the bar and inform us the name under which the order was placed.";
   this.NOTE_DI = "Dine-ins get you to the front of the table queue. We don't reserve seating. Please arrive slightly before your selected time so your pizza is as fresh as possible and you have time to get situated and get beverages! ";
-  this.NOTE_DELIVERY_BETA = "Our catering offering is current in a limited beta. We'll reach out shortly to determine our availability for the requested time and to get a better idea of your needs.";
+  this.NOTE_DELIVERY_BETA = "Our delivery service is now in beta. Delivery times are rough estimates and we will make every attempt to be prompt. We'll contact you to confirm the order shortly.";
   this.NOTE_PAYMENT = "We happily accept any major credit card or cash for payment upon arrival.";
-
+  this.NOTE_DELIVERY_SERVICE = "We appreciate your patience as our in-house delivery service is currently in its infancy. Delivery times are estimated. We might be a little earlier, or a little later. A 20% gratuity will be applied and is distributed among the Windy City Pie family.";
+  this.NOTE_ALCOHOL = "The recipient must have a valid ID showing they are at least 21 years of age.";
   this.REQUEST_SLICING = "In order to ensure the quality of our pizzas, we will not slice them. We'd recommend bringing anything from a bench scraper to a butter knife to slice the pizza. Slicing the whole pizza when it's hot inhibits the crust from properly setting, and can cause the crust to get soggy both during transit and as the pie is eaten. We want your pizza to be the best possible and bringing a tool with which to slice the pie will make a big difference.";
   this.REQUEST_VEGAN = "Our pizzas cannot be made vegan or without cheese. If you're looking for a vegan option, our Beets By Schrute salad can be made vegan by omitting the bleu cheese.";
   this.REQUEST_HALF = "While half toppings are not on the menu, we can do them (with the exception of half roasted garlic or half red sauce, half white sauce) but they are charged the same as full toppings. As such, we recommend against them as they're not a good value for the customer and an imbalance of toppings will cause uneven baking of your pizza.";
@@ -355,7 +356,7 @@ var WCPOrderHelper = function() {
     return encodeURI(service_type + " for " + name + " on " + date_string + " - " + service_time);
   };
 
-  this.EmailBodyStringBuilder = function(service_type, date, time, phone) {
+  this.EmailBodyStringBuilder = function(service_type, date, time, phone, delivery_address) {
     if (date === null || isNaN(time)) {
       return "";
     }
@@ -364,13 +365,21 @@ var WCPOrderHelper = function() {
     var service_time_print = this.MinutesToPrintTime(time);
     var nice_area_code = this.IsIllinoisAreaCode(phone);
     var confirm_string_array = [];
+    var opener = nice_area_code ? "Hello, nice area code, and thanks for your order! " : "Hello and thanks for your order! ";
     switch (service_type) {
       case this.cfg.DELIVERY:
-        confirm_string_array = ["NOT SUPPORTED"];
+        confirm_string_array = [
+          opener,
+          "We're happy to confirm your delivery for around ",
+          service_time_print,
+          ` to ${delivery_address}.\n\n`,
+          this.cfg.NOTE_DELIVERY_SERVICE,
+          " ",
+          this.cfg.NOTE_PAYMENT
+        ];
         break;
       case this.cfg.PICKUP:
         if (service_during_dine_in === 0) {
-          var opener = nice_area_code ? "Hello, nice area code, and thanks for your order! " : "Hello and thanks for your order! ";
           confirm_string_array = [
             opener,
             "We're happy to confirm your pickup for ",
@@ -384,7 +393,7 @@ var WCPOrderHelper = function() {
           var opener = nice_area_code ? "Nice area code! " : "";
           confirm_string_array = [
             opener,
-            "We're happy to confirm your pickup order for ",
+            "We're happy to confirm your pickup for ",
             service_time_print,
             " at our Phinney Ridge home (5918 Phinney Ave N, 98103).\n\n",
             service_during_dine_in === 1 ? this.cfg.NOTE_PICKUP_DURING_DI : this.cfg.NOTE_PICKUP_AFTER_DI,
@@ -472,7 +481,6 @@ var WCPOrderHelper = function() {
     }
     return es;
   };
-
 };
 
 var wcporderhelper = new WCPOrderHelper();
@@ -547,6 +555,20 @@ function UpdateLeadTime() {
       }
     };
 
+    this.ComputeSubtotal = function() {
+      var val = 0;
+      for (var i in this.cart.pizza) {
+        val += this.cart.pizza[i][0] * this.cart.pizza[i][1].price;
+      }
+      for (var j in this.cart.extras) {
+        val += this.cart.extras[j][0] * this.cart.extras[j][1].price;
+      }
+      for (var j in this.cart.beverages) {
+        val += this.cart.beverages[j][0] * this.cart.beverages[j][1].price;
+      }
+      return val;
+    }
+
     this.date_string = ""; // friendly version of the date, for the UI
     this.date_valid = false;
     this.service_times = ["Please select a valid date"];
@@ -560,10 +582,13 @@ function UpdateLeadTime() {
     this.delivery_address = ""; // customer input, not validated
     this.delivery_zipcode = ""; // customer input, not validated
     this.validated_delivery_address = "";
+    this.is_address_validated = false;
+    this.address_invalid = false;
     this.email_address = "";
     this.cart = {
       pizza: [],
-      extras: []
+      extras: [],
+      beverages: [],
     };
     this.cartstring = "";
     this.num_pizza = 0;
@@ -577,6 +602,7 @@ function UpdateLeadTime() {
     this.enable_split_toppings = false;
     this.enable_delivery = enable_delivery;
     this.delivery_fee = 0;
+    this.autograt = 0;
     this.EMAIL_REGEX = EMAIL_REGEX;
 
     this.service_type_functors = [
@@ -590,7 +616,7 @@ function UpdateLeadTime() {
       },
       // DELIVERY
       function(state) {
-        return state.enable_delivery && state.num_pizza >= 5;
+        return state.enable_delivery;
       }
     ];
 
@@ -610,7 +636,7 @@ function UpdateLeadTime() {
     this.selected_time_timeout = false;
   };
 
-  app.controller("OrderController", ["OrderHelper", "$filter", "$location", "socket", function(OrderHelper, $filter, $location, $socket) {
+  app.controller("OrderController", ["OrderHelper", "$filter", "$http", "$location", "$scope", "socket", function(OrderHelper, $filter, $http, $location, $scope, $socket) {
     this.ORDER_HELPER = OrderHelper;
     this.CONFIG = wcpconfig;
     this.toppings = toppings_array;
@@ -618,15 +644,14 @@ function UpdateLeadTime() {
     this.cheese_options = cheese_options;
     this.crusts = crusts;
     this.split_toppings = $location.search().split === true;
+    var enable_delivery = true;
 
-    var enable_delivery = $location.search().delivery === true;
+    this.s = $scope.state = new WCPOrderState(this.CONFIG, enable_delivery, this.split_toppings);
 
     this.ScrollTop = ScrollTopJQ;
 
-    this.s = new WCPOrderState(this.CONFIG, enable_delivery, this.split_toppings);
-
     this.Reset = function() {
-      this.s = new WCPOrderState(this.CONFIG, enable_delivery, this.split_toppings);
+      this.s = $scope.state = new WCPOrderState(this.CONFIG, enable_delivery, this.split_toppings);
     };
 
     this.ServiceTimeChanged = function() {
@@ -638,15 +663,42 @@ function UpdateLeadTime() {
     this.ClearAddress = function() {
       this.s.delivery_zipcode = "";
       this.s.delivery_address = "";
+      this.s.validated_delivery_address = "";
+      this.s.is_address_validated = false;
+      this.s.address_invalid = false;
+      this.s.delivery_fee = 0;
+      this.s.autograt = 0;
     };
 
     this.ClearSpecialInstructions = function() {
       this.s.special_instructions = "";
     };
 
-    this.ComputeDeliveryFee = function() {
-      this.s.delivery_fee = this.s.delivery_zipcode && this.s.delivery_zipcode.length > 0 ? 30 : 0;
-    };
+    this.ValidateDeliveryAddress = function() {
+      var onSuccess = function(response) {
+        if (response.status === 200 && response.data.found) {
+          $scope.state.validated_delivery_address = response.data.validated_address;
+          if (response.data.in_area) {
+            $scope.state.is_address_validated = true;
+            $scope.state.address_invalid = false;
+            $scope.state.delivery_fee = 0;
+            $scope.state.autograt = $scope.state.ComputeSubtotal() * .2;
+          }
+        }
+        else {
+          $scope.state.address_invalid = true;
+        }
+      };
+      var onFail = function(response) {
+        $scope.state.address_invalid = true;
+        console.log(response);
+      };
+      $http({
+        method: "GET",
+        url: "https://wario.windycitypie.com/api/v1/addresses/validate",
+        params: { address: this.s.delivery_address, zipcode:this.s.delivery_zipcode, city: "Seattle", state: "WA" }
+      }).then(onSuccess).catch(onFail);
+    }
 
     this.ValidateDate = function() {
       // determines if a particular date (as input) is valid, and if so, populates the service dropdown
@@ -708,6 +760,10 @@ function UpdateLeadTime() {
         var item_name = this.s.cart.extras[j][1].name;
         str_builder = str_builder + quantity + "x: " + item_name + "\n";
         short_builder = short_builder + quantity + "x: " + item_name + "\n";
+      }
+
+      if (this.s.validated_delivery_address) {
+        str_builder = str_builder + "\n Delivery Address: " + this.s.validated_delivery_address;
       }
 
       this.s.cartstring = str_builder;
@@ -786,14 +842,7 @@ function UpdateLeadTime() {
     };
 
     this.subtotal = function() {
-      var val = 0;
-      for (var i in this.s.cart.pizza) {
-        val += this.s.cart.pizza[i][0] * this.s.cart.pizza[i][1].price;
-      }
-      for (var j in this.s.cart.extras) {
-        val += this.s.cart.extras[j][0] * this.s.cart.extras[j][1].price;
-      }
-      return val;
+      return this.s.ComputeSubtotal();
     };
 
     this.fixQuantities = function(clear_if_invalid) {
@@ -1035,7 +1084,7 @@ function UpdateLeadTime() {
           $j(element).find("span.confirmation-subject textarea").val(confirmation_subject);
         };
         var ConfirmationBodySetter = function() {
-          var confirmation_body = OrderHelper.EmailBodyStringBuilder(scope.orderinfo.s.service_type, scope.orderinfo.s.selected_date, scope.orderinfo.s.service_time, scope.orderinfo.s.phone_number);
+          var confirmation_body = OrderHelper.EmailBodyStringBuilder(scope.orderinfo.s.service_type, scope.orderinfo.s.selected_date, scope.orderinfo.s.service_time, scope.orderinfo.s.phone_number, scope.orderinfo.s.validated_delivery_address);
           $j(element).find("span.confirmation-body textarea").val(confirmation_body);
         };
 
@@ -1096,11 +1145,12 @@ function UpdateLeadTime() {
         scope.$watch("orderinfo.s.email_address", function() {
           $j(element).find("span.user-email input").val(scope.orderinfo.s.email_address);
         }, true);
-        scope.$watch("orderinfo.s.delivery_address", function() {
-          $j(element).find("span.address input").val(scope.orderinfo.s.delivery_address);
-        }, true);
-        scope.$watch("orderinfo.s.delivery_zipcode", function() {
-          $j(element).find("span.zipcode input").val(scope.orderinfo.s.delivery_zipcode);
+        scope.$watch("orderinfo.s.validated_delivery_address", function() {
+          $j(element).find("span.address input").val(scope.orderinfo.s.validated_delivery_address);
+          var encoded_event_address = scope.orderinfo.s.validated_delivery_address ? "&location=" +
+            encodeURI(scope.orderinfo.s.validated_delivery_address.replace(/[&]/g, "and")).replace(/[\n\f]/gm, "%0A").replace(/\+/g, "%2B").replace(/\s/g, "+") : "";
+          $j(element).find("span.eventaddress input").val(encoded_event_address);
+          ConfirmationBodySetter();
         }, true);
         scope.$watch("orderinfo.s.referral", function() {
           $j(element).find("span.howdyouhear input").val(scope.orderinfo.s.referral);
