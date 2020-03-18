@@ -604,16 +604,6 @@ pizza_menu = {
     [TOPPING_WHOLE, toppings_dict.jala],
     [TOPPING_WHOLE, toppings_dict.garlic]]
   ),
-  veggie: new WCPPizza("Veggie",
-    "V",
-    crusts.regular,
-    "regular",
-    sauces.red,
-    [[TOPPING_WHOLE, toppings_dict.rbp],
-    [TOPPING_WHOLE, toppings_dict.carm_onion],
-    [TOPPING_WHOLE, toppings_dict.mush],
-    [TOPPING_WHOLE, toppings_dict.spin]]
-  ),
   classic: new WCPPizza("Classic",
     "C",
     crusts.regular,
@@ -699,14 +689,19 @@ pizza_menu = {
 };
 
 salad_menu = {
-  beets: new WCPSalad("Beets By Schrute",
+  beets: new WCPSalad("Beets By Schrute Salad",
     "Be",
     7,
     "Arugula + Roasted Beet + Roasted Pistachio + Bleu + Tarragon Vinaigrette"
   ),
-  caesar: new WCPSalad("All Kale Caesar!",
+  caesar: new WCPSalad("All Kale Caesar! Salad",
     "Cz",
     7,
     "Marinated Kale + Parmigiano Reggiano + Caesar Dressing + Garlic Crouton + Lemon Wedge"
+  ),
+  polpetta: new WCPSalad("Polpetta Party",
+    "Mb",
+    9,
+    "House-Made Meatball (8) + Marinara + Toasted Herbed Breadcrumb + Pecorino Romano + Fresh Basil (Please note: To ensure quality, to-Go orders for this item will be prepared upon guest arrival.)"
   )
 };
