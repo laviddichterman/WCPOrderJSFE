@@ -10,7 +10,7 @@ var $j = jQuery.noConflict();
 
 var EMAIL_REGEX = new RegExp("^[_A-Za-z0-9\-]+(\\.[_A-Za-z0-9\-]+)*@[A-Za-z0-9\-]+(\\.[A-Za-z0-9\-]+)*(\\.[A-Za-z]{2,})$");
 
-var DATE_STRING_INTERNAL_FORMAT = "YYYYMMDDZZ";
+var DATE_STRING_INTERNAL_FORMAT = "YYYYMMDD";
 
 function ScrollTopJQ() {
   $j("html, body").animate({
