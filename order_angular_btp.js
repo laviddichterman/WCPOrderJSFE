@@ -28,7 +28,7 @@ var TimingInfo = function() {
 
 var timing_info = new TimingInfo();
 
-var WCPStoreConfig = function() {
+var BTPStoreConfig = function() {
   // WCP store settings
   // 0 == carry out/pickup
   // 1 == dine in
@@ -43,6 +43,10 @@ var WCPStoreConfig = function() {
     ["Delivery", this.DELIVERY],
   ];
 
+  this.ALLOW_SLICING = true;
+  this.FLAVOR_MAX = FLAVOR_MAX;
+  this.BAKE_MAX = BAKE_MAX;
+
   // topping enums
   this.NONE = TOPPING_NONE;
   this.LEFT = TOPPING_LEFT;
@@ -52,33 +56,33 @@ var WCPStoreConfig = function() {
   this.BLOCKED_OFF = [WCP_time_off];
 
   this.PICKUP_HOURS = [
-    [12 * 60, 21 * 60], //sunday
-    [1 * 60, 0 * 60], //monday
-    [1 * 60, 0 * 60], //tuesday
+    [16 * 60, 21 * 60], //sunday
+    [16 * 60, 21 * 60], //monday
+    [16 * 60, 21 * 60], //tuesday
     [16 * 60, 21 * 60], //wednesday
     [16 * 60, 21 * 60], //thursday
-    [12 * 60, 22 * 60], //friday
-    [12 * 60, 22 * 60] //saturday
+    [16 * 60, 21 * 60], //friday
+    [16 * 60, 21 * 60] //saturday
   ];
 
   this.DINEIN_HOURS = [
-    [12 * 60, 21.5 * 60], //sunday
-    [1 * 60, 0 * 60], //monday
-    [1 * 60, 0 * 60], //tuesday
-    [16 * 60, 21.5 * 60], //wednesday
-    [16 * 60, 21.5 * 60], //thursday
-    [16 * 60, 22.5 * 60], //friday
-    [12 * 60, 22.5 * 60] //saturday
+    [12 * 60, 21 * 60], //sunday
+    [16 * 60, 21 * 60], //monday
+    [16 * 60, 21 * 60], //tuesday
+    [16 * 60, 21 * 60], //wednesday
+    [16 * 60, 21 * 60], //thursday
+    [16 * 60, 20 * 60], //friday
+    [12 * 60, 20 * 60] //saturday
   ];
 
   this.DELIVERY_HOURS = [
-    [12 * 60, 21 * 60], //sunday
-    [1 * 60, 0 * 60], //monday
-    [1 * 60, 0 * 60], //tuesday
+    [16 * 60, 21 * 60], //sunday
+    [16 * 60, 21 * 60], //monday
+    [16 * 60, 21 * 60], //tuesday
     [16 * 60, 21 * 60], //wednesday
     [16 * 60, 21 * 60], //thursday
-    [12 * 60, 22 * 60], //friday
-    [12 * 60, 22 * 60] //saturday
+    [16 * 60, 21 * 60], //friday
+    [16 * 60, 21 * 60] //saturday
   ];
 
   this.HOURS_BY_SERVICE_TYPE = [
@@ -98,42 +102,57 @@ var WCPStoreConfig = function() {
   // menu related
   this.EXTRAS_MENU = salad_menu;
   this.PIZZA_MENU = pizza_menu;
-  this.BEVERAGE_MENU = beverage_menu;
   this.TOPPINGS = toppings_array;
   this.SAUCES = sauces;
   this.CHEESE_OPTIONS = cheese_options;
   this.CRUSTS = crusts;
+  this.MULTI_CRUST = false;
   // END menu related
 
   // user messaging
   this.AREA_CODES = {
-    "217": true,
-    "309": true,
-    "312": true,
-    "630": true,
-    "331": true,
-    "618": true,
-    "708": true,
-    "773": true,
-    "815": true,
-    "779": true,
-    "847": true,
-    "224": true,
-    "872": true
+    "217": "Central Illinois, running west from the Illinois-Indiana border through Danville, Effingham, Champaign–Urbana, Decatur, Springfield, Quincy until Illinois' western border with Iowa.",
+    "309": "Central-Western Illinois including Bloomington–Normal, Peoria, and all the way west to the Illinois part of the Quad Cities including Moline, and Rock Island.",
+    "312": "Chicago, the central city area including the Chicago Loop and the Near North Side.",
+    "630": "West suburbs of Chicago in DuPage County and Kane County including Wheaton, Naperville, and Aurora.",
+    "331": "West suburbs of Chicago in DuPage County and Kane County including Wheaton, Naperville, and Aurora.",
+    "618": "Southern Illinois, including Carbondale and most of the Metro East region of St. Louis suburbs in Illinois",
+    "708": "South suburbs and inner west suburbs of Chicago, including the Chicago Southland and most west and south suburbs in Cook County such as Oak Park, Oak Lawn, Chicago Heights, and Orland Park.",
+    "773": "Chicago, covers most of the geographical area of Chicago except the downtown Chicago Loop, which is in area code 312.",
+    "815": "Northern Illinois outside of the immediate Chicago area including Joliet, Kankakee, LaSalle, DeKalb, and Rockford.",
+    "779": "Northern Illinois outside of the immediate Chicago area including Joliet, Kankakee, LaSalle, DeKalb, and Rockford.",
+    "847": "North and northwest suburbs of Chicago including all of Lake County, part of McHenry County, northern Cook County, and northeastern Kane County.",
+    "224": "North and northwest suburbs of Chicago including all of Lake County, part of McHenry County, northern Cook County, and northeastern Kane County.",
+    "872": "City of Chicago, overlaying area codes 312 and 773.",
+    "231": "Northwestern Lower Michigan: Traverse City, Ludington, Muskegon, Petoskey and Cheboygan",
+    "248": "Northern Metro Detroit: All of Oakland County, Northville, and most of Northville Township; overlays with area code 947",
+    "269": "Southwestern Michigan: Battle Creek, Benton Harbor, Allegan, Hastings, Kalamazoo, and St Joseph",
+    "313": "Wayne County: Detroit, Dearborn, Redford Township, and the Grosse Pointes",
+    "517": "South Central Michigan: Lansing, East Lansing, Jackson, Charlotte, Coldwater, Howell, Deerfield, and Addison",
+    "586": "Northeastern Metro Detroit: All of Macomb County",
+    "616": "Western Michigan: Grand Rapids, Holland, Greenville, Grand Haven, Zeeland, and Ionia",
+    "734": "Western and Down River/ Southeastern Michigan Metro Detroit: Ann Arbor, Monroe, Wayne, and Ypsilanti",
+    "810": "Southern Flint/Tri-Cities and The Thumb: Port Huron, Flint, Flushing, Otisville, Davison, Brighton, Sandusky, and Lapeer",
+    "906": "Upper Peninsula: Marquette, Sault Ste. Marie, St. Ignace, Escanaba, Iron Mountain, Munising, and Mackinac Island",
+    "947": "Northern Metro Detroit: All of Oakland County, Northville, and most of Northville Township; overlays with area code 248",
+    "989": "Northern, Flint/Tri-Cities and Northeastern Lower Michigan: Alpena, Mt. Pleasant, Bay City, Saginaw, Midland, Owosso, Gaylord, and Bad Axe",
+    "679": "A future overlay with Area code 313",
   };
+  this.NOTE_LOCATION = "inside Clock-Out Lounge (4864 Beacon Ave S, 98108) at the Breezy Town Pizza counter under the slice sign."
   this.NOTE_SPECIAL_INSTRUCTIONS = "Since you specified special instructions, we will let you know if we can accommodate your request. We may need your confirmation if your instructions will incur an additional cost or we cannot accommodate them, so please watch your email.";
   this.NOTE_KEEP_LEVEL = "Be sure to travel with your pizza as flat as possible, on the floor or in the trunk. Seats are generally not a level surface.";
-  this.NOTE_PICKUP_BEFORE_DI = "We won't be open for dine-in at the time of your pickup. Our door may be locked. Please text 206.486.4743 or respond to this email thread when you've arrived. Please let us know if you have any additional questions about the pickup process.";
-  this.NOTE_PICKUP_DURING_DI = "Come to the host stand and let us know your first name and that you have a pre-order. ";
-  this.NOTE_PICKUP_AFTER_DI = "We'll be ending our dine-in service at the time of your pickup. Please come to the bar and inform us the name under which the order was placed.";
-  this.NOTE_DI = "Dine-ins get you to the front of the table queue. We don't reserve seating. Please arrive slightly before your selected time so your pizza is as fresh as possible and you have time to get situated and get beverages! ";
+  // show pickup
+  this.NOTE_SHOW_POSSIBILITY = "";
+  // 21+ hours
+  this.NOTE_ADULT_HOURS_BTP = "Please note that we are all ages until 8pm after which we are a 21 and up venue. ";
+  this.NOTE_PICKUP_BEFORE_DI = "Because of the symbiotic nature of our relationship with our friends, Clock-Out Lounge, we will not be able to allow pick-up inside but will be doing curbside pick-up. We will have someone available to assist you at the front door when you arrive.";
+  this.NOTE_PICKUP_DURING_DI = this.NOTE_PICKUP_BEFORE_DI;
+  this.NOTE_DI = "Please come to our counter and let us know the name under which your order was placed. Please arrive promptly so your pizza is as fresh as possible and you have time to get situated and get beverages.";
   this.NOTE_DELIVERY_BETA = "Our delivery service is now in beta. Delivery times are rough estimates and we will make every attempt to be prompt. We'll contact you to confirm the order shortly.";
+  this.NOTE_DELIVERY_SERVICE = "We appreciate your patience as our in-house delivery service is currently in its infancy. Delivery times are estimated. We might be a little earlier, or a little later. A 20% gratuity will be applied and is distributed among the Breezy Town Pizza family.";
   this.NOTE_PAYMENT = "We happily accept any major credit card or cash for payment upon arrival.";
-  this.NOTE_DELIVERY_SERVICE = "We appreciate your patience as our in-house delivery service is currently in its infancy. Delivery times are estimated. We might be a little earlier, or a little later. A 20% gratuity will be applied and is distributed among the Windy City Pie family.";
-  this.NOTE_ALCOHOL = "The recipient must have a valid ID showing they are at least 21 years of age.";
-  this.REQUEST_SLICING = "In order to ensure the quality of our pizzas, we will not slice them. We'd recommend bringing anything from a bench scraper to a butter knife to slice the pizza. Slicing the whole pizza when it's hot inhibits the crust from properly setting, and can cause the crust to get soggy both during transit and as the pie is eaten. We want your pizza to be the best possible and bringing a tool with which to slice the pie will make a big difference.";
-  this.REQUEST_VEGAN = "Our pizzas cannot be made vegan or without cheese. If you're looking for a vegan option, our Beets By Schrute salad can be made vegan by omitting the bleu cheese.";
-  this.REQUEST_HALF = "While half toppings are not on the menu, we can do them (with the exception of half roasted garlic or half red sauce, half white sauce) but they are charged the same as full toppings. As such, we recommend against them as they're not a good value for the customer and an imbalance of toppings will cause uneven baking of your pizza.";
+
+  this.REQUEST_HALF = "While half toppings are not on the menu, we can do them but they are charged the same as full toppings. As such, we recommend against them as they're not a good value for the customer and an imbalance of toppings will cause uneven baking of your pizza.";
   // END user messaging
 
   this.UpdateBlockedOffVal = function(bo) {
@@ -146,7 +165,7 @@ var WCPStoreConfig = function() {
   //END WCP store config
 };
 
-var wcpconfig = new WCPStoreConfig();
+var wcpconfig = new BTPStoreConfig();
 
 function FixOldBlockedOff() {
   for (var i in wcpconfig.BLOCKED_OFF) {
@@ -361,12 +380,11 @@ var WCPOrderHelper = function() {
     if (date === null || isNaN(time)) {
       return "";
     }
-
-    var service_during_dine_in = this.RelationshipToDineInHour(date, time);
+    //var show_possible  = this.DuringShowHours();
     var service_time_print = this.MinutesToPrintTime(time);
     var nice_area_code = this.IsIllinoisAreaCode(phone);
+    var opener = nice_area_code ? "Hey, nice area code! " : "Thanks! ";
     var confirm_string_array = [];
-    var opener = nice_area_code ? "Hello, nice area code, and thanks for your order! " : "Hello and thanks for your order! ";
     switch (service_type) {
       case this.cfg.DELIVERY:
         confirm_string_array = [
@@ -380,36 +398,23 @@ var WCPOrderHelper = function() {
         ];
         break;
       case this.cfg.PICKUP:
-        if (service_during_dine_in === 0) {
-          confirm_string_array = [
-            opener,
-            "We're happy to confirm your pickup for ",
-            service_time_print,
-            ".\n\n",
-            this.cfg.NOTE_PICKUP_BEFORE_DI,
-            " ",
-            this.cfg.NOTE_PAYMENT
-          ];
-        } else {
-          var opener = nice_area_code ? "Nice area code! " : "";
-          confirm_string_array = [
-            opener,
-            "We're happy to confirm your pickup for ",
-            service_time_print,
-            " at our Phinney Ridge home (5918 Phinney Ave N, 98103).\n\n",
-            service_during_dine_in === 1 ? this.cfg.NOTE_PICKUP_DURING_DI : this.cfg.NOTE_PICKUP_AFTER_DI,
-            this.cfg.NOTE_PAYMENT
-          ];
-        }
+        confirm_string_array = [
+          opener,
+          "We've got your order and we'll see you at ",
+          service_time_print,
+          " ", this.cfg.NOTE_LOCATION, "\n\n",
+          this.cfg.NOTE_PAYMENT
+        ];
         break;
       case this.cfg.DINEIN:
-        var opener = nice_area_code ? "Nice area code! " : "";
         confirm_string_array = [
           opener,
           "We're happy to confirm your order for ",
           service_time_print,
-          " at our Phinney Ridge home (5918 Phinney Ave N, 98103).\n\n",
+          " ", this.cfg.NOTE_LOCATION, "\n\n",
           this.cfg.NOTE_DI,
+          " We do not reserve seating. ",
+          this.cfg.NOTE_ADULT_HOURS_BTP,
           this.cfg.NOTE_PAYMENT
         ];
         break;
@@ -420,14 +425,14 @@ var WCPOrderHelper = function() {
     return encodeURI(confirm_string_array.join(""));
   };
 
-  this.EventTitleStringBuilder = function(service, customer, cart, special_instructions) {
+  this.EventTitleStringBuilder = function(service, customer, cart, special_instructions, sliced) {
     if (!customer || cart.pizza.length === 0) {
       return "";
     }
     customer = customer.replace(/\s/g, "+").replace(/[&]/g, "and");
     var service_string = "";
     if (service == this.cfg.PICKUP) {
-      service_string = "P";
+      service_string = "P" + (sliced ? "+SLICED" : "");
     } else if (service == this.cfg.DINEIN) {
       service_string = "DINE";
     } else if (service == this.cfg.DELIVERY) {
@@ -450,19 +455,10 @@ var WCPOrderHelper = function() {
       var shortcode = cart.extras[j][1].shortcode;
       extras_shortcodes = extras_shortcodes + "+" + quantity.toString(10) + "x" + shortcode;
     }
-
-    var beverage_shortcodes = "";
-    for (var k in cart.beverages) {
-      var quantity = cart.beverages[k][0];
-      var shortcode = cart.beverages[k][1].shortcode;
-      beverage_shortcodes = beverage_shortcodes + "+" + quantity.toString(10) + "x" + shortcode;
-    }
-
     var customer_encoded = encodeURI(customer);
     var pizzas_title = num_pizzas + "x" + pizza_shortcodes;
     var extras_title = extras_shortcodes.length > 0 ? "+Extras" + extras_shortcodes : "";
-    var beverages_title = beverage_shortcodes.length > 0 ? "+Bev" + beverage_shortcodes : "";
-    return service_string + "+" + customer_encoded + "+" + pizzas_title + extras_title + beverages_title + (has_special_instructions ? "+%2A" : "");
+    return service_string + "+" + customer_encoded + "+" + pizzas_title + extras_title + (has_special_instructions ? "+%2A" : "");
   };
 
   this.EventDateTimeStringBuilder = function(date, time) {
@@ -491,6 +487,7 @@ var WCPOrderHelper = function() {
     }
     return es;
   };
+
 };
 
 var wcporderhelper = new WCPOrderHelper();
@@ -523,7 +520,7 @@ function UpdateLeadTime() {
   });
 
   app.factory('socket', function($rootScope) {
-    var socket = io.connect("https://wario.windycitypie.com/nsRO");
+    var socket = io.connect("https://wario.breezytownpizza.com/nsRO");
     return {
       on: function(eventName, callback) {
         socket.on(eventName, function() {
@@ -549,7 +546,6 @@ function UpdateLeadTime() {
   app.service("OrderHelper", WCPOrderHelper);
 
   var WCPOrderState = function(cfg, enable_delivery, enable_split_toppings) {
-
     this.RecomputeOrderSize = function() {
       var size = 0;
       for (var i in this.cart.pizza) {
@@ -573,9 +569,6 @@ function UpdateLeadTime() {
       for (var j in this.cart.extras) {
         val += this.cart.extras[j][0] * this.cart.extras[j][1].price;
       }
-      for (var k in this.cart.beverages) {
-        val += this.cart.beverages[k][0] * this.cart.beverages[k][1].price;
-      }
       return val;
     }
 
@@ -589,16 +582,15 @@ function UpdateLeadTime() {
     this.service_time = "Please select a valid date";
     this.customer_name = "";
     this.phone_number = "";
-    this.delivery_address = ""; // customer input, not validated
-    this.delivery_zipcode = ""; // customer input, not validated
+    this.delivery_address = "";
+    this.delivery_zipcode = "";
     this.validated_delivery_address = "";
     this.is_address_validated = false;
     this.address_invalid = false;
     this.email_address = "";
     this.cart = {
       pizza: [],
-      extras: [],
-      beverages: [],
+      extras: []
     };
     this.cartstring = "";
     this.num_pizza = 0;
@@ -612,7 +604,7 @@ function UpdateLeadTime() {
     this.enable_split_toppings = false;
     this.enable_delivery = enable_delivery;
     this.delivery_fee = 0;
-    this.autograt = 0;
+    this.slice_pizzas = false;
     this.EMAIL_REGEX = EMAIL_REGEX;
 
     this.service_type_functors = [
@@ -626,18 +618,17 @@ function UpdateLeadTime() {
       },
       // DELIVERY
       function(state) {
-        return state.enable_delivery;
+        return true;
       }
     ];
 
     // stage 0: menu/cart controller: cart display // pie selection // customize pie, add to cart
     // stage 1: salads
-    // stage 2: beverages
-    // stage 3: customer name, phone, email address, address , referral info
-    // stage 4: select service_type date/time
-    // stage 5: review order, special instructions
-    // stage 6: pressed submit, waiting validation
-    // stage 7: submitted successfully
+    // stage 2: customer name, phone, email address, address , referral info
+    // stage 3: select service_type date/time
+    // stage 4: review order, special instructions
+    // stage 5: pressed submit, waiting validation
+    // stage 6: submitted successfully
     this.stage = 0;
 
     // flag for when submitting fails according to submission backend
@@ -657,9 +648,9 @@ function UpdateLeadTime() {
     this.split_toppings = $location.search().split === true;
     var enable_delivery = true;
 
-    this.s = $scope.state = new WCPOrderState(this.CONFIG, enable_delivery, this.split_toppings);
-
     this.ScrollTop = ScrollTopJQ;
+
+    this.s = $scope.state = new WCPOrderState(this.CONFIG, enable_delivery, this.split_toppings);
 
     this.Reset = function() {
       this.s = $scope.state = new WCPOrderState(this.CONFIG, enable_delivery, this.split_toppings);
@@ -681,13 +672,17 @@ function UpdateLeadTime() {
       this.s.autograt = 0;
     };
 
+    this.ClearSlicing = function() {
+      this.s.slice_pizzas = false;
+    };
+
     this.ClearSpecialInstructions = function() {
       this.s.special_instructions = "";
     };
 
     this.ValidateDeliveryAddress = function() {
       $scope.state.address_invalid = false;
-      
+
       var onSuccess = function(response) {
         if (response.status === 200 && response.data.found) {
           $scope.state.validated_delivery_address = response.data.validated_address;
@@ -707,7 +702,7 @@ function UpdateLeadTime() {
       };
       $http({
         method: "GET",
-        url: "https://wario.windycitypie.com/api/v1/addresses/validate",
+        url: "https://wario.breezytownpizza.com/api/v1/addresses/validate",
         params: { address: this.s.delivery_address, zipcode:this.s.delivery_zipcode, city: "Seattle", state: "WA" }
       }).then(onSuccess).catch(onFail);
     }
@@ -762,22 +757,14 @@ function UpdateLeadTime() {
       for (var i in this.s.cart.pizza) {
         var quantity = this.s.cart.pizza[i][0];
         var item = this.s.cart.pizza[i][1];
-        str_builder = str_builder + quantity + "x: " + item.name + "\n";
-        short_builder = short_builder + quantity + "x: " + item.shortname + "\n";
+        str_builder = str_builder + quantity + "x: " + item.name + (this.s.slice_pizzas ? " (Sliced)" : "") + "\n";
+        short_builder = short_builder + quantity + "x: " + item.shortname + (this.s.slice_pizzas ? " SLICED" : "") + "\n";
       }
 
       // process cart for extras
       for (var j in this.s.cart.extras) {
         var quantity = this.s.cart.extras[j][0];
         var item_name = this.s.cart.extras[j][1].name;
-        str_builder = str_builder + quantity + "x: " + item_name + "\n";
-        short_builder = short_builder + quantity + "x: " + item_name + "\n";
-      }
-
-      // process cart for beverages
-      for (var k in this.s.cart.beverages) {
-        var quantity = this.s.cart.beverages[k][0];
-        var item_name = this.s.cart.beverages[k][1].name;
         str_builder = str_builder + quantity + "x: " + item_name + "\n";
         short_builder = short_builder + quantity + "x: " + item_name + "\n";
       }
@@ -821,26 +808,6 @@ function UpdateLeadTime() {
       this.PostCartUpdate();
     };
 
-    this.addBeverageToOrder = function(selection) {
-      // check for existing entry
-      for (var i in this.s.cart.beverages) {
-        if (this.s.cart.beverages[i][1].shortcode == selection.shortcode) {
-          // note, dumb check here for equality
-          this.s.cart.beverages[i][0] += 1;
-          this.PostCartUpdate();
-          return;
-        }
-      }
-      // add new entry
-      this.s.cart.beverages.push([1, selection]);
-      this.PostCartUpdate();
-    };
-
-    this.removeBeverageFromOrder = function(idx) {
-      this.s.cart.beverages.splice(idx, 1);
-      this.PostCartUpdate();
-    };
-
     this.addExtraToOrder = function(selection) {
       // check for existing entry
       for (var i in this.s.cart.extras) {
@@ -872,37 +839,34 @@ function UpdateLeadTime() {
       for (var j in this.s.cart.extras) {
         this.s.cart.extras[j][0] = FixQuantity(this.s.cart.extras[j][0], clear_if_invalid);
       }
-      for (var k in this.s.cart.extras) {
-        this.s.cart.beverages[k][0] = FixQuantity(this.s.cart.beverages[k][0], clear_if_invalid);
-      }
       this.PostCartUpdate();
     };
 
     this.Submit = function() {
-      this.s.stage = 6;
+      this.s.stage = 5;
     };
 
     this.CF7SubmitFailed = function() {
       this.s.submit_failed = true;
-      this.s.stage = 3;
+      this.s.stage = 2;
     };
 
     this.CF7SubmitSuccess = function() {
-      this.s.stage = 7;
+      this.s.stage = 6;
     };
 
     this.SlowSubmitterTrigger = function() {
       // set flag for user notification that too much time passed
       this.s.selected_time_timeout = true;
-      // set stage to 4 (time selection)
-      this.s.stage = 4;
+      // set stage to 3 (time selection)
+      this.s.stage = 3;
     };
 
     this.SlowSubmitterCheck = function() {
       var old_time = this.s.service_time;
       this.ValidateDate();
       // only bump someone to the time selection page if they're already at least that far
-      if (old_time != this.s.service_time && this.s.stage >= 4) {
+      if (old_time != this.s.service_time && this.s.stage >= 3) {
         this.SlowSubmitterTrigger();
       }
     };
@@ -914,10 +878,10 @@ function UpdateLeadTime() {
       this.s.stage = this.s.stage - 1;
     };
     this.HasPreviousStage = function() {
-      return this.s.stage > 0 && this.s.stage <= 5;
+      return this.s.stage > 0 && this.s.stage <= 4;
     };
     this.HasNextStage = function() {
-      return this.s.stage < 5;
+      return this.s.stage < 4;
     };
 
     // this binding means we need to have this block here.
@@ -941,7 +905,7 @@ function UpdateLeadTime() {
   app.controller("PizzaMenuController", function() {
     this.pizza_menu = wcpconfig.PIZZA_MENU;
     this.extras_menu = wcpconfig.EXTRAS_MENU;
-    this.beverage_menu = wcpconfig.BEVERAGE_MENU;
+    this.BAKE_MAX = wcpconfig.BAKE_MAX;
     this.selection = null;
     this.quantity = 1;
     this.toppings = toppings_array;
@@ -959,14 +923,8 @@ function UpdateLeadTime() {
         if (this.selection.crust.dough == crust_doughs.gf) {
           this.messages.push("Gluten free pizzas require 24 hour's notice and are baked in a kitchen exposed to wheat flour. While we take very thorough precautions, cross-contamination is a possibility.");
         }
-        if (this.selection.bake_count[0] + addon_chz + addon_crust < 2 || this.selection.bake_count[1] + addon_chz + addon_crust < 2) {
-          this.messages.push("Our pizza is designed as a vehicle for add-ons. We recommend at least two toppings to weigh the crust down during baking. If this is your first time dining with us, we'd suggest ordering a menu pizza without modifications.");
-        }
-        if (this.selection.flavor_count[0] + addon_crust > 5 || this.selection.flavor_count[1] + addon_crust > 5) {
-          this.messages.push("We love our toppings too, but adding this many flavors can end up detracting from the overall enjoyment. We'd suggest scaling this pizza back a bit. If this is your first time dining with us, we'd suggest ordering a menu pizza without modifications.");
-        }
-        if (this.selection.sauce == sauces.white && this.selection.toppings_tracker[toppings_dict.bleu.index] != TOPPING_NONE) {
-          this.messages.push("Our white sauce really lets the bleu cheese flavor come through. If you haven't had this pairing before, we'd suggest asking for light bleu cheese or switching back to red sauce.");
+        if (this.selection.flavor_count[0] + addon_chz + addon_crust < 1 || this.selection.flavor_count[1] + addon_chz + addon_crust < 1) {
+          this.messages.push("Hey, add something to this!");
         }
       }
     };
@@ -1090,11 +1048,11 @@ function UpdateLeadTime() {
         $j(element).find("span.load-time input").val(timing_info.load_time.format("H:mm:ss"));
 
         var EventTitleSetter = function() {
-          var event_title = OrderHelper.EventTitleStringBuilder(scope.orderinfo.s.service_type, scope.orderinfo.s.customer_name, scope.orderinfo.s.cart, scope.orderinfo.s.special_instructions);
+          var event_title = OrderHelper.EventTitleStringBuilder(scope.orderinfo.s.service_type, scope.orderinfo.s.customer_name, scope.orderinfo.s.cart, scope.orderinfo.s.special_instructions, scope.orderinfo.s.slice_pizzas);
           $j(element).find("span.eventtitle input").val(event_title);
         };
         var EventDetailSetter = function() {
-          var eventdetail = OrderHelper.EventDetailStringBuilder(scope.orderinfo.s.shortcartstring, scope.orderinfo.s.phone_number, scope.orderinfo.s.special_instructions);
+          var eventdetail = OrderHelper.EventDetailStringBuilder(scope.orderinfo.s.shortcartstring, scope.orderinfo.s.phone_number, scope.orderinfo.s.special_instructions, scope.orderinfo.s.slice_pizzas);
           $j(element).find("span.eventdetail textarea").val(eventdetail);
         };
         var AutomatedInstructionsSetter = function() {
@@ -1114,15 +1072,8 @@ function UpdateLeadTime() {
         var ParseSpecialInstructionsAndPopulateResponses = function() {
           scope.orderinfo.s.special_instructions_responses = [];
           var special_instructions_lower = scope.orderinfo.s.special_instructions ? scope.orderinfo.s.special_instructions.toLowerCase() : "";
-          if (wcpconfig.REQUEST_HALF && special_instructions_lower.indexOf("split") >= 0 || special_instructions_lower.indexOf("half") >= 0 || special_instructions_lower.indexOf("1/2") >= 0) {
+          if (special_instructions_lower.indexOf("split") >= 0 || special_instructions_lower.indexOf("half") >= 0 || special_instructions_lower.indexOf("1/2") >= 0) {
             scope.orderinfo.s.special_instructions_responses.push(wcpconfig.REQUEST_HALF);
-
-          }
-          if (wcpconfig.REQUEST_SLICING && special_instructions_lower.indexOf("slice") >= 0 || special_instructions_lower.indexOf("cut") >= 0) {
-            scope.orderinfo.s.special_instructions_responses.push(wcpconfig.REQUEST_SLICING);
-          }
-          if (wcpconfig.REQUEST_VEGAN && special_instructions_lower.indexOf("no cheese") >= 0 || special_instructions_lower.indexOf("vegan") >= 0 || special_instructions_lower.indexOf("without cheese") >= 0) {
-            scope.orderinfo.s.special_instructions_responses.push(wcpconfig.REQUEST_VEGAN);
           }
         };
 
