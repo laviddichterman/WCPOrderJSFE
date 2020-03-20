@@ -742,5 +742,83 @@ beverage_menu = {
     "HMAlt",
     14,
     "American Pale Ale with aromas and flavors of citrus, tropical fruit, peach, and hints of sticky pine. ABV 5.2% - 32oz"
+  ),
+  oly6pk: new WCPSalad("Olympia Tall Boy 6 Pack",
+    "Oly6pk",
+    11,
+    "It's the water, y'all. ABV 4.78% - 6 x 16oz"
+  ),
+  oly1pk: new WCPSalad("Olympia Tall Boy",
+    "Oly1pk",
+    3,
+    "It's the water, y'all. ABV 4.78% - 16oz"
+  ),
+  zitrone4k: new WCPSalad("Stiegel Zitrone Radler Tall Boy - 4 x 16",
+    "StZitrone4pk",
+    11,
+    "Summer in a glass... err can. ABV 2.0% - 4 x 16.9oz"
+  ),
+  moderntms4pk: new WCPSalad("Stiegel Zitrone Radler Tall Boy - 4 x 16",
+    "ModernTms4pk",
+    14,
+    "FILL ME OUT. ABV 2.0% - 4 x 16.9oz"
+  ),
+  	
+};
+
+beverage_menu = {
+  citraipa: new WCPSalad("Stoup - Citra IPA Crowler",
+    "StCit",
+    14,
+    "Images of tropical fruit and citrus thanks to a healthy dose of Citra® hops - ABV 5.9% - IBU 50 - 32oz"
+  ),
+  pistolipa: new WCPSalad("Stoup - Pistol Fingers IPA Crowler",
+    "StPis",
+    14,
+    "Resonate, Pellets and Cryo pellets in this homage to the mighty Mosaic hop. - ABV 6.9% - IBU 75 - 32oz"
+  ),
+  whitelodge: new WCPSalad("Holy Mountain - White Lodge Wit Crowler",
+    "HMWit",
+    14,
+    "Belgian-Style Witbier wih pilsner malt and oats and fermented with a traditional Belgian strain. ABV 4.8% - 32oz"
+  ),
+  blackbeer: new WCPSalad("Holy Mountain - Black Beer Crowler",
+    "HMBlk",
+    14,
+    "Session black ale brewed with roasted and flaked barley and hopped with East Kent Golding. ABV 4.5% - 32oz"
+  ),
+  witherer: new WCPSalad("Holy Mountain - Witherer Crowler",
+    "HMWitherer",
+    14,
+    "Coconut Session Porter brewed with a special variety of British Two Row, and a variety of specialty dark crystal and roasted malts. - ABV 5% - 32oz"
+  ),
+  lowdrone: new WCPSalad("Holy Mountain - Low Drone Crowler",
+    "HMLow",
+    14,
+    "Hoppy Lager brewed with a combination of German Pilsner Malt and Malted Wheat. Hopped entirely with whole-leaf Citra and Strata during the boil. ABV 5.4% - 32oz"
+  ),
+  altarpiece: new WCPSalad("Holy Mountain - Altarpiece Crowler",
+    "HMAlt",
+    14,
+    "American Pale Ale with aromas and flavors of citrus, tropical fruit, peach, and hints of sticky pine. ABV 5.2% - 32oz"
   )	
 };
+
+extras_menu = {
+  small_plates: { 
+    menu_name: "Small plates", 
+    menu: salad_menu
+  },
+  growler_fills: { 
+    menu_name: "Growler Fills", 
+    menu: growler_fill_menu
+  },
+  beer: { 
+    menu_name: "Packaged beer (crowlers, cans, bottles)", 
+    menu: beverage_menu
+  },
+  wine_bottles: { 
+    menu_name: "Bottled wine (750mL)", 
+    menu: wine_bottles_menu
+  },
+}
