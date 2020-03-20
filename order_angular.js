@@ -12,6 +12,8 @@ var EMAIL_REGEX = new RegExp("^[_A-Za-z0-9\-]+(\\.[_A-Za-z0-9\-]+)*@[A-Za-z0-9\-
 
 var DATE_STRING_INTERNAL_FORMAT = "YYYYMMDD";
 
+var DELIVERY_INTERVAL_TIME = 30;
+
 function ScrollTopJQ() {
   $j("html, body").animate({
     scrollTop: $j("#ordertop").offset().top - 150
@@ -67,7 +69,7 @@ var WCPStoreConfig = function() {
     [1 * 60, 0 * 60], //tuesday
     [16 * 60, 21.5 * 60], //wednesday
     [16 * 60, 21.5 * 60], //thursday
-    [16 * 60, 22.5 * 60], //friday
+    [12 * 60, 22.5 * 60], //friday
     [12 * 60, 22.5 * 60] //saturday
   ];
 
@@ -184,16 +186,20 @@ var WCPOrderHelper = function() {
     return date.hours() * 60 + date.minutes();
   };
 
-  this.MinutesToPrintTime = function(minutes) {
+  this.MinutesToPrintTime = function(minutes, service_type) {
+    var mtpt = function(min) { 
+        var hour = Math.floor(min / 60);
+        var minute = min - (hour * 60);
+        var meridian = hour >= 12 ? "PM" : "AM";
+        var printHour = (hour % 12 === 0 ? 12 : hour % 12).toString();
+        var printMinute = (minute < 10 ? "0" : "").concat(minute.toString());
+        return printHour.concat(":").concat(printMinute + meridian);
+    }
     if (isNaN(minutes) || minutes < 0) {
       return minutes;
     }
-    var hour = Math.floor(minutes / 60);
-    var minute = minutes - (hour * 60);
-    var meridian = hour >= 12 ? "PM" : "AM";
-    var printHour = (hour % 12 === 0 ? 12 : hour % 12).toString();
-    var printMinute = (minute < 10 ? "0" : "").concat(minute.toString());
-    return printHour.concat(":").concat(printMinute + meridian);
+    var starttime = mtpt(minutes);
+    return service_type != wcpconfig.DELIVERY ? starttime : starttime + " - " + mtpt(minutes + DELIVERY_INTERVAL_TIME);
   };
 
   this.IsIllinoisAreaCode = function(phone) {
@@ -352,7 +358,7 @@ var WCPOrderHelper = function() {
       return "";
     }
     service_type = this.cfg.SERVICE_TYPES[service_type][0];
-    service_time = this.MinutesToPrintTime(service_time);
+    service_time = this.MinutesToPrintTime(service_time, service_type);
     //[service-option] for [user-name] on [service-date] - [service-time]
     return encodeURI(service_type + " for " + name + " on " + date_string + " - " + service_time);
   };
@@ -363,7 +369,7 @@ var WCPOrderHelper = function() {
     }
 
     var service_during_dine_in = this.RelationshipToDineInHour(date, time);
-    var service_time_print = this.MinutesToPrintTime(time);
+    var service_time_print = this.MinutesToPrintTime(time, service_type);
     var nice_area_code = this.IsIllinoisAreaCode(phone);
     var confirm_string_array = [];
     var opener = nice_area_code ? "Hello, nice area code, and thanks for your order! " : "Hello and thanks for your order! ";
@@ -465,7 +471,7 @@ var WCPOrderHelper = function() {
     return service_string + "+" + customer_encoded + "+" + pizzas_title + extras_title + beverages_title + (has_special_instructions ? "+%2A" : "");
   };
 
-  this.EventDateTimeStringBuilder = function(date, time) {
+  this.EventDateTimeStringBuilder = function(date, time, service_type) {
     if (!date || !date.isValid() || isNaN(time) || time < 0) {
       return "";
     }
@@ -474,7 +480,7 @@ var WCPOrderHelper = function() {
     time = String(time).split(",");
     if (time.length == 1) {
       var ts = this.MinutesToHMS(time[0]);
-      timeString = [ts, ts];
+      timeString = [ts, service_type === wcporderhelper.cfg.DELIVERY ? this.MinutesToHMS(parseInt(time[0]) + DELIVERY_INTERVAL_TIME ) : ts ];
     } else {
       timeString = [this.MinutesToHMS(parseInt(time[0])), this.MinutesToHMS(parseInt(time[1]))];
     }
@@ -508,7 +514,7 @@ var FixQuantity = function(val, clear_if_invalid) {
 function UpdateLeadTime() {
   if (wcporderhelper.IsDateActive(timing_info.current_time, wcpconfig.PICKUP, 1, 0)) {
     var first = wcporderhelper.GetFirstAvailableTime(timing_info.current_time, wcpconfig.PICKUP, 1, 0);
-    $j("span.leadtime").html("Next available same-day order: " + wcporderhelper.MinutesToPrintTime(first));
+    $j("span.leadtime").html("Next available same-day order: " + wcporderhelper.MinutesToPrintTime(first, wcpconfig.PICKUP));
   } else {
     $j("span.leadtime").html("");
   }
@@ -1146,15 +1152,15 @@ function UpdateLeadTime() {
           var selected_date_string = scope.orderinfo.s.selected_date ? scope.orderinfo.s.selected_date.format("dddd, MMMM DD, Y") : "";
           $j(element).find("span.service-date input").val(selected_date_string);
           $j(element).find("span.additional_message input").val(scope.orderinfo.s.additional_message);
-          var eventdate = OrderHelper.EventDateTimeStringBuilder(scope.orderinfo.s.selected_date, scope.orderinfo.s.service_time);
+          var eventdate = OrderHelper.EventDateTimeStringBuilder(scope.orderinfo.s.selected_date, scope.orderinfo.s.service_time, scope.orderinfo.s.service_type);
           $j(element).find("span.eventdate input").val(eventdate);
           ConfirmationSubjectSetter();
           ConfirmationBodySetter();
           AutomatedInstructionsSetter();
         }, true);
         scope.$watch("orderinfo.s.service_time", function() {
-          $j(element).find("span.service-time input").val($filter("MinutesToPrintTime")(scope.orderinfo.s.service_time));
-          var eventdate = OrderHelper.EventDateTimeStringBuilder(scope.orderinfo.s.selected_date, scope.orderinfo.s.service_time);
+          $j(element).find("span.service-time input").val($filter("MinutesToPrintTime")(scope.orderinfo.s.service_time, scope.orderinfo.s.service_type));
+          var eventdate = OrderHelper.EventDateTimeStringBuilder(scope.orderinfo.s.selected_date, scope.orderinfo.s.service_time, scope.orderinfo.s.service_type);
           $j(element).find("span.eventdate input").val(eventdate);
           ConfirmationSubjectSetter();
           ConfirmationBodySetter();

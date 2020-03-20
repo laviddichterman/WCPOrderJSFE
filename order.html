@@ -205,7 +205,7 @@
       </span>
       <span class="service-time-text">Time</span>
       <span class="wpcf7-form-control-wrap service-time">
-        <select ng-disabled="!orderCtrl.s.date_valid" name="service-time" ng-model="orderCtrl.s.service_time" ng-options="servicetime | MinutesToPrintTime for servicetime in orderCtrl.s.service_times" ng-change="orderCtrl.ServiceTimeChanged()">
+        <select ng-disabled="!orderCtrl.s.date_valid" name="service-time" ng-model="orderCtrl.s.service_time" ng-options="servicetime | MinutesToPrintTime:orderCtrl.s.service_type for servicetime in orderCtrl.s.service_times" ng-change="orderCtrl.ServiceTimeChanged()">
         </select>
       </span>
       <div class="wpcf7-response-output wpcf7-mail-sent-ng" ng-if="orderCtrl.s.selected_time_timeout">The previously selected service time has expired.</div>
@@ -253,7 +253,7 @@
           </tr>
           <tr>
             <td>Service</td>
-            <td>{{orderCtrl.CONFIG.SERVICE_TYPES[orderCtrl.s.service_type][0]}} on {{orderCtrl.s.date_string}} at {{orderCtrl.s.service_time | MinutesToPrintTime}}</td>
+            <td>{{orderCtrl.CONFIG.SERVICE_TYPES[orderCtrl.s.service_type][0]}} on {{orderCtrl.s.date_string}} at {{orderCtrl.s.service_time | MinutesToPrintTime : orderCtrl.s.service_type}}</td>
           </tr>
           <tr ng-if="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY">
             <td>Address</td>
@@ -403,4 +403,4 @@
   <script src="https://www.windycitypie.com/wp-includes/js/socket.io.js"></script>
   <script src="https://www.windycitypie.com/wp-includes/js/socket.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
-  <script src="https://www.windycitypie.com/wp-includes/js/WCPMenu_1.js"></script>
+  <script src="https://www.windycitypie.com/wp-includes/js/WCPMenu_2.js"></script>
