@@ -151,7 +151,7 @@ function initializeToppingsDict() {
 initializeToppingsDict();
 
 var pizza_menu = {};
-var salad_menu = {};
+var extras_menu = {};
 
 var WCPProduct = function(name, shortcode, price) {
   this.name = name;
@@ -766,9 +766,47 @@ beverage_menu = {
   	
 };
 
-beverage_menu = {
-  citraipa: new WCPSalad("Stoup - Citra IPA Crowler",
-    "StCit",
+growler_fill_menu = {
+  abt12: new WCPSalad("Stoup sdsdfsdf- Citra IPA Crowler",
+    "abt12",
+    14,
+    "Images of tropical fruit and citrus thanks to a healthy dose of Citra® hops - ABV 5.9% - IBU 50 - 32oz"
+  ),
+  seapine: new WCPSalad("Stoup - Pistodsdsdfsdfsdfsl Fingers IPA Crowler",
+    "seapine",
+    14,
+    "Resonate, Pellets and Cryo pellets in this homage to the mighty Mosaic hop. - ABV 6.9% - IBU 75 - 32oz"
+  ),
+  cider: new WCPSalad("Holy Mountain - White ddsdsdsd Wit Crowler",
+    "cider",
+    14,
+    "Belgian-Style Witbier wih pilsner malt and oats and fermented with a traditional Belgian strain. ABV 4.8% - 32oz"
+  ),
+  osl: new WCPSalad("Hodddddd Black Beer Crowler",
+    "osl",
+    14,
+    "Session black ale brewed with roasted and flaked barley and hopped with East Kent Golding. ABV 4.5% - 32oz"
+  ),
+  pils: new WCPSalad("Hsdfdsdfsdddr",
+    "pils",
+    14,
+    "Coconut Session Porter brewed with a special variety of British Two Row, and a variety of specialty dark crystal and roasted malts. - ABV 5% - 32oz"
+  ),
+  bcbs: new WCPSalad("sdsdfdfds",
+    "bcbs",
+    14,
+    "Hoppy Lager brewed with a combination of German Pilsner Malt and Malted Wheat. Hopped entirely with whole-leaf Citra and Strata during the boil. ABV 5.4% - 32oz"
+  ),
+  hmrot: new WCPSalad("hmrot",
+    "hmrot",
+    14,
+    "American Pale Ale with aromas and flavors of citrus, tropical fruit, peach, and hints of sticky pine. ABV 5.2% - 32oz"
+  )	
+};
+
+wine_bottles_menu = {
+  citraipa: new WCPSalad("Some wine",
+    "",
     14,
     "Images of tropical fruit and citrus thanks to a healthy dose of Citra® hops - ABV 5.9% - IBU 50 - 32oz"
   ),

@@ -98,9 +98,8 @@ var WCPStoreConfig = function() {
   this.TIME_STEP = [WCP_time_step];
 
   // menu related
-  this.EXTRAS_MENU = salad_menu;
+  this.EXTRAS_MENU = extras_menu;
   this.PIZZA_MENU = pizza_menu;
-  this.BEVERAGE_MENU = beverage_menu;
   this.TOPPINGS = toppings_array;
   this.SAUCES = sauces;
   this.CHEESE_OPTIONS = cheese_options;
@@ -452,23 +451,17 @@ var WCPOrderHelper = function() {
     }
     var extras_shortcodes = "";
     for (var j in cart.extras) {
-      var quantity = cart.extras[j][0];
-      var shortcode = cart.extras[j][1].shortcode;
-      extras_shortcodes = extras_shortcodes + "+" + quantity.toString(10) + "x" + shortcode;
-    }
-
-    var beverage_shortcodes = "";
-    for (var k in cart.beverages) {
-      var quantity = cart.beverages[k][0];
-      var shortcode = cart.beverages[k][1].shortcode;
-      beverage_shortcodes = beverage_shortcodes + "+" + quantity.toString(10) + "x" + shortcode;
+      for (var k in cart.extras[j]) {
+        var quantity = cart.extras[j][k][0];
+        var shortcode = cart.extras[j][k][1].shortcode;
+        extras_shortcodes = extras_shortcodes + "+" + quantity.toString(10) + "x" + shortcode;
+      }
     }
 
     var customer_encoded = encodeURI(customer);
     var pizzas_title = num_pizzas + "x" + pizza_shortcodes;
     var extras_title = extras_shortcodes.length > 0 ? "+Extras" + extras_shortcodes : "";
-    var beverages_title = beverage_shortcodes.length > 0 ? "+Bev" + beverage_shortcodes : "";
-    return service_string + "+" + customer_encoded + "+" + pizzas_title + extras_title + beverages_title + (has_special_instructions ? "+%2A" : "");
+    return service_string + "+" + customer_encoded + "+" + pizzas_title + extras_title + (has_special_instructions ? "+%2A" : "");
   };
 
   this.EventDateTimeStringBuilder = function(date, time, service_type) {
@@ -577,10 +570,9 @@ function UpdateLeadTime() {
         val += this.cart.pizza[i][0] * this.cart.pizza[i][1].price;
       }
       for (var j in this.cart.extras) {
-        val += this.cart.extras[j][0] * this.cart.extras[j][1].price;
-      }
-      for (var k in this.cart.beverages) {
-        val += this.cart.beverages[k][0] * this.cart.beverages[k][1].price;
+        for (var k in this.cart.extras[j]) {
+          val += this.cart.extras[j][k][0] * this.cart.extras[j][k][1].price;
+        }
       }
       return val;
     }
@@ -603,8 +595,7 @@ function UpdateLeadTime() {
     this.email_address = "";
     this.cart = {
       pizza: [],
-      extras: [],
-      beverages: [],
+      extras: []// (filled at end of function)
     };
     this.cartstring = "";
     this.num_pizza = 0;
@@ -651,6 +642,10 @@ function UpdateLeadTime() {
 
     // flag for when too much time passes and the user's time needs to be re-selected
     this.selected_time_timeout = false;
+
+    for (var i in extras_menu) { 
+      this.cart.extras.push([]);
+    }
   };
 
   app.controller("OrderController", ["OrderHelper", "$filter", "$http", "$location", "$scope", "socket", function(OrderHelper, $filter, $http, $location, $scope, $socket) {
@@ -774,18 +769,12 @@ function UpdateLeadTime() {
 
       // process cart for extras
       for (var j in this.s.cart.extras) {
-        var quantity = this.s.cart.extras[j][0];
-        var item_name = this.s.cart.extras[j][1].name;
-        str_builder = str_builder + quantity + "x: " + item_name + "\n";
-        short_builder = short_builder + quantity + "x: " + item_name + "\n";
-      }
-
-      // process cart for beverages
-      for (var k in this.s.cart.beverages) {
-        var quantity = this.s.cart.beverages[k][0];
-        var item_name = this.s.cart.beverages[k][1].name;
-        str_builder = str_builder + quantity + "x: " + item_name + "\n";
-        short_builder = short_builder + quantity + "x: " + item_name + "\n";
+        for (var k in this.s.cart.extras[j]) {
+          var quantity = this.s.cart.extras[j][k][0];
+          var item_name = this.s.cart.extras[j][k][1].name;
+          str_builder = str_builder + quantity + "x: " + item_name + "\n";
+          short_builder = short_builder + quantity + "x: " + item_name + "\n";
+        }
       }
 
       if (this.s.validated_delivery_address) {
@@ -847,23 +836,23 @@ function UpdateLeadTime() {
       this.PostCartUpdate();
     };
 
-    this.addExtraToOrder = function(selection) {
+    this.addExtraToOrder = function(selection, menuidx) {
       // check for existing entry
-      for (var i in this.s.cart.extras) {
-        if (this.s.cart.extras[i][1].shortcode == selection.shortcode) {
+      for (var i in this.s.cart.extras[menuidx]) {
+        if (this.s.cart.extras[menuidx][i][1].shortcode == selection.shortcode) {
           // note, dumb check here for equality
-          this.s.cart.extras[i][0] += 1;
+          this.s.cart.extras[menuidx][i][0] += 1;
           this.PostCartUpdate();
           return;
         }
       }
       // add new entry
-      this.s.cart.extras.push([1, selection]);
+      this.s.cart.extras[menuidx].push([1, selection]);
       this.PostCartUpdate();
     };
 
-    this.removeExtraFromOrder = function(idx) {
-      this.s.cart.extras.splice(idx, 1);
+    this.removeExtraFromOrder = function(idx, menuidx) {
+      this.s.cart.extras[menuidx].splice(idx, 1);
       this.PostCartUpdate();
     };
 
@@ -876,10 +865,9 @@ function UpdateLeadTime() {
         this.s.cart.pizza[item][0] = FixQuantity(this.s.cart.pizza[item][0], clear_if_invalid);
       }
       for (var j in this.s.cart.extras) {
-        this.s.cart.extras[j][0] = FixQuantity(this.s.cart.extras[j][0], clear_if_invalid);
-      }
-      for (var k in this.s.cart.extras) {
-        this.s.cart.beverages[k][0] = FixQuantity(this.s.cart.beverages[k][0], clear_if_invalid);
+        for (var k in this.s.cart.extras[j]) {
+          this.s.cart.extras[j][k][0] = FixQuantity(this.s.cart.extras[j][k][0], clear_if_invalid);
+        }
       }
       this.PostCartUpdate();
     };
@@ -947,7 +935,6 @@ function UpdateLeadTime() {
   app.controller("PizzaMenuController", function() {
     this.pizza_menu = wcpconfig.PIZZA_MENU;
     this.extras_menu = wcpconfig.EXTRAS_MENU;
-    this.beverage_menu = wcpconfig.BEVERAGE_MENU;
     this.selection = null;
     this.quantity = 1;
     this.toppings = toppings_array;
