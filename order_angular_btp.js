@@ -689,7 +689,7 @@ function UpdateLeadTime() {
           if (response.data.in_area) {
             $scope.state.is_address_validated = true;
             $scope.state.delivery_fee = 0;
-            $scope.state.autograt = $scope.state.ComputeSubtotal() * .2;
+            //$scope.state.autograt = $scope.state.ComputeSubtotal() * .2;
           }
         }
         else {
