@@ -844,7 +844,7 @@ wine_bottles_menu = {
 
 extras_menu = {
   small_plates: { 
-    menu_name: "Small plates", 
+    menu_name: "Small Plates", 
     menu: salad_menu
   },
   growler_fills: { 
@@ -852,11 +852,11 @@ extras_menu = {
     menu: growler_fill_menu
   },
   beer: { 
-    menu_name: "Packaged beer (crowlers, cans, bottles)", 
+    menu_name: "Packaged Beer (crowlers, cans, bottles)", 
     menu: beverage_menu
   },
   wine_bottles: { 
-    menu_name: "Bottled wine (750mL)", 
+    menu_name: "Bottled Wine (750mL)", 
     menu: wine_bottles_menu
   },
 }
