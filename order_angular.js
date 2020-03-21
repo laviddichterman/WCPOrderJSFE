@@ -627,15 +627,14 @@ function UpdateLeadTime() {
       }
     ];
 
-    // stage 0: menu/cart controller: cart display // pie selection // customize pie, add to cart
-    // stage 1: salads
-    // stage 2: beverages
+    // stage 1: menu/cart controller: cart display // pie selection // customize pie, add to cart
+    // stage 2: everything else
     // stage 3: customer name, phone, email address, address , referral info
     // stage 4: select service_type date/time
     // stage 5: review order, special instructions
     // stage 6: pressed submit, waiting validation
     // stage 7: submitted successfully
-    this.stage = 0;
+    this.stage = 1;
 
     // flag for when submitting fails according to submission backend
     this.submit_failed = false;
