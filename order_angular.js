@@ -451,11 +451,9 @@ var WCPOrderHelper = function() {
     }
     var extras_shortcodes = "";
     for (var j in cart.extras) {
-      for (var k in cart.extras[j]) {
-        var quantity = cart.extras[j][k][0];
-        var shortcode = cart.extras[j][k][1].shortcode;
-        extras_shortcodes = extras_shortcodes + "+" + quantity.toString(10) + "x" + shortcode;
-      }
+      var quantity = cart.extras[j][0];
+      var shortcode = cart.extras[j][1].shortcode;
+      extras_shortcodes = extras_shortcodes + "+" + quantity.toString(10) + "x" + shortcode;
     }
 
     var customer_encoded = encodeURI(customer);
@@ -570,9 +568,7 @@ function UpdateLeadTime() {
         val += this.cart.pizza[i][0] * this.cart.pizza[i][1].price;
       }
       for (var j in this.cart.extras) {
-        for (var k in this.cart.extras[j]) {
-          val += this.cart.extras[j][k][0] * this.cart.extras[j][k][1].price;
-        }
+        val += this.cart.extras[j][0] * this.cart.extras[j][1].price;
       }
       return val;
     }
@@ -595,7 +591,7 @@ function UpdateLeadTime() {
     this.email_address = "";
     this.cart = {
       pizza: [],
-      extras: []// (filled at end of function)
+      extras: []
     };
     this.cartstring = "";
     this.num_pizza = 0;
@@ -611,6 +607,7 @@ function UpdateLeadTime() {
     this.delivery_fee = 0;
     this.autograt = 0;
     this.EMAIL_REGEX = EMAIL_REGEX;
+    this.accordionstate = [];
 
     this.service_type_functors = [
       // PICKUP
@@ -642,9 +639,12 @@ function UpdateLeadTime() {
     // flag for when too much time passes and the user's time needs to be re-selected
     this.selected_time_timeout = false;
 
-    for (var i in extras_menu) { 
-      this.cart.extras.push([]);
+    for (var i in cfg.EXTRAS_MENU) {
+      console.log(i);
+      this.accordionstate.push(i == 0);
+      console.log(this.accordionstate);
     }
+    
   };
 
   app.controller("OrderController", ["OrderHelper", "$filter", "$http", "$location", "$scope", "socket", function(OrderHelper, $filter, $http, $location, $scope, $socket) {
@@ -679,6 +679,13 @@ function UpdateLeadTime() {
       this.s.address_invalid = false;
       this.s.delivery_fee = 0;
       this.s.autograt = 0;
+    };
+
+    this.toggleAccordion = function(idx) {
+      var startingstatus = this.s.accordionstate[idx];
+      for (var i in this.s.accordionstate) {
+        this.s.accordionstate[i] = startingstatus ? 0 : (i == idx ? true : false);
+      }
     };
 
     this.ClearSpecialInstructions = function() {
@@ -768,12 +775,10 @@ function UpdateLeadTime() {
 
       // process cart for extras
       for (var j in this.s.cart.extras) {
-        for (var k in this.s.cart.extras[j]) {
-          var quantity = this.s.cart.extras[j][k][0];
-          var item_name = this.s.cart.extras[j][k][1].name;
-          str_builder = str_builder + quantity + "x: " + item_name + "\n";
-          short_builder = short_builder + quantity + "x: " + item_name + "\n";
-        }
+        var quantity = this.s.cart.extras[j][0];
+        var item_name = this.s.cart.extras[j][1].name;
+        str_builder = str_builder + quantity + "x: " + item_name + "\n";
+        short_builder = short_builder + quantity + "x: " + item_name + "\n";
       }
 
       if (this.s.validated_delivery_address) {
@@ -815,43 +820,23 @@ function UpdateLeadTime() {
       this.PostCartUpdate();
     };
 
-    this.addBeverageToOrder = function(selection) {
+    this.addExtraToOrder = function(selection) {
       // check for existing entry
-      for (var i in this.s.cart.beverages) {
-        if (this.s.cart.beverages[i][1].shortcode == selection.shortcode) {
+      for (var i in this.s.cart.extras) {
+        if (this.s.cart.extras[i][1].shortcode == selection.shortcode) {
           // note, dumb check here for equality
-          this.s.cart.beverages[i][0] += 1;
+          this.s.cart.extras[i][0] += 1;
           this.PostCartUpdate();
           return;
         }
       }
       // add new entry
-      this.s.cart.beverages.push([1, selection]);
+      this.s.cart.extras.push([1, selection]);
       this.PostCartUpdate();
     };
 
-    this.removeBeverageFromOrder = function(idx) {
-      this.s.cart.beverages.splice(idx, 1);
-      this.PostCartUpdate();
-    };
-
-    this.addExtraToOrder = function(selection, menuidx) {
-      // check for existing entry
-      for (var i in this.s.cart.extras[menuidx]) {
-        if (this.s.cart.extras[menuidx][i][1].shortcode == selection.shortcode) {
-          // note, dumb check here for equality
-          this.s.cart.extras[menuidx][i][0] += 1;
-          this.PostCartUpdate();
-          return;
-        }
-      }
-      // add new entry
-      this.s.cart.extras[menuidx].push([1, selection]);
-      this.PostCartUpdate();
-    };
-
-    this.removeExtraFromOrder = function(idx, menuidx) {
-      this.s.cart.extras[menuidx].splice(idx, 1);
+    this.removeExtraFromOrder = function(idx) {
+      this.s.cart.extras.splice(idx, 1);
       this.PostCartUpdate();
     };
 
@@ -864,9 +849,7 @@ function UpdateLeadTime() {
         this.s.cart.pizza[item][0] = FixQuantity(this.s.cart.pizza[item][0], clear_if_invalid);
       }
       for (var j in this.s.cart.extras) {
-        for (var k in this.s.cart.extras[j]) {
-          this.s.cart.extras[j][k][0] = FixQuantity(this.s.cart.extras[j][k][0], clear_if_invalid);
-        }
+        this.s.cart.extras[j][0] = FixQuantity(this.s.cart.extras[j][0], clear_if_invalid);
       }
       this.PostCartUpdate();
     };
@@ -907,7 +890,7 @@ function UpdateLeadTime() {
       this.s.stage = this.s.stage - 1;
     };
     this.HasPreviousStage = function() {
-      return this.s.stage > 0 && this.s.stage <= 5;
+      return this.s.stage > 1 && this.s.stage <= 5;
     };
     this.HasNextStage = function() {
       return this.s.stage < 5;

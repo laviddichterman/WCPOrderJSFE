@@ -713,10 +713,10 @@ beverage_menu = {
     14,
     "Images of tropical fruit and citrus thanks to a healthy dose of Citra® hops - ABV 5.9% - IBU 50 - 32oz"
   ),
-  pistolipa: new WCPSalad("Stoup - Pistol Fingers IPA Crowler",
-    "StPis",
+  pistolipa: new WCPSalad("Stoup - Bonus Cup IPA Crowler",
+    "StBCp",
     14,
-    "Resonate, Pellets and Cryo pellets in this homage to the mighty Mosaic hop. - ABV 6.9% - IBU 75 - 32oz"
+    "Brewed with Galaxy, Citra and Cascade hops. A beer packed with citrus, passionfruit and pine! - ABV 6.5% - 32oz"
   ),
   whitelodge: new WCPSalad("Holy Mountain - White Lodge Wit Crowler",
     "HMWit",
@@ -748,60 +748,64 @@ beverage_menu = {
     11,
     "It's the water, y'all. ABV 4.78% - 6 x 16oz"
   ),
+  zitrone4k: new WCPSalad("Stiegel Zitrone Radler Tall Boy - 4 x 16.9oz",
+    "StZitrone4pk",
+    14,
+    "Summer in a glass... err can. ABV 2.0% - 4 x 16.9oz"
+  ),
+  moderntms4pk: new WCPSalad("Modern Times Orderville IPA Tall Boy - 4 x 16oz",
+    "ModernTms4pk",
+    19,
+    "Orderville is an aggressive, fragrant IPA that blends the fruit-forward character of Mosaic hops with resinous stickiness from a mélange of dank hops. ABV 7.2% IBU 75 - 4 x 16.9oz"
+  ),
   oly1pk: new WCPSalad("Olympia Tall Boy",
     "Oly1pk",
     3,
     "It's the water, y'all. ABV 4.78% - 16oz"
-  ),
-  zitrone4k: new WCPSalad("Stiegel Zitrone Radler Tall Boy - 4 x 16",
-    "StZitrone4pk",
-    11,
-    "Summer in a glass... err can. ABV 2.0% - 4 x 16.9oz"
-  ),
-  moderntms4pk: new WCPSalad("Stiegel Zitrone Radler Tall Boy - 4 x 16",
-    "ModernTms4pk",
-    14,
-    "FILL ME OUT. ABV 2.0% - 4 x 16.9oz"
-  ),
-  	
+  ),  	
 };
 
 growler_fill_menu = {
-  abt12: new WCPSalad("Stoup sdsdfsdf- Citra IPA Crowler",
+  abt12: new WCPSalad("St. Bernardus - ABT12",
     "abt12",
-    14,
-    "Images of tropical fruit and citrus thanks to a healthy dose of Citra® hops - ABV 5.9% - IBU 50 - 32oz"
+    38,
+    "Belgian Quadruple, the flagship. One of the best beers in the world. - ABV 10.0% - EBU 20 - 64oz"
   ),
-  seapine: new WCPSalad("Stoup - Pistodsdsdfsdfsdfsl Fingers IPA Crowler",
+  seapine: new WCPSalad("Seapine - IPA",
     "seapine",
-    14,
-    "Resonate, Pellets and Cryo pellets in this homage to the mighty Mosaic hop. - ABV 6.9% - IBU 75 - 32oz"
+    17,
+    "Our brewery neighbors from the SoDo days. Centennial hops, heavy citrus. - 6.7% ABV - 65 IBU - 64oz"
   ),
-  cider: new WCPSalad("Holy Mountain - White ddsdsdsd Wit Crowler",
+  cider: new WCPSalad("Portland Cider Company - Kinda Dry",
     "cider",
-    14,
-    "Belgian-Style Witbier wih pilsner malt and oats and fermented with a traditional Belgian strain. ABV 4.8% - 32oz"
+    24,
+    "Apples, yo. 6.9% ABV - 1.03 brix - 64oz"
   ),
-  osl: new WCPSalad("Hodddddd Black Beer Crowler",
+  osl: new WCPSalad("Maritime Pacific - Old Seattle Lager",
     "osl",
-    14,
-    "Session black ale brewed with roasted and flaked barley and hopped with East Kent Golding. ABV 4.5% - 32oz"
+    16,
+    "Light, crisp, refreshing, Seattle institution - 4.3% ABV - 16 IBU - 64oz"
   ),
-  pils: new WCPSalad("Hsdfdsdfsdddr",
+  pils: new WCPSalad("Chuckanut - Pilsner",
     "pils",
-    14,
-    "Coconut Session Porter brewed with a special variety of British Two Row, and a variety of specialty dark crystal and roasted malts. - ABV 5% - 32oz"
+    19,
+    "Golden, dry, bitter, floral, snappy - 5.0% ABV - 36 IBU - 64oz"
   ),
-  bcbs: new WCPSalad("sdsdfdfds",
+  bcbs: new WCPSalad("Goose Island - Bourbon County Stout 2019",
     "bcbs",
-    14,
-    "Hoppy Lager brewed with a combination of German Pilsner Malt and Malted Wheat. Hopped entirely with whole-leaf Citra and Strata during the boil. ABV 5.4% - 32oz"
+    48,
+    "A special taste of home. ABV 14.7% - 64oz"
   ),
-  hmrot: new WCPSalad("hmrot",
+  hmrot: new WCPSalad("Holy Mountain - White Lodge Wit",
     "hmrot",
-    14,
-    "American Pale Ale with aromas and flavors of citrus, tropical fruit, peach, and hints of sticky pine. ABV 5.2% - 32oz"
-  )	
+    20,
+    "Belgian-Style Witbier wih pilsner malt and oats and fermented with a traditional Belgian strain. ABV 4.8% - 64oz"
+  ),
+  stpket: new WCPSalad("Stoup - Ketel To Table IPA",
+  "stpket",
+  20,
+  "HBC 630, Mandarina Bavaria, Wai-iti, Citra and Loral for an unquestionable orange citrus, lime, and raspberry candy hop presence. ABV 5.7% - IBU 38 - 64oz"
+)	
 };
 
 wine_bottles_menu = {
@@ -810,10 +814,10 @@ wine_bottles_menu = {
     14,
     "Images of tropical fruit and citrus thanks to a healthy dose of Citra® hops - ABV 5.9% - IBU 50 - 32oz"
   ),
-  pistolipa: new WCPSalad("Stoup - Pistol Fingers IPA Crowler",
-    "StPis",
+  bonuscup: new WCPSalad("Stoup - Bonus Cup IPA Crowler",
+    "StBCup",
     14,
-    "Resonate, Pellets and Cryo pellets in this homage to the mighty Mosaic hop. - ABV 6.9% - IBU 75 - 32oz"
+    "Brewed with Galaxy, Citra and Cascade hops. A beer packed with citrus, passionfruit and pine! - ABV 6.5% - 32oz"
   ),
   whitelodge: new WCPSalad("Holy Mountain - White Lodge Wit Crowler",
     "HMWit",
@@ -842,21 +846,21 @@ wine_bottles_menu = {
   )	
 };
 
-extras_menu = {
-  small_plates: { 
+extras_menu = [
+  { 
     menu_name: "Small Plates", 
     menu: salad_menu
   },
-  growler_fills: { 
-    menu_name: "Growler Fills", 
+  { 
+    menu_name: "Growler Fills ($6 to buy a growler or we can sanitize yours)", 
     menu: growler_fill_menu
   },
-  beer: { 
+  { 
     menu_name: "Packaged Beer (crowlers, cans, bottles)", 
     menu: beverage_menu
   },
-  wine_bottles: { 
-    menu_name: "Bottled Wine (750mL)", 
-    menu: wine_bottles_menu
-  },
-}
+  // { 
+  //   menu_name: "Bottled Wine (750mL)", 
+  //   menu: wine_bottles_menu
+  // }
+];
