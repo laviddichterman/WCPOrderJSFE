@@ -64,13 +64,13 @@ var WCPStoreConfig = function() {
   ];
 
   this.DINEIN_HOURS = [
-    [12 * 60, 21.5 * 60], //sunday
+    [1 * 60, 0 * 60], //sunday
     [1 * 60, 0 * 60], //monday
     [1 * 60, 0 * 60], //tuesday
-    [16 * 60, 21.5 * 60], //wednesday
-    [16 * 60, 21.5 * 60], //thursday
-    [12 * 60, 22.5 * 60], //friday
-    [12 * 60, 22.5 * 60] //saturday
+    [1 * 60, 0 * 60], //wednesday
+    [1 * 60, 0 * 60], //thursday
+    [1 * 60, 0 * 60], //friday
+    [1 * 60, 0 * 60] //saturday
   ];
 
   this.DELIVERY_HOURS = [
@@ -124,13 +124,13 @@ var WCPStoreConfig = function() {
   };
   this.NOTE_SPECIAL_INSTRUCTIONS = "Since you specified special instructions, we will let you know if we can accommodate your request. We may need your confirmation if your instructions will incur an additional cost or we cannot accommodate them, so please watch your email.";
   this.NOTE_KEEP_LEVEL = "Be sure to travel with your pizza as flat as possible, on the floor or in the trunk. Seats are generally not a level surface.";
-  this.NOTE_PICKUP_BEFORE_DI = "We won't be open for dine-in at the time of your pickup. Our door may be locked. Please text 206.486.4743 or respond to this email thread when you've arrived. Please let us know if you have any additional questions about the pickup process.";
+  this.NOTE_PICKUP_BEFORE_DI = "Come to the door and we'll greet you. If there is a line, please form alongside the patio. Please maintain a 6 foot distance between yourself and other patrons at all times. ";
   this.NOTE_PICKUP_DURING_DI = "Come to the host stand and let us know your first name and that you have a pre-order. ";
-  this.NOTE_PICKUP_AFTER_DI = "We'll be ending our dine-in service at the time of your pickup. Please come to the bar and inform us the name under which the order was placed.";
+  this.NOTE_PICKUP_AFTER_DI = this.NOTE_PICKUP_BEFORE_DI;
   this.NOTE_DI = "Dine-ins get you to the front of the table queue. We don't reserve seating. Please arrive slightly before your selected time so your pizza is as fresh as possible and you have time to get situated and get beverages! ";
   this.NOTE_DELIVERY_BETA = "Our delivery service is now in beta. Delivery times are rough estimates and we will make every attempt to be prompt. We'll contact you to confirm the order shortly.";
   this.NOTE_PAYMENT = "We happily accept any major credit card or cash for payment upon arrival.";
-  this.NOTE_DELIVERY_SERVICE = "We appreciate your patience as our in-house delivery service is currently in its infancy. Delivery times are estimated. We might be a little earlier, or a little later. A 20% gratuity will be applied and is distributed among the Windy City Pie family.";
+  this.NOTE_DELIVERY_SERVICE = "We appreciate your patience as our in-house delivery service is currently in its infancy. Delivery times are estimated. We might be a little earlier, or a little later. A 20% gratuity will be applied and is distributed among the Windy City Pie family. Payment is normally taken upon arrival, but if a no-contact delivery is required we can accommodate, if given at least a few hours notice. Let us know if this is your preference by responding to this e-mail.";
   this.NOTE_ALCOHOL = "The recipient must have a valid ID showing they are at least 21 years of age.";
   this.REQUEST_SLICING = "In order to ensure the quality of our pizzas, we will not slice them. We'd recommend bringing anything from a bench scraper to a butter knife to slice the pizza. Slicing the whole pizza when it's hot inhibits the crust from properly setting, and can cause the crust to get soggy both during transit and as the pie is eaten. We want your pizza to be the best possible and bringing a tool with which to slice the pie will make a big difference.";
   this.REQUEST_VEGAN = "Our pizzas cannot be made vegan or without cheese. If you're looking for a vegan option, our Beets By Schrute salad can be made vegan by omitting the bleu cheese.";
