@@ -57,7 +57,7 @@
           </span>
         </div>
       </div>
-      <md-content ng-show="orderCtrl.s.stage === 2">
+      <md-content ng-show="orderCtrl.s.stage === 2"><br>
       <h3 class="flush"><strong>Add small plates or beverages to your order.</strong></h3>
       <div class="ordering-menu menu-list menu-list__dotted md-accordion" ng-repeat="submenu in pmenuCtrl.extras_menu">
         <md-toolbar ng-click="orderCtrl.toggleAccordion($index)" role="button">
@@ -65,7 +65,7 @@
             <h2>
               <span><strong>{{submenu.menu_name}}</strong></span>
             </h2>
-            <span flex=""></span>
+            <span flex="" class="flex"></span>
             <span ng-class="{expandCollapse:true, active:orderCtrl.s.accordionstate[$index]}"></span> 
           </div>
         </md-toolbar> 
