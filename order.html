@@ -64,6 +64,7 @@
           <div class="md-toolbar-tools">
             <h2>
               <span><strong>{{submenu.menu_name}}</strong></span>
+              <span style="color: red;" ng-if="submenu.in_red"><strong>{{submenu.in_red}}</strong></span>
             </h2>
             <span flex="" class="flex"></span>
             <span ng-class="{expandCollapse:true, active:orderCtrl.s.accordionstate[$index]}"></span> 
@@ -126,24 +127,6 @@
                       <input type="number" class="quantity" min=1 max=99 ng-model="item[0]" ng-blur="orderCtrl.fixQuantities(true)" ng-change="orderCtrl.fixQuantities(false)">
                       <span class="cart-item-remove">
                         <button name="remove" ng-click="orderCtrl.ScrollTop(); orderCtrl.removeExtraFromOrder($index)" class="button-remove">X</button>
-                      </span>
-                    </div>
-                  </td>
-                </tr>
-                <tr ng-repeat="item in orderCtrl.s.cart.beverages" class="cart-item">
-                  <td>
-                    <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
-                      <div class="menu-list__item">
-                        <h4 class="menu-list__item-title"><span class="item_title">{{item[1].name}}</span></h4>
-                        <p class="menu-list__item-desc"><span class="desc__content">{{item[1].description}}</span></p>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <div class="grid-flex grid-valign-middle">
-                      <input type="number" class="quantity" min=1 max=99 ng-model="item[0]" ng-blur="orderCtrl.fixQuantities(true)" ng-change="orderCtrl.fixQuantities(false)">
-                      <span class="cart-item-remove">
-                        <button name="remove" ng-click="orderCtrl.ScrollTop(); orderCtrl.removeBeverageFromOrder($index)" class="button-remove">X</button>
                       </span>
                     </div>
                   </td>
@@ -402,4 +385,4 @@
   <script src="https://www.windycitypie.com/wp-includes/js/socket.io.js"></script>
   <script src="https://www.windycitypie.com/wp-includes/js/socket.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
-  <script src="https://www.windycitypie.com/wp-includes/js/WCPMenu_10.js"></script>
+  <script src="https://www.windycitypie.com/wp-includes/js/WCPMenu_5.js"></script>

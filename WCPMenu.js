@@ -1,12 +1,12 @@
 var toppings_dict = {};
 
-var no_restriction = function(pizza) {
+var no_restriction = function (pizza) {
   return true;
 };
-var enable_on_white = function(pizza) {
+var enable_on_white = function (pizza) {
   return pizza && pizza.sauce.shortname == "white";
 };
-var disable_on_gf = function(pizza) {
+var disable_on_gf = function (pizza) {
   return pizza && pizza.crust.dough.shortname == "regular";
 };
 var disable_on_brussels_sprout = function (pizza) {
@@ -22,7 +22,7 @@ var disable_on_pork_sausage = function (pizza) {
   return pizza && pizza.toppings_tracker[toppings_dict.sausage.index] > 0 ? false : true;
 };
 
-var WCPOption = function(name, shortname, price) {
+var WCPOption = function (name, shortname, price) {
   this.name = name;
   this.shortname = shortname;
   this.price = price;
@@ -51,32 +51,32 @@ var cheese_options = {
   }
 };
 
-var WCPSauce = function(name, shortname, price, enable_filter) {
+var WCPSauce = function (name, shortname, price, enable_filter) {
   WCPOption.call(this, name, shortname, price);
   this.enable = enable_filter;
-  this.ShowOption = function(pizza) {
+  this.ShowOption = function (pizza) {
     return pizza && (this.enable(pizza) || pizza.sauce == this.shortname);
   };
 };
 
-var WCPCrust = function(name, shortname, price, enable_filter, flavor, dough, leadtime) {
+var WCPCrust = function (name, shortname, price, enable_filter, flavor, dough, leadtime) {
   WCPOption.call(this, name, shortname, price);
   this.enable = enable_filter;
   this.flavor = flavor;
   this.dough = dough;
   this.leadtime = leadtime;
-  this.ShowOption = function(pizza) {
+  this.ShowOption = function (pizza) {
     return pizza && (this.enable(pizza) || pizza.crust == this.shortname);
   };
 };
 
-var WCPTopping = function(name, shortname, price, index, enable_filter, flavor_factor, bake_factor) {
+var WCPTopping = function (name, shortname, price, index, enable_filter, flavor_factor, bake_factor) {
   WCPOption.call(this, name, shortname, price);
   this.index = index;
   this.enable = enable_filter;
   this.flavor_factor = flavor_factor;
   this.bake_factor = bake_factor;
-  this.ShowOption = function(pizza, location) {
+  this.ShowOption = function (pizza, location) {
     var base = pizza && this.enable(pizza);
     var this_topping_state = pizza.toppings_tracker[this.index];
     var left_bake = pizza.bake_count[0];
@@ -106,14 +106,14 @@ var crust_flavors = {
 
 var crust_doughs = {
   regular: new WCPOption("Regular", "regular", 0),
-//  gf: new WCPOption("Gluten Free Dough", "gf", 5)
+  //  gf: new WCPOption("Gluten Free Dough", "gf", 5)
 };
 
 var crusts = {
   regular: new WCPCrust("Regular", "regular", 0, no_restriction, crust_flavors.regular, crust_doughs.regular, 0),
-//  garlic: new WCPCrust("Roasted Garlic", "garlic", 2, no_restriction, crust_flavors.garlic, crust_doughs.regular, 0),
-//  gf: new WCPCrust("Gluten Free", "gf", 5, disable_on_meatball, crust_flavors.regular, crust_doughs.gf, 1440),
-//  gf_garlic: new WCPCrust("Roasted Garlic Gluten Free", "gf_garlic", 7, disable_on_meatball, crust_flavors.garlic, crust_doughs.gf, 1440),
+  //  garlic: new WCPCrust("Roasted Garlic", "garlic", 2, no_restriction, crust_flavors.garlic, crust_doughs.regular, 0),
+  //  gf: new WCPCrust("Gluten Free", "gf", 5, disable_on_meatball, crust_flavors.regular, crust_doughs.gf, 1440),
+  //  gf_garlic: new WCPCrust("Roasted Garlic Gluten Free", "gf_garlic", 7, disable_on_meatball, crust_flavors.garlic, crust_doughs.gf, 1440),
 };
 
 var idx = 0;
@@ -135,7 +135,7 @@ var toppings_array = [
   new WCPTopping("Rosemary Chicken Sausage", "chix", 2, idx++, disable_on_pork_sausage, 1, 1),
   new WCPTopping("House Sausage", "sausage", 2, idx++, disable_on_chicken_sausage, 1, 1),
   new WCPTopping("Meatball", "meatball", 4, idx++, disable_on_gf, 1, 2),
-//  new WCPTopping("Braised Beef", "beef", 4, idx++, no_restriction, 1, 2),
+  //  new WCPTopping("Braised Beef", "beef", 4, idx++, no_restriction, 1, 2),
   new WCPTopping("Brussels Sprout", "brussels", 2, idx++, enable_on_white, 1, 1),
   new WCPTopping("Candied Bacon", "bacon", 2, idx++, no_restriction, 1, 1),
   new WCPTopping("Bleu", "bleu", 2, idx++, no_restriction, 1, 1),
@@ -153,18 +153,18 @@ initializeToppingsDict();
 var pizza_menu = {};
 var extras_menu = {};
 
-var WCPProduct = function(name, shortcode, price) {
+var WCPProduct = function (name, shortcode, price) {
   this.name = name;
   this.shortcode = shortcode;
   this.price = price;
 };
 
-var WCPSalad = function(name, shortcode, price, description) {
+var WCPSalad = function (name, shortcode, price, description) {
   WCPProduct.call(this, name, shortcode, price);
   this.description = description;
 };
 
-var WCPPizza = function(name, shortcode, crust, cheese, sauce, toppings) {
+var WCPPizza = function (name, shortcode, crust, cheese, sauce, toppings) {
   WCPProduct.call(this, name, shortcode, 0);
   // topping enum is 0: none, 1: left, 2: right, 3: both
   // toppings is array<tuple<enum, topping>>
@@ -202,7 +202,7 @@ var WCPPizza = function(name, shortcode, crust, cheese, sauce, toppings) {
 
   function GetSauceDoughCrustCheeseList(pizza, getter, verbose) {
     var ret = [];
-    if (verbose || pizza.sauce.shortname != sauces.red.shortname ) {
+    if (verbose || pizza.sauce.shortname != sauces.red.shortname) {
       ret.push(getter(pizza.sauce));
     }
     if (pizza.crust.dough.shortname != "regular") {
@@ -211,7 +211,7 @@ var WCPPizza = function(name, shortcode, crust, cheese, sauce, toppings) {
     if (pizza.crust.flavor.shortname != "regular") {
       ret.push(getter(pizza.crust.flavor));
     }
-    if (verbose || pizza.cheese_option != cheese_options.regular.shortname ) {
+    if (verbose || pizza.cheese_option != cheese_options.regular.shortname) {
       ret.push(getter(cheese_options[pizza.cheese_option]));
     }
     return ret;
@@ -235,7 +235,7 @@ var WCPPizza = function(name, shortcode, crust, cheese, sauce, toppings) {
   }
 
   // begin member functions
-  this.GenerateToppingsList = function() {
+  this.GenerateToppingsList = function () {
     // generates and returns a topping list for use by the constructor or something iterating over the toppings
     var new_toppings_list = [];
     for (var i in this.toppings_tracker) {
@@ -246,11 +246,11 @@ var WCPPizza = function(name, shortcode, crust, cheese, sauce, toppings) {
     return new_toppings_list;
   };
 
-  this.SplitToppingsList = function() {
+  this.SplitToppingsList = function () {
     // generates three lists ordered from top to bottom: whole toppings, left only toppings, right only toppings
-    var ret = { left: [], right: [], whole: []};
+    var ret = { left: [], right: [], whole: [] };
     for (var i in this.toppings_tracker) {
-      switch(this.toppings_tracker[i]) {
+      switch (this.toppings_tracker[i]) {
         case 1: ret.left.push(i); break;
         case 2: ret.right.push(i); break;
         case 3: ret.whole.push(i);
@@ -259,13 +259,13 @@ var WCPPizza = function(name, shortcode, crust, cheese, sauce, toppings) {
     return ret;
   };
 
-  this.DisplayToppings = function() {
+  this.DisplayToppings = function () {
     var split_toppings = this.SplitToppingsList();
     var toppings_sections = [];
 
     //whole toppings begin
-    var whole_toppings = split_toppings.whole.map(function(x) { return toppings_array[x].name; });
-    var sauce_dough_crust_cheese = GetSauceDoughCrustCheeseList(this, function(x) { return x.name; }, true);
+    var whole_toppings = split_toppings.whole.map(function (x) { return toppings_array[x].name; });
+    var sauce_dough_crust_cheese = GetSauceDoughCrustCheeseList(this, function (x) { return x.name; }, true);
     whole_toppings = sauce_dough_crust_cheese.concat(whole_toppings);
     toppings_sections.push(["Whole", whole_toppings.join(" + ")]);
     //whole toppings end
@@ -273,34 +273,34 @@ var WCPPizza = function(name, shortcode, crust, cheese, sauce, toppings) {
     //split toppings begin
     if (this.is_split) {
       if (split_toppings.left.length > 0) {
-        toppings_sections.push(["Left", split_toppings.left.map(function(x) { return toppings_array[x].name; }).join(" + ")]);
+        toppings_sections.push(["Left", split_toppings.left.map(function (x) { return toppings_array[x].name; }).join(" + ")]);
       }
       if (split_toppings.right.length > 0) {
-        toppings_sections.push(["Right", split_toppings.right.map(function(x) { return toppings_array[x].name; }).join(" + ")]);
+        toppings_sections.push(["Right", split_toppings.right.map(function (x) { return toppings_array[x].name; }).join(" + ")]);
       }
     }
     //split toppings end
     return toppings_sections;
   };
 
-  this.OneLineDisplayToppings = function() {
+  this.OneLineDisplayToppings = function () {
     var split_toppings = this.SplitToppingsList();
     var sections = [];
-    sections.push(GetSauceDoughCrustCheeseList(this, function(x) { return x.name; }, true).join(" + "));
+    sections.push(GetSauceDoughCrustCheeseList(this, function (x) { return x.name; }, true).join(" + "));
 
-    var whole_toppings = split_toppings.whole.map(function(x) { return toppings_array[x].name; });
+    var whole_toppings = split_toppings.whole.map(function (x) { return toppings_array[x].name; });
     if (whole_toppings.length > 0) {
       sections.push(whole_toppings.join(" + "));
     }
     if (this.is_split) {
-      var left = split_toppings.left.length > 0 ? split_toppings.left.map(function(x) { return toppings_array[x].name; }).join(" + ") : "∅";
-      var right = split_toppings.right.length > 0 ? split_toppings.right.map(function(x) { return toppings_array[x].name; }).join(" + ") : "∅";
+      var left = split_toppings.left.length > 0 ? split_toppings.left.map(function (x) { return toppings_array[x].name; }).join(" + ") : "∅";
+      var right = split_toppings.right.length > 0 ? split_toppings.right.map(function (x) { return toppings_array[x].name; }).join(" + ") : "∅";
       sections.push("(" + [left, right].join(" | ") + ")");
     }
     return sections.join(" + ");
   };
 
-  this.Compare = function(other) {
+  this.Compare = function (other) {
     // 0 no match
     // 1 at least
     // 2 exact match
@@ -314,7 +314,7 @@ var WCPPizza = function(name, shortcode, crust, cheese, sauce, toppings) {
     var min_topping_match_left = 2;
     var min_topping_match_right = 2;
     for (var i in other.toppings_tracker) {
-      switch(other.toppings_tracker[i]) {
+      switch (other.toppings_tracker[i]) {
         case 0:
           switch (this.toppings_tracker[i]) {
             case 0: toppings_match[0].push(2); toppings_match[1].push(2); break;
@@ -367,22 +367,22 @@ var WCPPizza = function(name, shortcode, crust, cheese, sauce, toppings) {
     };
   };
 
-  this.EqualsFromComparisonInfo = function(comparison_info) {
+  this.EqualsFromComparisonInfo = function (comparison_info) {
     return comparison_info.mirror || (comparison_info.min_non_topping == 2 && comparison_info.min_topping_left == 2 && comparison_info.min_topping_right == 2);
   };
 
-  this.Equals = function(other) {
+  this.Equals = function (other) {
     var comparison_info = this.Compare(other);
     return this.EqualsFromComparisonInfo(comparison_info);
   };
 
-  this.RecomputeName = function() {
+  this.RecomputeName = function () {
     // TODO: this logic lacks elegance. Fix that.
     var byo_shortcode = BuildCustomShortcode(this);
     var shortcodes = [byo_shortcode, byo_shortcode];
     var menu_match = [null, null];
-    var shortname_components = {sauce: null, cheese: null, dough: null, crust: null};
-    var name_components = {sauce: null, cheese: null, dough: null, crust: null};
+    var shortname_components = { sauce: null, cheese: null, dough: null, crust: null };
+    var name_components = { sauce: null, cheese: null, dough: null, crust: null };
     var toppings_name_tracker = [];
     for (var i in toppings_array) {
       toppings_name_tracker.push([0, 0]);
@@ -392,7 +392,7 @@ var WCPPizza = function(name, shortcode, crust, cheese, sauce, toppings) {
       if (menu_match[idx] !== null) {
         return;
       }
-      switch(comparison) {
+      switch (comparison) {
         case 2: // exact match
           menu_match[idx] = pizza_menu[menu_compare];
           shortcodes[idx] = pizza_menu[menu_compare].shortcode;
@@ -439,7 +439,7 @@ var WCPPizza = function(name, shortcode, crust, cheese, sauce, toppings) {
       pizza.is_byo = menu_match[0] === pizza_menu["byo"] || menu_match[1] === pizza_menu["byo"];
 
       // split out toppings into left additions, right additions, and whole additions
-      var additional_toppings = {left: [], right: [], whole: []};
+      var additional_toppings = { left: [], right: [], whole: [] };
       for (var i in toppings_name_tracker) {
         if (toppings_name_tracker[i][0] === 1 && toppings_name_tracker[i][1] === 1) {
           additional_toppings.whole.push(toppings_array[i]);
@@ -454,12 +454,12 @@ var WCPPizza = function(name, shortcode, crust, cheese, sauce, toppings) {
       var split_toppings = ["∅", "∅"];
       var short_split_toppings = ["∅", "∅"];
       if (additional_toppings.left.length) {
-        split_toppings[0] = additional_toppings.left.map(function(x) { return x.name; }).join(" + ");
-        short_split_toppings[0] = additional_toppings.left.map(function(x) { return x.shortname; }).join(" + ");
+        split_toppings[0] = additional_toppings.left.map(function (x) { return x.name; }).join(" + ");
+        short_split_toppings[0] = additional_toppings.left.map(function (x) { return x.shortname; }).join(" + ");
       }
       if (additional_toppings.right.length) {
-        split_toppings[1] = additional_toppings.right.map(function(x) { return x.name; }).join(" + ");
-        short_split_toppings[1] = additional_toppings.right.map(function(x) { return x.shortname; }).join(" + ");
+        split_toppings[1] = additional_toppings.right.map(function (x) { return x.name; }).join(" + ");
+        short_split_toppings[1] = additional_toppings.right.map(function (x) { return x.shortname; }).join(" + ");
       }
 
       function BuildComponentsList(source, getter) {
@@ -476,14 +476,14 @@ var WCPPizza = function(name, shortcode, crust, cheese, sauce, toppings) {
         if (source.cheese) {
           lst.push(getter(source.cheese));
         }
-        return lst.concat(additional_toppings.whole.map(function(x) { return getter(x); }));
+        return lst.concat(additional_toppings.whole.map(function (x) { return getter(x); }));
       }
 
       var name_components_list = null;
       var shortname_components_list = null;
       if (pizza.is_split) {
-        name_components_list = BuildComponentsList(name_components, function(x) { return x.name; });
-        shortname_components_list = BuildComponentsList(shortname_components, function(x) { return x.shortname; });
+        name_components_list = BuildComponentsList(name_components, function (x) { return x.name; });
+        shortname_components_list = BuildComponentsList(shortname_components, function (x) { return x.shortname; });
         if (menu_match[0].name == menu_match[1].name) {
           if (menu_match[0] !== pizza_menu["byo"]) {
             name_components_list.unshift(menu_match[0].name);
@@ -515,12 +515,12 @@ var WCPPizza = function(name, shortcode, crust, cheese, sauce, toppings) {
         // we've got a build your own pizza, make sure sauce and cheese name components are present
         name_components.sauce = name_components.sauce !== null ? name_components.sauce : menu_match[0].sauce;
         name_components.cheese = name_components.cheese !== null ? name_components.cheese : cheese_options[menu_match[0].cheese_option];
-        name_components_list = BuildComponentsList(name_components, function(x) { return x.name; });
-        shortname_components_list = BuildComponentsList(shortname_components, function(x) { return x.shortname; });
+        name_components_list = BuildComponentsList(name_components, function (x) { return x.name; });
+        shortname_components_list = BuildComponentsList(shortname_components, function (x) { return x.shortname; });
       }
       else {
-        name_components_list = BuildComponentsList(name_components, function(x) { return x.name; });
-        shortname_components_list = BuildComponentsList(shortname_components, function(x) { return x.shortname; });
+        name_components_list = BuildComponentsList(name_components, function (x) { return x.name; });
+        shortname_components_list = BuildComponentsList(shortname_components, function (x) { return x.shortname; });
         name_components_list.unshift(menu_match[0].name);
         shortname_components_list.unshift(menu_match[0].name);
       }
@@ -543,7 +543,7 @@ var WCPPizza = function(name, shortcode, crust, cheese, sauce, toppings) {
     }
   };
 
-  this.UpdatePie = function() {
+  this.UpdatePie = function () {
     this.price = ComputePrice(this);
     RecomputeToppingsMetadata(this);
     this.RecomputeName();
@@ -703,7 +703,7 @@ salad_menu = {
     "Mb",
     9,
     "House-Made Meatball (8) + Marinara + Toasted Herbed Breadcrumb + Pecorino Romano + Fresh Basil (Please note: To ensure quality, to-go orders for this item will be prepared upon guest arrival, which will take 6-7 minutes.)"
-  )	
+  )
 };
 
 
@@ -762,7 +762,7 @@ beverage_menu = {
     "Oly1pk",
     3,
     "It's the water, y'all. ABV 4.78% - 16oz"
-  ),  	
+  ),
 };
 
 growler_fill_menu = {
@@ -802,65 +802,123 @@ growler_fill_menu = {
     "Belgian-Style Witbier wih pilsner malt and oats and fermented with a traditional Belgian strain. ABV 4.8% - 64oz"
   ),
   stpket: new WCPSalad("Stoup - Ketel To Table IPA",
-  "stpket",
-  20,
-  "HBC 630, Mandarina Bavaria, Wai-iti, Citra and Loral for an unquestionable orange citrus, lime, and raspberry candy hop presence. ABV 5.7% - IBU 38 - 64oz"
-)	
+    "stpket",
+    20,
+    "HBC 630, Mandarina Bavaria, Wai-iti, Citra and Loral for an unquestionable orange citrus, lime, and raspberry candy hop presence. ABV 5.7% - IBU 38 - 64oz"
+  ),
+  growler: new WCPSalad("Empty Growler",
+  "growler",
+  6,
+  "Required for delivery growler purchases. If not selected for a pick-up growler fill, we will assume you're bringing your own (which we will sanitize)."
+)
 };
 
 wine_bottles_menu = {
-  citraipa: new WCPSalad("Some wine",
-    "",
-    14,
-    "Images of tropical fruit and citrus thanks to a healthy dose of Citra® hops - ABV 5.9% - IBU 50 - 32oz"
+  CapaSang: new WCPSalad("Red - Caparzo - Sangiovese - 2018",
+    "CapaSang",
+    26,
+    "Full bodied and slightly fruity, with ripe blackberries, wild strawberries, and spiced vanilla."
   ),
-  bonuscup: new WCPSalad("Stoup - Bonus Cup IPA Crowler",
-    "StBCup",
-    14,
-    "Brewed with Galaxy, Citra and Cascade hops. A beer packed with citrus, passionfruit and pine! - ABV 6.5% - 32oz"
+  HighMalbec: new WCPSalad("Red - High Note - Malbec - 2017",
+    "HighMalbec",
+    20,
+    "Plum and cassis on the front end, some spice notes, and a subtle vanilla/pepper finish."
   ),
-  whitelodge: new WCPSalad("Holy Mountain - White Lodge Wit Crowler",
-    "HMWit",
-    14,
-    "Belgian-Style Witbier wih pilsner malt and oats and fermented with a traditional Belgian strain. ABV 4.8% - 32oz"
+  // BioNeb: new WCPSalad("Red - La Biòca - Nebbiolo",
+  //   "BioNeb",
+  //   14,
+  //   "Rich and complex with rose, plum, strawberry, and hints of sweet tobacco, rhubarb. Has a great texture with rich tannins."
+  // ),
+  Kiuva: new WCPSalad("Red - La Kiuva - Picotendro (Nebbiolo), Gros Vien, Heyret, Cornalin, Fumin - 2018",
+    "Kiuva",
+    41,
+    "Light and rustic with bright, wild cherry and racy floral aromas with a juicy finish."
   ),
-  blackbeer: new WCPSalad("Holy Mountain - Black Beer Crowler",
-    "HMBlk",
-    14,
-    "Session black ale brewed with roasted and flaked barley and hopped with East Kent Golding. ABV 4.5% - 32oz"
+  MonteCorv: new WCPSalad("Red - Monte Tondo - Corvina Veneto - 2016",
+    "MonteCorv",
+    20,
+    "Rich wine with hints of red licorice and cherry. The finish has mixed spices and pepper with moderate tannins and acidity."
   ),
-  witherer: new WCPSalad("Holy Mountain - Witherer Crowler",
-    "HMWitherer",
-    14,
-    "Coconut Session Porter brewed with a special variety of British Two Row, and a variety of specialty dark crystal and roasted malts. - ABV 5% - 32oz"
+  CdBVerd: new WCPSalad("White - Conti di Buscareto - Verdicchio - 2016",
+    "CdBVerd",
+    28,
+    "Clean and crisp with a hint of fruit and a smooth finish."
   ),
-  lowdrone: new WCPSalad("Holy Mountain - Low Drone Crowler",
-    "HMLow",
-    14,
-    "Hoppy Lager brewed with a combination of German Pilsner Malt and Malted Wheat. Hopped entirely with whole-leaf Citra and Strata during the boil. ABV 5.4% - 32oz"
+  LavisPinot: new WCPSalad("White - Cantina Lavis - Pinot Grigio Trentino - 2018",
+    "LavisPinot",
+    26,
+    "Rich and warm, inviting lots of ripe fruits and honey. Strong minerality on the te but has a nice balance of silky tannins."
   ),
-  altarpiece: new WCPSalad("Holy Mountain - Altarpiece Crowler",
-    "HMAlt",
-    14,
-    "American Pale Ale with aromas and flavors of citrus, tropical fruit, peach, and hints of sticky pine. ABV 5.2% - 32oz"
-  )	
+  MarchVerd: new WCPSalad("White - Marchetti - Verdicchio dei Castelli di Jesi - 2017",
+    "MarchVerd",
+    20,
+    "Refreshing citrus fruits, playful acidity, and complex minerality."
+  ),
+  RiffPin: new WCPSalad("White - Riff - Pinot Grigio - 2018",
+    "RiffPin",
+    20,
+    "Beautiful dry and crisp with hints of apple, peach, and citrus."
+  ),
+  Trerere: new WCPSalad("White - Trere - 'Re Famoso' Ravenna Bianco - Famoso, Chardonnay - 2017",
+    "Trerere",
+    24,
+    "Full-bodied, fresh and well balanced. Traces of tropical fruit, citrus with an earthy touch."
+  ),
+  CallingChard: new WCPSalad("White - The Calling - Chardonnay - 2018",
+    "CallingChard",
+    26,
+    "Key lime and lemon meringue flavors mingle with white peach, apple, pear and stone fruit that linger with a refreshing, elegant finish."
+  ),
+  MathildeRose: new WCPSalad("Pink - Mathilde Chapoutier - Côtes de Provence Rosé - Grenache, Syrah, Vermentino",
+    "MathildeRose",
+    18,
+    "Round and delicious with strawberry, grapefruit, and apricot notes. Has a silky mouthfeel with bright acidity as it comes together."
+  ),
+  LocationsF: new WCPSalad("Pink - Locations F Rosé - Grenache",
+    "LocationsF",
+    18,
+    "Fresh red berries and ripe watermelon; has a hint of dusty minerality but finishes with enough acid to stand up to the floral notes."
+  ),
+  RivePro: new WCPSalad("White Bubbles - Rive Della Chiesa - Prosecco - Glera - N/V",
+    "RivePro",
+    18,
+    "An extra dry DOC; very aromatic and fruity."
+  ),
+  LamboEmma: new WCPSalad("Red Bubbles - Cantina di Carpi e Sorbara \"Emma\" - Lambrusco di Sorbara - N/V",
+    "LamboEmma",
+    26,
+    "Dark red berries, plum, and zesty cola notes on a refreshing, fuller bodied, tangy finish."
+  ),
+};
+
+spirits_menu = {
+  malortbtl: new WCPSalad("Carl Jeppson Company - Jeppson's Malört - 750mL",
+    "malortbtl",
+    30,
+    "The Chicago wormwood classic enjoyed by two-fisted drinkers the world over."
+  )
 };
 
 extras_menu = [
-  { 
-    menu_name: "Small Plates", 
+  {
+    menu_name: "Small Plates",
     menu: salad_menu
   },
-  { 
-    menu_name: "Growler Fills ($6 to buy a growler or we can sanitize yours)", 
+  {
+    menu_name: "Growler Fills",
     menu: growler_fill_menu
   },
-  { 
-    menu_name: "Packaged Beer (crowlers, cans, bottles)", 
+  {
+    menu_name: "Packaged Beer",
     menu: beverage_menu
   },
-  // { 
-  //   menu_name: "Bottled Wine (750mL)", 
-  //   menu: wine_bottles_menu
-  // }
+  {
+    menu_name: "Bottled Wine (750mL)",
+    in_red: "Sale pricing!",
+    menu: wine_bottles_menu
+  },
+  {
+    menu_name: "Bottled Spirits",
+    menu: spirits_menu
+  }
 ];
