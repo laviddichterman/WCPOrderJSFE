@@ -57,8 +57,8 @@
           </span>
         </div>
       </div>
-      <md-content ng-show="orderCtrl.s.stage === 2"><br>
-      <h3 class="flush"><strong>Add small plates or beverages to your order.</strong></h3>
+      <md-content ng-show="orderCtrl.s.stage === 2">
+      <h3 class="flush--top"><strong>Add small plates or beverages to your order.</strong></h3>
       <div class="ordering-menu menu-list menu-list__dotted md-accordion" ng-repeat="submenu in pmenuCtrl.extras_menu">
         <md-toolbar ng-click="orderCtrl.toggleAccordion($index)" role="button">
           <div class="md-toolbar-tools">
@@ -71,6 +71,7 @@
           </div>
         </md-toolbar> 
         <ul ng-class="{dataContent:true, activeContent:orderCtrl.s.accordionstate[$index]}" class="menu-list__items">
+          <li class="menu-list__item" ng-if="submenu.subtitle"><strong>{{submenu.subtitle}}</strong></li>
           <li class="menu-list__item" ng-repeat="extra in submenu.menu">
             <div class="offer-link" ng-click="orderCtrl.ScrollTop(); orderCtrl.addExtraToOrder(extra)">
               <h4 class="menu-list__item-title"><span class="item_title">{{extra.name}}</span><span class="dots"></span></h4>
@@ -385,4 +386,4 @@
   <script src="https://www.windycitypie.com/wp-includes/js/socket.io.js"></script>
   <script src="https://www.windycitypie.com/wp-includes/js/socket.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
-  <script src="https://www.windycitypie.com/wp-includes/js/WCPMenu_5.js"></script>
+  <script src="https://www.windycitypie.com/wp-includes/js/WCPMenu_6.js"></script>

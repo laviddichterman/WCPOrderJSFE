@@ -906,6 +906,7 @@ extras_menu = [
   },
   {
     menu_name: "Growler Fills",
+    subtitle: "We can fill your growler (after we sanitize it) or you can buy one of ours! Add empty growlers to your order if buying one of ours.",
     menu: growler_fill_menu
   },
   {
@@ -919,6 +920,7 @@ extras_menu = [
   },
   {
     menu_name: "Bottled Spirits",
+    subtitle: "Looking for a different bottle? Let us know in your order special instructions and we'll see what we can do for you!",
     menu: spirits_menu
   }
 ];
