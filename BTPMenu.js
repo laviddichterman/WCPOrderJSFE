@@ -128,6 +128,7 @@ var toppings_array = [
   new WCPTopping("Artichoke Heart", "art", 2, idx++, no_restriction, 1, 1),
   new WCPTopping("Pineapple", "pine", 2, idx++, no_restriction, 1, 1),
   new WCPTopping("Rosemary Chicken Sausage", "chix", 2.5, idx++, disable_on_ital_sausage, 1, 1),
+  new WCPTopping("Vegan Chick-un Sausage", "chickun", 2.5, idx++, no_restriction, 1, 1),
   new WCPTopping("Italian Sausage", "ital", 2.5, idx++, disable_on_chicken_sausage, 1, 1),
   new WCPTopping("Meatball", "meatball", 4, idx++, disable_on_vegan, 1, 2),
   new WCPTopping("Bacon", "bacon", 2.5, idx++, no_restriction, 1, 1),
@@ -586,8 +587,18 @@ pizza_menu = {
     [TOPPING_WHOLE, toppings_dict.crim],
     [TOPPING_WHOLE, toppings_dict.spin]]
   ),
+  raiders: new WCPPizza("Raiders of The Lost Art",
+    "R",
+    crusts.regular,
+    cheese_options.vegan_chz,
+    sauces.red,
+    [[TOPPING_WHOLE, toppings_dict.chickun],
+    [TOPPING_WHOLE, toppings_dict.art],
+    [TOPPING_WHOLE, toppings_dict.rbp],
+    [TOPPING_WHOLE, toppings_dict.spin]]
+  ),
   pete: new WCPPizza("Pete n Pete",
-    "P",
+    "E",
     crusts.regular,
     cheese_options.regular,
     sauces.red,
@@ -641,7 +652,7 @@ pizza_menu = {
 };
 
 salad_menu = {
-  beets: new WCPSalad("Beets By Schrute",
+  beets: new WCPSalad("Beets By Schrute Salad",
     "Be",
     7,
     "Arugula + Roasted Beet + Roasted Pistachio + Bleu + Tarragon Vinaigrette"
@@ -651,9 +662,29 @@ salad_menu = {
     7,
     "Baby Spinach + Chèvre + Candied Pecan + Roasted Red Bell Pepper Vinaigrette + Pickled Red Onion"
   ),
-  caesar: new WCPSalad("All Kale Caesar!",
+  caesar: new WCPSalad("All Kale Caesar! Salad",
     "Cz",
     7,
     "Kale + Parmigiano Reggiano + Caesar Dressing + Garlic Crouton + Lemon Wedge"
   ),
+  meatball: new WCPSalad("Polpetta Party!",
+    "Mb",
+    9,
+    "Extra-Large House-Made Meatball (3) + Marinara + Pecorino Romano + Fresh Basil"
+  ),
+  SLTod: new WCPSalad("Toddler Slice",
+    "SLTod",
+    4,
+    "Slice of: Wisconsin Brick & Mozzarella Blend + Red Sauce + Fresh Basil"
+  ),
+  SLPepp: new WCPSalad("Pepperoni Paint Job Slice",
+    "Mb",
+    4.5,
+    "Slice of: Wisconsin Brick & Mozzarella Blend + Baked-In Pepperoni + Red Sauce + Crispy Pepperoni"
+  ),
+  SLRaid: new WCPSalad("Raiders of The Lost Art Slice",
+    "SLRaid",
+    5,
+    "Slice of: Vegan Cheese Blend + Red Sauce + Spinach + Red Bell Pepper + Artichoke Heart + Vegan Chick-un Sausage"
+  ),    
 };
