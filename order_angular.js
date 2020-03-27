@@ -581,14 +581,14 @@ function UpdateLeadTime() {
     this.service_type = cfg.PICKUP;
     this.selected_date = ""; // the moment object of the selected date
     this.service_time = "Please select a valid date";
-    this.customer_name = "";
-    this.phone_number = "";
+    this.customer_name = "David Lichterman";
+    this.phone_number = "8474363283";
     this.delivery_address = ""; // customer input, not validated
     this.delivery_zipcode = ""; // customer input, not validated
     this.validated_delivery_address = "";
     this.is_address_validated = false;
     this.address_invalid = false;
-    this.email_address = "";
+    this.email_address = "laviddichterman@gmail.com";
     this.cart = {
       pizza: [],
       extras: []
@@ -607,7 +607,10 @@ function UpdateLeadTime() {
     this.delivery_fee = 0;
     this.autograt = 0;
     this.EMAIL_REGEX = EMAIL_REGEX;
-    this.accordionstate = [];
+
+    this.custom_value = 0; //TODO: need to initialize this to 20% when it's first selected, make sure to not clobber it if it's been set by the user, unless the total changes
+    this.selected = 1;
+    this.showcustom = false;
 
     this.service_type_functors = [
       // PICKUP
@@ -629,22 +632,17 @@ function UpdateLeadTime() {
     // stage 3: customer name, phone, email address, address , referral info
     // stage 4: select service_type date/time
     // stage 5: review order, special instructions
-    // stage 6: pressed submit, waiting validation
-    // stage 7: submitted successfully
-    this.stage = 1;
+    // stage 6: tip entering
+    // stage 7: payment
+    // stage 8: pressed submit, waiting validation
+    // stage 9: submitted successfully
+    this.stage = 4;
 
     // flag for when submitting fails according to submission backend
     this.submit_failed = false;
 
     // flag for when too much time passes and the user's time needs to be re-selected
     this.selected_time_timeout = false;
-
-    for (var i in cfg.EXTRAS_MENU) {
-      console.log(i);
-      this.accordionstate.push(i == 0);
-      console.log(this.accordionstate);
-    }
-    
   };
 
   app.controller("OrderController", ["OrderHelper", "$filter", "$http", "$location", "$scope", "socket", function(OrderHelper, $filter, $http, $location, $scope, $socket) {
@@ -679,13 +677,6 @@ function UpdateLeadTime() {
       this.s.address_invalid = false;
       this.s.delivery_fee = 0;
       this.s.autograt = 0;
-    };
-
-    this.toggleAccordion = function(idx) {
-      var startingstatus = this.s.accordionstate[idx];
-      for (var i in this.s.accordionstate) {
-        this.s.accordionstate[i] = startingstatus ? 0 : (i == idx ? true : false);
-      }
     };
 
     this.ClearSpecialInstructions = function() {
@@ -890,10 +881,10 @@ function UpdateLeadTime() {
       this.s.stage = this.s.stage - 1;
     };
     this.HasPreviousStage = function() {
-      return this.s.stage > 1 && this.s.stage <= 5;
+      return this.s.stage > 1 && this.s.stage <= 7;
     };
     this.HasNextStage = function() {
-      return this.s.stage < 5;
+      return this.s.stage < 7;
     };
 
     // this binding means we need to have this block here.
@@ -912,7 +903,24 @@ function UpdateLeadTime() {
     const BoundUpdateLeadTimeFxn = UpdateLeadTimeFxn.bind(this);
     $socket.on("WCP_LEAD_TIMES", BoundUpdateLeadTimeFxn);
 
+    var dummymenu = wcpconfig.PIZZA_MENU['mamma_mia'];
+    var dummypizza = new WCPPizza(dummymenu.name, dummymenu.shortcode, dummymenu.crust, dummymenu.cheese_option, dummymenu.sauce, dummymenu.GenerateToppingsList())
+    this.addPizzaToOrder(1, dummypizza);
   }]);
+
+  app.controller("AccordionController", function() {
+    this.accordionstate = [];
+    for (var i in wcpconfig.EXTRAS_MENU) {
+      this.accordionstate.push(i == 0);
+    }
+    
+    this.toggleAccordion = function(idx) {
+      var startingstatus = this.s.accordionstate[idx];
+      for (var i in this.s.accordionstate) {
+        this.s.accordionstate[i] = startingstatus ? 0 : (i == idx ? true : false);
+      }
+    };
+  });
 
   app.controller("PizzaMenuController", function() {
     this.pizza_menu = wcpconfig.PIZZA_MENU;
