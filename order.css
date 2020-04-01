@@ -477,3 +477,161 @@ span.cf7bridge {
     padding: 20px 0 20px 20px !important;
   }
 }
+
+.md-accordion .expandCollapse { 
+  width:30px;
+  height:30px;
+  position:relative;
+  font-size:20px;
+  font-weight:bold;
+  cursor:pointer;
+  color:#fff;
+  display:block;
+  margin-top: -2px;
+  margin-left: -2px;
+  overflow:hidden;
+}
+.md-accordion .expandCollapse:active {
+  border:0px;
+}
+.md-accordion .expandCollapse:before, .md-accordion .expandCollapse:after {
+  width:30px;
+  height:30px;
+  display:block;
+  position:absolute;
+  top:0; left:0;
+  line-height:32px;
+  text-align:center;
+  -webkit-transition: .3s all ease-out;
+  transition: .3s all ease-out;
+}
+
+.md-accordion .expandCollapse:before { 
+  opacity:1;
+  -webkit-transform: rotate(0deg);
+  transform: rotate(0deg);
+  content: "|";
+  margin-top:-3px;
+	color: #000000;
+}
+.md-accordion .expandCollapse:after {
+  opacity:1;
+  -webkit-transform: rotate(-90deg);
+  transform: rotate(-90deg);
+  content: "|";
+  margin-left:-3px;
+	color: #000000;
+}
+.md-accordion .active:before {
+  opacity:1;
+  -webkit-transform: rotate(90deg);
+  transform: rotate(90deg);
+  margin-left:3px;
+  margin-top:0px;
+	color: #000000;
+}
+
+.md-accordion .dataContent {
+  height:0px;
+  overflow:hidden;
+  -webkit-transition: .3s all ease-out;
+  transition: .3s all ease-out;
+}
+
+.md-accordion .activeContent {
+  height:auto;
+  padding:20px;
+  display:block;
+}
+
+.md-accordion md-toolbar{
+  cursor:pointer;
+  border:1px solid #000000;
+  background-color: #fcfcfc;
+
+}
+
+html, .wp-caption-text, .small-link, .post-nav-link__label, .author__social-link, .comment__links, .score__desc {
+ font-family: Cabin !important;
+}
+
+.btn h2, .btn h3, .btn h6, .btn h5 {
+  color: #ffffff;
+}
+
+.tipbtn .selected {
+  color: #ffffff;
+  background-color: #c59d5f;
+}
+
+.btn h2, .btn h3, .btn h6, .btn h5 {
+  color: #ffffff;
+}
+.tipbtn {
+  border: 1px solid ;
+  transition: all .3s;
+}
+.tipbtn.selected {
+  border: 1px solid #252525;
+}
+.tipbtn.selected,
+.tipbtn:hover {
+  background-color: #c59d5f;
+}
+.soft-quarter {
+  padding: 6px !important;
+  padding: 0.375rem !important;
+}
+
+.tipbtn input {
+  display: inline;
+  padding: 6px;
+  border-radius: 0 0 3px 3px;
+  font-size: 14px;
+  line-height: 1;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: .2em;
+  border: 1px solid #252525;
+  text-align: center;
+  font-family: "Cabin", Arial, Helvetica, sans-serif;
+}
+
+.third {
+  float: left;
+  width: calc((100% - 32px) / 3);
+  padding: 0;
+  margin: 0 16px 16px 0;
+}
+
+.third:last-of-type {
+  margin-right: 0;
+}
+
+/* Define how SqPaymentForm iframes should look */
+.sq-input {
+  height: 56px;
+  box-sizing: border-box;
+  border: 1px solid #E0E2E3;
+  background-color: white;
+  border-radius: 6px;
+  display: inline-block;
+  -webkit-transition: border-color .2s ease-in-out;
+     -moz-transition: border-color .2s ease-in-out;
+      -ms-transition: border-color .2s ease-in-out;
+          transition: border-color .2s ease-in-out;
+}
+
+/* Define how SqPaymentForm iframes should look when they have focus */
+.sq-input--focus {
+  border: 1px solid #4A90E2;
+}
+
+/* Define how SqPaymentForm iframes should look when they contain invalid values */
+.sq-input--error {
+  border: 1px solid #E02F2F;
+}
+
+#sq-card-number {
+  margin-bottom: 16px;
+}

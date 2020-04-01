@@ -1,4 +1,11 @@
 <div ng-cloak class="orderform" ng-app="WCPOrder" ng-controller="OrderController as orderCtrl">
+  <span>Subtotal: {{orderCtrl.s.computed_subtotal}}</span><br />
+  <span>computed_tax: {{orderCtrl.s.computed_tax}}</span><br />
+  <span>custom_tip_value: {{orderCtrl.s.custom_tip_value}}</span><br />
+  <span>tip_value: {{orderCtrl.s.tip_value}}</span><br />
+  <span>total: {{orderCtrl.s.total}}</span><br />
+  <span>autograt: {{orderCtrl.s.autograt}}</span><br />
+  <span>selected tip: {{orderCtrl.s.selected_tip}}</span><br />
   <span id="ordertop"></span>
   <div ng-show="orderCtrl.s.stage === 1 || orderCtrl.s.stage === 2" ng-controller="PizzaMenuController as pmenuCtrl">
     <div class="ordering-menu menu-list menu-list__dotted" ng-show="orderCtrl.s.stage === 1 && !pmenuCtrl.selection">
@@ -57,9 +64,9 @@
         </span>
       </div>
     </div>
-    <md-content ng-show="orderCtrl.s.stage === 2">
+    <md-content ng-show="orderCtrl.s.stage === 2" ng-controller="AccordionController as accordionCtrl">
     <h3 class="flush--top"><strong>Add small plates or beverages to your order.</strong></h3>
-    <div class="ordering-menu menu-list menu-list__dotted md-accordion" ng-repeat="submenu in pmenuCtrl.extras_menu" ng-controller="AccordionController as accordionCtrl">
+    <div class="ordering-menu menu-list menu-list__dotted md-accordion" ng-repeat="submenu in pmenuCtrl.extras_menu">
       <md-toolbar ng-click="accordionCtrl.toggleAccordion($index)" role="button">
         <div class="md-toolbar-tools">
           <h2>
@@ -189,18 +196,43 @@
       </select>
     </span>
     <div class="wpcf7-response-output wpcf7-mail-sent-ng" ng-if="orderCtrl.s.selected_time_timeout">The previously selected service time has expired.</div>
-    <legend ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && !orderCtrl.s.is_address_validated">
-      <span class="delivery-address-text">Delivery Address (exclude unit number):</span>
-    </legend>
-    <span ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && !orderCtrl.s.is_address_validated">
-      <input type="text" name="address" size="40" ng-model="orderCtrl.s.delivery_address" address>
+    <span class="flexbox" ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && !orderCtrl.s.is_address_validated">
+      <legend class="flexbox__item one-whole"></legend>
+        <span class="delivery-address-text">Delivery Information:</span>
+      </legend>
     </span>
-    <legend ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && !orderCtrl.s.is_address_validated">
-      <span class="delivery-zipcode-text">Zip Code:</span>
-    </legend>
-    <span ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && !orderCtrl.s.is_address_validated" class="wpcf7-form-control-wrap zipcode">
-      <input type="text" name="zipcode" size="40" ng-model="orderCtrl.s.delivery_zipcode" zipcode>
+    <span class="flexbox" ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && !orderCtrl.s.is_address_validated">
+      <span class="flexbox__item one-half">
+        <legend>
+          <span class="delivery-address-text">Address:</span>
+        </legend>
+        <input type="text" name="address" size="40" ng-model="orderCtrl.s.delivery_address" address>
+      </span>
+      <span class="flexbox__item one-quarter soft-half--sides">
+        <legend>
+          <span class="delivery-address-text">Apt/Unit:</span>
+        </legend>
+        <input type="text" name="address_2" size="10" ng-model="orderCtrl.s.delivery_address_2">
+      </span>
+      <span class="flexbox__item one-quarter">
+        <legend >
+          <span class="delivery-zipcode-text">Zip Code:</span>
+        </legend>
+        <span class="zipcode">
+          <input type="text" name="zipcode" size="10" ng-model="orderCtrl.s.delivery_zipcode" zipcode>
+        </span>
+      </span>
     </span>
+    <span class="flexbox" ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY">
+      <span class="flexbox__item one-whole">
+        <legend>
+          <span class="delivery-instructions-text">Delivery Instructions (optional):</span>
+        </legend>
+        <input type="text" name="delivery_instructions" size="40" ng-model="orderCtrl.s.delivery_instructions">
+      </span>
+    </span>
+  </span>
+
     <button type="submit" class="btn" ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && !(stage4.address.$error.address || stage4.zipcode.$error.zipcode) && !orderCtrl.s.is_address_validated" ng-click="orderCtrl.ValidateDeliveryAddress()">Validate Delivery Address</button>
     </form>
     <span ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && orderCtrl.s.validated_delivery_address" class="">
@@ -314,23 +346,26 @@
                 <td class="cart-item-description">
                   <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
                     <div class="cart-item-title-subtitle column menu-list__item">
-                      <h4 class="menu-list__item-title"><span class="item_title">Delivery Fee (waived)</span></h4>
+                      <h4 class="menu-list__item-title"><span class="item_title">Delivery Fee<span ng-show="orderCtrl.s.delivery_fee === 0"> (waived)</span></h4>
                     </div>
                   </div>
                 </td>
                 <td class="cart-item-quantity-price no-wrap"></td>
-                <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price"><strike>{{5 | number:2}}</strike></span></td>
+                <td class="cart-item-subtotal no-wrap">
+                  <span ng-show="orderCtrl.s.delivery_fee === 0" class="menu-list__item-price"><strike>{{5 | number:2}}</strike></span>
+                  <span ng-show="orderCtrl.s.delivery_fee !== 0" class="menu-list__item-price">{{orderCtrl.s.delivery_fee | number:2}}</span>
+                </td>
               </tr>
-              <tr class="cart-item" ng-hide="orderCtrl.s.autograt === 0">
+              <tr class="cart-item" ng-hide="orderCtrl.s.tip_value === 0">
                 <td class="cart-item-description">
                   <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
                     <div class="cart-item-title-subtitle column menu-list__item">
-                      <h4 class="menu-list__item-title"><span class="item_title">Autogratuity*</span></h4>
+                      <h4 class="menu-list__item-title"><span class="item_title">Gratuity*</span></h4>
                     </div>
                   </div>
                 </td>
                 <td class="cart-item-quantity-price no-wrap"></td>
-                <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{orderCtrl.s.autograt | number:2}}</span></td>
+                <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{orderCtrl.s.tip_value | number:2}}</span></td>
               </tr>
               <tr class="cart-item">
                 <td class="cart-item-description">
@@ -341,7 +376,7 @@
                   </div>
                 </td>
                 <td class="cart-item-quantity-price no-wrap"></td>
-                <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{(orderCtrl.subtotal() + orderCtrl.s.delivery_fee + orderCtrl.s.autograt) * orderCtrl.CONFIG.TAX_RATE | number:2}}</span></td>
+                <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{orderCtrl.s.computed_tax | number:2}}</span></td>
               </tr>
               <tr class="cart-item">
                 <td class="cart-item-description">
@@ -352,44 +387,68 @@
                   </div>
                 </td>
                 <td class="cart-item-quantity-price no-wrap"></td>
-                <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{(orderCtrl.subtotal() + orderCtrl.s.delivery_fee + orderCtrl.s.autograt) * (orderCtrl.CONFIG.TAX_RATE + 1) | number: 2}}</span></td>
+                <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{(orderCtrl.s.computed_subtotal + orderCtrl.s.delivery_fee + orderCtrl.s.tip_value + orderCtrl.s.computed_tax) | number: 2}}</span></td>
               </tr>
             </tbody>
           </table>
         </div>
     </div>
     <label><input type="checkbox" ng-model="orderCtrl.s.acknowledge_instructions_dialogue" ng-change="orderCtrl.ClearSpecialInstructions()">
-    I need to specify some special instructions (and am aware this may delay my order or change the cost)</label>
+    I need to specify some special instructions and am aware this may delay my order or change the cost. I will not be able to pre-pay for this order immediately.</label>
     <textarea ng-show="orderCtrl.s.acknowledge_instructions_dialogue" ng-model="orderCtrl.s.special_instructions"></textarea>
     <div ng-repeat="res in orderCtrl.s.special_instructions_responses" class="wpcf7-response-output wpcf7-validation-errors">{{res}}</div>
     <div class="order-nav">
       <button type="submit" class="btn scrolltotop" ng-show="orderCtrl.HasPreviousStage()" ng-click="orderCtrl.PreviousStage()">Previous</button>
       <button type="submit" class="btn scrolltotop" ng-show="orderCtrl.HasNextStage()" ng-click="orderCtrl.NextStage();">Next</button>
     </div>
-    <div ng-hide="orderCtrl.s.autograt === 0">* Auto-gratuity is distributed to the staff that worked on the day services are rendered </div>
+    <div ng-hide="orderCtrl.s.tip_value === 0">* Gratuity is distributed to the staff that worked on the day services are rendered. </div>
   </div>
   <div ng-show="orderCtrl.s.stage === 6">
     <!-- tip page -->
-    <h3 class="flush--top">Add gratuity to your order.</h3>
+    <h3 ng-show="orderCtrl.computeDefaultTipIfClean()" class="flush--top">Add gratuity to your order.</h3>
     <h5>All gratuity is distributed to the staff that worked to make and serve your food on that day.</h5>
-    <div class="flexitems">
-      <button ng-repeat="tip in orderCtrl.ticlass="btn flexitem">15%</button>
-      <button class="btn flexitem">20%</button>
-      <button class="btn flexitem">25%</button>
+    <div class="flexbox">
+      <div ng-hide="(orderCtrl.s.autograt === 0 && $index === 3) || (orderCtrl.s.autograt !== 0 && $index === 0)" class="flexbox__item one-third soft-quarter"  ng-repeat="tip in orderCtrl.s.tip_options" >
+        <button ng-click="orderCtrl.s.selectPercentageTip($index)" ng-class="{btn:true, tipbtn:true, 'flexbox__item':true, 'one-whole':true, 'selected':orderCtrl.s.selected_tip==$index}" >
+          <h3 class="flush--bottom">{{tip * 100| number:0}}&#37;</h3>
+          <h5 class="flush--top">{{(orderCtrl.s.computed_subtotal + orderCtrl.s.delivery_fee  + orderCtrl.s.computed_tax) * tip | number: 2}}</h5>
+        </button>
+      </div>
+    </div>
+    <div class="flexbox">
+      <div class="flexbox__item one-third soft-quarter" >
+        <button ng-click="orderCtrl.s.selectCustomTip()" ng-class="{btn:true, tipbtn:true, 'flexbox__item':true, 'one-whole':true, 'selected':orderCtrl.s.show_custom_tip_input}" >
+          <h3 class="flush">Custom Tip Amount</h3>
+          <input ng-show="orderCtrl.s.show_custom_tip_input" type="number" class="quantity" min=0 ng-model="orderCtrl.s.custom_tip_value" ng-blur="orderCtrl.updateCustomTip()">
+        </button>
+      </div>
     </div>
     <div class="order-nav">
       <button type="submit" class="btn scrolltotop" ng-show="orderCtrl.HasPreviousStage()" ng-click="orderCtrl.PreviousStage()">Previous</button>
       <button type="submit" class="btn scrolltotop" ng-show="orderCtrl.HasNextStage()" ng-click="orderCtrl.NextStage();">Next</button>
     </div>
   </div>
-  <div ng-show="orderCtrl.s.stage === 7">
-    <!-- payment page -->
-    <div class="order-nav">
-      <button type="submit" class="btn scrolltotop" ng-show="orderCtrl.HasPreviousStage()" ng-click="orderCtrl.PreviousStage()">Previous</button>
-      <button type="submit" class="btn" disabled ng-show="!orderCtrl.s.is_paid && !orderCtrl.s.payment_in_person">Select a payment option to continue</button>
-      <span ng-show="orderCtrl.s.is_paid || orderCtrl.s.payment_in_person" ng-click="orderCtrl.Submit()" cf7bridge class="cf7bridge scrolltotop" orderinfo="orderCtrl">
-        [contact-form-7 id="28805" title="Order Form Bridge"]
-      </span>
+  <div ng-if="orderCtrl.s.stage === 7">
+    <div ng-controller="PaymentController as pmntCtrl">
+      <div ng-show="buildForm()"></div>
+      <div id="successNotification" ng-show="isPaymentSuccess">
+        Card Charged Succesfully!!
+      </div>
+      <div id="form-container" ng-hide="isPaymentSuccess">
+        <div ng-model="data.card.card_number" id="sq-card-number"></div>
+        <div ng-model="data.card.expiration_date" class="third" id="sq-expiration-date"></div>
+        <div ng-model="data.card.cvv" class="third" id="sq-cvv"></div>
+        <div ng-model="data.card.postal_code" class="third" id="sq-postal-code"></div>
+        <button id="sq-creditcard" class="btn" ng-click="submitForm()" ng-disabled="isProcessing">Pay ${{orderCtrl.s.total | number:2}}</button>
+      </div>
+      <div class="order-nav">
+        <button type="submit" class="btn scrolltotop" ng-show="orderCtrl.HasPreviousStage()" ng-click="orderCtrl.PreviousStage()">Previous</button>
+        <button type="submit" class="btn scrolltotop"  ng-click="orderCtrl.SubmitToWario()">Previous</button>
+        <button type="submit" class="btn" disabled ng-show="!orderCtrl.s.is_paid && !orderCtrl.s.payment_in_person">Select a payment option to continue</button>
+        <span ng-show="orderCtrl.s.is_paid || orderCtrl.s.payment_in_person" ng-click="orderCtrl.Submit()" cf7bridge class="cf7bridge scrolltotop" orderinfo="orderCtrl">
+          [contact-form-7 id="28805" title="Order Form Bridge"]
+        </span>
+      </div>
     </div>
   </div>
   <div ng-show="orderCtrl.s.stage === 8">      
@@ -400,6 +459,7 @@
   </div>
 </div>
 <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.12/angular-material.min.css">
+<script type="text/javascript" src="https://js.squareupsandbox.com/v2/paymentform"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.11/angular.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.11/angular-animate.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mailcheck/1.1.2/mailcheck.min.js"></script>
