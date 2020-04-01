@@ -122,6 +122,7 @@ var WCPStoreConfig = function () {
   this.NOTE_DI = "Dine-ins get you to the front of the table queue. We don't reserve seating. Please arrive slightly before your selected time so your pizza is as fresh as possible and you have time to get situated and get beverages! ";
   this.NOTE_DELIVERY_BETA = "Our delivery service is now in beta. Delivery times are rough estimates and we will make every attempt to be prompt. We'll contact you to confirm the order shortly.";
   this.NOTE_PAYMENT = "We happily accept any major credit card or cash for payment upon arrival.";
+  this.NOTE_ALREADY_PAID = "You've already paid, so unless there's an issue with the order, there's no need to handle payment from this point forward.";
   this.NOTE_DELIVERY_SERVICE = "We appreciate your patience as our in-house delivery service is currently in its infancy. Delivery times are estimated. We might be a little earlier, or a little later. A 20% gratuity will be applied and is distributed among the Windy City Pie family. Payment is normally taken upon arrival, but if a no-contact delivery is required we can accommodate, if given at least a few hours notice. Let us know if this is your preference by responding to this e-mail.";
   this.NOTE_ALCOHOL = "The recipient must have a valid ID showing they are at least 21 years of age.";
   this.REQUEST_SLICING = "In order to ensure the quality of our pizzas, we will not slice them. We'd recommend bringing anything from a bench scraper to a butter knife to slice the pizza. Slicing the whole pizza when it's hot inhibits the crust from properly setting, and can cause the crust to get soggy both during transit and as the pie is eaten. We want your pizza to be the best possible and bringing a tool with which to slice the pie will make a big difference.";
@@ -164,12 +165,6 @@ var WCPOrderHelper = function () {
   this.IsPreviousDay = function (date) {
     // dateis a moment
     return this.IsFirstDatePreviousDayToSecond(date, timing_info.current_time);
-  };
-
-  this.MinutesToHMS = function (time) {
-    var hour = Math.floor(time / 60);
-    var minute = time - (hour * 60);
-    return String(hour) + (minute < 10 ? "0" : "") + String(minute) + "00";
   };
 
   this.DateToMinutes = function (date) {
@@ -354,7 +349,7 @@ var WCPOrderHelper = function () {
     return encodeURI(service_type + " for " + name + " on " + date_string + " - " + service_time);
   };
 
-  this.EmailBodyStringBuilder = function (service_type, date, time, phone, delivery_address) {
+  this.EmailBodyStringBuilder = function (service_type, date, time, phone, delivery_address, ispaid) {
     if (date === null || isNaN(time)) {
       return "";
     }
@@ -373,7 +368,7 @@ var WCPOrderHelper = function () {
           ` to ${delivery_address}.\n\n`,
           this.cfg.NOTE_DELIVERY_SERVICE,
           " ",
-          this.cfg.NOTE_PAYMENT
+          ispaid ? this.cfg.NOTE_ALREADY_PAID : this.cfg.NOTE_PAYMENT
         ];
         break;
       case this.cfg.PICKUP:
@@ -385,7 +380,7 @@ var WCPOrderHelper = function () {
             ".\n\n",
             this.cfg.NOTE_PICKUP_BEFORE_DI,
             " ",
-            this.cfg.NOTE_PAYMENT
+            ispaid ? this.cfg.NOTE_ALREADY_PAID : this.cfg.NOTE_PAYMENT
           ];
         } else {
           var opener = nice_area_code ? "Nice area code! " : "";
@@ -395,7 +390,7 @@ var WCPOrderHelper = function () {
             service_time_print,
             " at our Phinney Ridge home (5918 Phinney Ave N, 98103).\n\n",
             service_during_dine_in === 1 ? this.cfg.NOTE_PICKUP_DURING_DI : this.cfg.NOTE_PICKUP_AFTER_DI,
-            this.cfg.NOTE_PAYMENT
+            ispaid ? this.cfg.NOTE_ALREADY_PAID : this.cfg.NOTE_PAYMENT
           ];
         }
         break;
@@ -458,25 +453,26 @@ var WCPOrderHelper = function () {
     if (!date || !date.isValid() || isNaN(time) || time < 0) {
       return "";
     }
-    var dateString = String(date.year()) + (date.month() < 9 ? "0" : "") + String(date.month() + 1) + (date.date() < 10 ? "0" : "") + String(date.date()) + "T";
-    var timeString;
+    var date_lower = moment(date);
+    var date_upper = moment(date);
     time = String(time).split(",");
-    if (time.length == 1) {
-      var ts = this.MinutesToHMS(time[0]);
-      timeString = [ts, service_type === wcporderhelper.cfg.DELIVERY ? this.MinutesToHMS(parseInt(time[0]) + DELIVERY_INTERVAL_TIME) : ts];
+    date_lower.add(time[0], "minutes");
+    if (time.length === 1) {
+      date_upper = moment(date_lower);
+      date_upper = service_type === wcporderhelper.cfg.DELIVERY ? date_upper.add(DELIVERY_INTERVAL_TIME, "minutes") : date_upper;
     } else {
-      timeString = [this.MinutesToHMS(parseInt(time[0])), this.MinutesToHMS(parseInt(time[1]))];
+      date_upper.add(time[1], "minutes");
     }
-    return dateString + timeString[0] + "/" + dateString + timeString[1];
+    return [date_lower.format("YYYY-MM-DDTHH:mm:ssZ"), date_upper.format("YYYY-MM-DDTHH:mm:ssZ")];
   };
 
   this.EventDetailStringBuilder = function (order, phone, special_instructions) {
     if (!order || !phone) {
       return "";
     }
-    var es = order.replace(/[&]/g, "and") + "<br />ph:+" + phone.replace(/\D/g, "");
+    var es = order.replace(/[&]/g, "and") + "<br />ph: " + phone.replace(/\D/g, "");
     if (special_instructions.length > 0) {
-      es = es + "<br />" + special_instructions;
+      es = es + "<br />Special Instructions:" + special_instructions;
     }
     return es;
   };
@@ -604,7 +600,7 @@ function UpdateLeadTime() {
     this.SetDeliveryState = function(validated) {
       if (validated) {
         this.is_address_validated = true;
-        this.delivery_fee = 5;
+        this.delivery_fee = 0;//5;
         this.autograt = .2;
         this.address_invalid = false;
         this.TotalsUpdate();
@@ -651,6 +647,58 @@ function UpdateLeadTime() {
       this.TotalsUpdate();
     }
 
+    this.SubmitToWarioInternal = function (http_provider, state) {
+
+      var onSuccess = function (response) {
+        if (response.status === 200) {
+          state.stage = 8;
+        }
+        else {
+          state.submit_failed = true;
+          state.stage = 3;
+          console.log("FAILWHALE");
+        }
+      };
+      var onFail = function (response) {
+        state.submit_failed = true;
+        state.stage = 3;
+        console.log("FAILWHALE");
+      };
+      state.stage = 7;
+      http_provider({
+        method: "POST",
+        url: "https://wario.windycitypie.com/api/v1/order/",
+        data: { 
+          service_option: state.formdata.service_option,
+          customer_name: state.formdata.customer_name,
+          service_date: state.formdata.service_date,
+          service_time: state.formdata.service_time,
+          phonenum: state.formdata.phonenum,
+          user_email: state.formdata.user_email,
+          address: state.formdata.address,
+          delivery_instructions: state.formdata.delivery_instructions,
+          short_order: state.formdata.short_order,
+          referral: state.formdata.referral,
+          calendar_event_title: state.formdata.calendar_event_title,
+          calendar_event_dates: state.formdata.calendar_event_dates,
+          calendar_event_detail: state.formdata.calendar_event_detail,
+          calendar_event_address: state.validated_delivery_address,
+          confirmation_subject_escaped: state.formdata.confirmation_subject_escaped,
+          confirmation_body_escaped: state.formdata.confirmation_body_escaped,
+          special_instructions: state.formdata.special_instructions,
+          additional_message: state.formdata.additional_message,
+          load_time: state.formdata.load_time, 
+          time_selection_time: state.formdata.time_selection_time,
+          submittime: moment().format("MM-DD-YYYY HH:mm:ss"),
+          useragent: navigator.userAgent,
+          order_long: state.formdata.order_long,
+          automated_instructions: state.formdata.automated_instructions,
+          ispaid: state.isPaymentSuccess,
+          payment_info: state.isPaymentSuccess === true ? state.payment_info : ""
+        }
+      }).then(onSuccess).catch(onFail);
+    }
+
     this.date_string = ""; // friendly version of the date, for the UI
     this.date_valid = false;
     this.service_times = ["Please select a valid date"];
@@ -659,8 +707,8 @@ function UpdateLeadTime() {
     this.service_type = cfg.PICKUP;
     this.selected_date = ""; // the moment object of the selected date
     this.service_time = "Please select a valid date";
-    this.customer_name = "David Lichterman";
-    this.phone_number = "8474363283";
+    this.customer_name = "";
+    this.phone_number = "";
     this.delivery_address = ""; // customer input, not validated
     this.delivery_address_2 = ""; // customer input, not validated/required
     this.delivery_zipcode = ""; // customer input, not validated
@@ -668,7 +716,7 @@ function UpdateLeadTime() {
     this.validated_delivery_address = "";
     this.is_address_validated = false;
     this.address_invalid = false;
-    this.email_address = "laviddichterman@gmail.com";
+    this.email_address = "";
     this.cart = {
       pizza: [],
       extras: []
@@ -699,6 +747,9 @@ function UpdateLeadTime() {
     this.show_custom_tip_input = false;
     this.custom_tip_value = 0;
     this.tip_clean = true;
+    this.payment_info = {};
+    this.isPaymentSuccess = false;
+    this.isProcessing = false;
 
     this.formdata = {};
 
@@ -722,11 +773,10 @@ function UpdateLeadTime() {
     // stage 3: customer name, phone, email address, address , referral info
     // stage 4: select service_type date/time
     // stage 5: review order, special instructions
-    // stage 6: tip entering
-    // stage 7: payment
-    // stage 8: pressed submit, waiting validation
-    // stage 9: submitted successfully
-    this.stage = 6;
+    // stage 6: tip entering, payment
+    // stage 7: pressed submit, waiting validation
+    // stage 8: submitted successfully
+    this.stage = 1;
 
     // flag for when submitting fails according to submission backend
     this.submit_failed = false;
@@ -946,55 +996,6 @@ function UpdateLeadTime() {
       this.PostCartUpdate();
     };
 
-    this.SubmitToWario = function () {
-
-      var onSuccess = function (response) {
-        if (response.status === 200) {
-          console.log("successfully submitted order!")
-        }
-        else {
-          console.log("FAILWHALE");
-        }
-      };
-      var onFail = function (response) {
-        console.log("FAILWHALE");
-      };
-      $http({
-        method: "POST",
-        url: "https://wario.windycitypie.com/api/v1/order/",
-        data: { 
-          service_option: this.s.formdata.service_option,
-          customer_name: this.s.formdata.customer_name,
-          service_date: this.s.formdata.service_date,
-          service_time: this.s.formdata.service_time,
-          phonenum: this.s.formdata.phonenum,
-          user_email: this.s.formdata.user_email,
-          address: this.s.formdata.address,
-          delivery_instructions: this.s.formdata.delivery_instructions,
-          short_order: this.s.formdata.short_order,
-          referral: this.s.formdata.referral,
-          calendar_event_title: this.s.formdata.calendar_event_title,
-          calendar_event_dates: this.s.formdata.calendar_event_dates,
-          calendar_event_detail: this.s.formdata.calendar_event_detail,
-          calendar_event_address: this.s.validated_delivery_address,
-          confirmation_subject_escaped: this.s.formdata.confirmation_subject_escaped,
-          confirmation_body_escaped: this.s.formdata.confirmation_body_escaped,
-          special_instructions: this.s.formdata.special_instructions,
-          additional_message: this.s.formdata.additional_message,
-          load_time: this.s.formdata.load_time, 
-          time_selection_time: this.s.formdata.time_selection_time,
-          submittime: moment().format("MM-DD-YYYY HH:mm:ss"),
-          useragent: navigator.userAgent,
-          order_long: this.s.formdata.order_long,
-          automated_instructions: this.s.formdata.automated_instructions
-        }
-      }).then(onSuccess).catch(onFail);
-    }
-
-    this.Submit = function () {
-      this.s.stage = 6;
-    };
-
     this.updateCustomTip = function () {
       this.s.updateCustomTipInternal();
       this.s.TotalsUpdate();
@@ -1006,15 +1007,6 @@ function UpdateLeadTime() {
       }
       return true;
     }
-
-    this.CF7SubmitFailed = function () {
-      this.s.submit_failed = true;
-      this.s.stage = 3;
-    };
-
-    this.CF7SubmitSuccess = function () {
-      this.s.stage = 9;
-    };
 
     this.SlowSubmitterTrigger = function () {
       // set flag for user notification that too much time passed
@@ -1039,11 +1031,15 @@ function UpdateLeadTime() {
       this.s.stage = this.s.stage - 1;
     };
     this.HasPreviousStage = function () {
-      return this.s.stage > 1 && this.s.stage <= 7;
+      return this.s.stage > 1 && this.s.stage <= 6;
     };
     this.HasNextStage = function () {
       return this.s.stage < 7;
     };
+
+    this.SubmitToWario = function () {
+      return this.s.SubmitToWarioInternal($http, this.s);
+    }
 
     // this binding means we need to have this block here.
     var UpdateBlockedOffFxn = function (message) {
@@ -1061,9 +1057,9 @@ function UpdateLeadTime() {
     const BoundUpdateLeadTimeFxn = UpdateLeadTimeFxn.bind(this);
     $socket.on("WCP_LEAD_TIMES", BoundUpdateLeadTimeFxn);
 
-    var dummymenu = wcpconfig.PIZZA_MENU['mamma_mia'];
-    var dummypizza = new WCPPizza(dummymenu.name, dummymenu.shortcode, dummymenu.crust, dummymenu.cheese_option, dummymenu.sauce, dummymenu.GenerateToppingsList())
-    this.addPizzaToOrder(1, dummypizza);
+    // var dummymenu = wcpconfig.PIZZA_MENU['mamma_mia'];
+    // var dummypizza = new WCPPizza(dummymenu.name, dummymenu.shortcode, dummymenu.crust, dummymenu.cheese_option, dummymenu.sauce, dummymenu.GenerateToppingsList())
+    // this.addPizzaToOrder(1, dummypizza);
   }]);
 
   app.controller("AccordionController", function () {
@@ -1219,50 +1215,33 @@ function UpdateLeadTime() {
         orderinfo: "=orderinfo",
       },
       link: function (scope, element, attrs) {
-        // add event handler for invalid/spam/mailsent/mailfailed/submit
-        $j(element).on("wpcf7mailfailed", function () {
-          scope.orderinfo.CF7SubmitFailed();
-          scope.$apply();
-        });
-        $j(element).on("wpcf7mailsent", function () {
-          scope.orderinfo.CF7SubmitSuccess();
-          scope.$apply();
-        });
-
         // set load time field once
         var formatted_load_time = timing_info.load_time.format("H:mm:ss");
-        $j(element).find("span.load-time input").val(formatted_load_time);
         scope.orderinfo.s.formdata.load_time = formatted_load_time;
 
         var EventTitleSetter = function () {
           var event_title = OrderHelper.EventTitleStringBuilder(scope.orderinfo.s.service_type, scope.orderinfo.s.customer_name, scope.orderinfo.s.cart, scope.orderinfo.s.special_instructions);
           scope.orderinfo.s.formdata.calendar_event_title = event_title;
-          $j(element).find("span.eventtitle input").val(event_title);
         };
         var EventDetailSetter = function () {
           var eventdetail = OrderHelper.EventDetailStringBuilder(scope.orderinfo.s.shortcartstring, scope.orderinfo.s.phone_number, scope.orderinfo.s.special_instructions);
           scope.orderinfo.s.formdata.calendar_event_detail = eventdetail;
-          $j(element).find("span.eventdetail textarea").val(eventdetail);
         };
         var AutomatedInstructionsSetter = function () {
           var confirmation_body = OrderHelper.AutomatedInstructionsBuilder(scope.orderinfo.s.service_type, scope.orderinfo.s.selected_date, scope.orderinfo.s.service_time, scope.orderinfo.s.special_instructions, timing_info.order_placed_during_dining);
           scope.orderinfo.s.formdata.automated_instructions = confirmation_body;
-          $j(element).find("span.automated_instructions textarea").val(confirmation_body);
         };
         var ConfirmationSubjectSetter = function () {
           var selected_date_string = scope.orderinfo.s.selected_date ? scope.orderinfo.s.selected_date.format("dddd, MMMM DD, Y") : "";
           scope.orderinfo.s.formdata.confirmation_subject_escaped = OrderHelper.EmailSubjectStringBuilder(scope.orderinfo.s.service_type, scope.orderinfo.s.customer_name, selected_date_string, scope.orderinfo.s.service_time);
-          $j(element).find("span.confirmation-subject textarea").val(scope.orderinfo.s.formdata.confirmation_subject_escaped);
         };
         var ConfirmationBodySetter = function () {
-          var confirmation_body = OrderHelper.EmailBodyStringBuilder(scope.orderinfo.s.service_type, scope.orderinfo.s.selected_date, scope.orderinfo.s.service_time, scope.orderinfo.s.phone_number, scope.orderinfo.s.validated_delivery_address);
+          var confirmation_body = OrderHelper.EmailBodyStringBuilder(scope.orderinfo.s.service_type, scope.orderinfo.s.selected_date, scope.orderinfo.s.service_time, scope.orderinfo.s.phone_number, scope.orderinfo.s.validated_delivery_address, scope.orderinfo.s.isPaymentSuccess);
           scope.orderinfo.s.formdata.confirmation_body_escaped = confirmation_body;
-          $j(element).find("span.confirmation-body textarea").val(confirmation_body);
         };
         var EventDateSetter = function() {
           var eventdate = OrderHelper.EventDateTimeStringBuilder(scope.orderinfo.s.selected_date, scope.orderinfo.s.service_time, scope.orderinfo.s.service_type);
-          scope.orderinfo.s.formdata.calendar_event_date = eventdate
-          $j(element).find("span.eventdate input").val(eventdate);
+          scope.orderinfo.s.formdata.calendar_event_dates = eventdate
         }
         var AddressSetter = function() {
           var full_address_info = scope.orderinfo.s.validated_delivery_address;
@@ -1270,7 +1249,6 @@ function UpdateLeadTime() {
             full_address_info = full_address_info + ", Unit Info: " + scope.orderinfo.s.delivery_address_2;
           }
           scope.orderinfo.s.formdata.address = full_address_info;
-          $j(element).find("span.address input").val(full_address_info);
         }
 
         var ParseSpecialInstructionsAndPopulateResponses = function () {
@@ -1291,13 +1269,11 @@ function UpdateLeadTime() {
         scope.$watch("orderinfo.s.debug_info", function () {
           var time_selection_time = scope.orderinfo.s.debug_info["time-selection-time"] ? scope.orderinfo.s.debug_info["time-selection-time"].format("H:mm:ss") : "";
           scope.orderinfo.s.formdata.time_selection_time = time_selection_time;
-          $j(element).find("span.time-selection-time input").val(time_selection_time);
         }, true);
 
         scope.$watch("orderinfo.s.service_type", function () {
           var service_option = scope.orderinfo.CONFIG.SERVICE_TYPES[scope.orderinfo.s.service_type][0];
           scope.orderinfo.s.formdata.service_option = service_option;
-          $j(element).find("span.service-option input").val(service_option);
           EventTitleSetter();
           EventDateSetter();
           ConfirmationSubjectSetter();
@@ -1307,16 +1283,13 @@ function UpdateLeadTime() {
         }, true);
         scope.$watch("orderinfo.s.customer_name", function () {
           scope.orderinfo.s.formdata.customer_name = scope.orderinfo.s.customer_name;
-          $j(element).find("span.user-name input").val(scope.orderinfo.s.customer_name);
           EventTitleSetter();
           ConfirmationSubjectSetter();
         }, true);
         scope.$watch("orderinfo.s.selected_date", function () {
           var selected_date_string = scope.orderinfo.s.selected_date ? scope.orderinfo.s.selected_date.format("dddd, MMMM DD, Y") : "";
           scope.orderinfo.s.formdata.service_date = selected_date_string;
-          $j(element).find("span.service-date input").val(selected_date_string);
           scope.orderinfo.s.formdata.additional_message = scope.orderinfo.s.additional_message;
-          $j(element).find("span.additional_message input").val(scope.orderinfo.s.additional_message);
           EventDateSetter();
           ConfirmationSubjectSetter();
           ConfirmationBodySetter();
@@ -1325,7 +1298,6 @@ function UpdateLeadTime() {
         scope.$watch("orderinfo.s.service_time", function () {
           var service_time = $filter("MinutesToPrintTime")(scope.orderinfo.s.service_time, scope.orderinfo.s.service_type);
           scope.orderinfo.s.formdata.service_time = service_time;
-          $j(element).find("span.service-time input").val(service_time);
           EventDateSetter();
           EventTitleSetter();
           ConfirmationSubjectSetter();
@@ -1334,18 +1306,13 @@ function UpdateLeadTime() {
         }, true);
         scope.$watch("orderinfo.s.phone_number", function () {
           scope.orderinfo.s.formdata.phonenum = scope.orderinfo.s.phone_number;
-          $j(element).find("span.phonenum input").val(scope.orderinfo.s.phone_number);
           EventDetailSetter();
           ConfirmationBodySetter();
         }, true);
         scope.$watch("orderinfo.s.email_address", function () {
           scope.orderinfo.s.formdata.user_email = scope.orderinfo.s.email_address;
-          $j(element).find("span.user-email input").val(scope.orderinfo.s.email_address);
         }, true);
         scope.$watch("orderinfo.s.validated_delivery_address", function () {
-          var encoded_event_address = scope.orderinfo.s.validated_delivery_address ? "&location=" +
-            encodeURI(scope.orderinfo.s.validated_delivery_address.replace(/[&]/g, "and")).replace(/[\n\f]/gm, "%0A").replace(/\+/g, "%2B").replace(/\s/g, "+") : "";
-          $j(element).find("span.eventaddress input").val(encoded_event_address);
           AddressSetter();
           ConfirmationBodySetter();
         }, true);
@@ -1354,17 +1321,14 @@ function UpdateLeadTime() {
         }, true);
         scope.$watch("orderinfo.s.delivery_instructions", function () {
           scope.orderinfo.s.formdata.delivery_instructions = scope.orderinfo.s.delivery_instructions;
-          $j(element).find("span.delivery_instructions input").val(scope.orderinfo.s.delivery_instructions);
         }, true);
         scope.$watch("orderinfo.s.referral", function () {
           scope.orderinfo.s.formdata.referral = scope.orderinfo.s.referral;
-          $j(element).find("span.howdyouhear input").val(scope.orderinfo.s.referral);
         }, true);
         scope.$watch("orderinfo.s.special_instructions", function () {
           ParseSpecialInstructionsAndPopulateResponses();
           var temp = scope.orderinfo.s.special_instructions.length > 0 ? "Special instructions: " + scope.orderinfo.s.special_instructions : "";
           scope.orderinfo.s.formdata.special_instructions = temp;
-          $j(element).find("span.special_instructions input").val(temp);
           EventTitleSetter();
           EventDetailSetter();
           AutomatedInstructionsSetter();
@@ -1372,8 +1336,6 @@ function UpdateLeadTime() {
         scope.$watch("orderinfo.s.cartstring", function () {
           scope.orderinfo.s.formdata.short_order = scope.orderinfo.s.shortcartlist;
           scope.orderinfo.s.formdata.order_long = scope.orderinfo.s.cartlist;
-          $j(element).find("span.your-order textarea").val(scope.orderinfo.s.cartstring);
-          $j(element).find("span.your-order-short textarea").val(scope.orderinfo.s.shortcartstring);
           EventTitleSetter();
           EventDetailSetter();
         }, true);
@@ -1476,22 +1438,17 @@ function UpdateLeadTime() {
 
   app.controller('PaymentController', ['$scope', '$rootScope', '$http', function($scope, $rootScope, $http) {
     //for showing #successNotification div
-    $scope.isPaymentSuccess = false;
-    
-    //for disabling payment button
-    $scope.isProcessing = false;
-
     $scope.isBuilt = false;
     
 
     $scope.submitForm = function() {
-      $scope.isProcessing = true;
+      $rootScope.state.isProcessing = true;
       $scope.paymentForm.requestCardNonce();
       return false
     }
 
     $scope.paymentForm = new SqPaymentForm({
-      applicationId: "sandbox-sq0idb-CLTBfwitzbKY10Dee4IgbA",
+      applicationId: "sq0idp-C1A7WMB-lGqPkebOGHS8Pw",
       inputClass: 'sq-input',
       autoBuild: false,
       inputStyles: [{
@@ -1501,28 +1458,16 @@ function UpdateLeadTime() {
         placeholderColor: '#a0a0a0',
         backgroundColor: 'transparent',
       }],
-      cardNumber: {
-        elementId: 'sq-card-number',
-        placeholder: 'Card Number'
-      },
-      cvv: {
-        elementId: 'sq-cvv',
-        placeholder: 'CVV'
-      },
-      expirationDate: {
-        elementId: 'sq-expiration-date',
-        placeholder: 'MM/YY'
-      },
-      postalCode: {
-        elementId: 'sq-postal-code',
-        placeholder: 'Postal'
-      },
+      card: {
+        elementId: 'sq-card',
+  },
       callbacks: {
         cardNonceResponseReceived: function(errors, nonce, cardData) {
           if (errors){
             $scope.card_errors = errors
-            $scope.isProcessing = false;
-            $scope.$apply(); // required since this is not an angular function
+            $rootScope.state.isProcessing = false;
+            $scope.$apply();
+            $rootScope.$apply();
           }else{
             $scope.card_errors = []
             $scope.chargeCardWithNonce(nonce);
@@ -1530,44 +1475,41 @@ function UpdateLeadTime() {
           
         },
         unsupportedBrowserDetected: function() {
-
-          // Alert the buyer
+          alert("Unfortunately, your browser or settings don't allow for pre-payment. Please go back and select that you'd like to pay later or try your order on a newer browser.");
         }
       }
     });
 
     $scope.chargeCardWithNonce = function(nonce) {
       var uri = "https://wario.windycitypie.com/api/v1/payments/payment";
-
+      
       var data = {
         nonce: nonce,
         amount_money: $rootScope.state.total - $rootScope.state.tip_value,
         tip_money: $rootScope.state.tip_value,
-        user_email: $rootScope.state.email_address,
-        email_title: $rootScope.state.formdata.confirmation_subject_escaped
+        email_title: decodeURIComponent($rootScope.state.formdata.confirmation_subject_escaped)
       };
       $http.post(uri, data).success(function(data, status) {
-
-        if (data.status == 400){
+        if (status == 400){
           // display server side card processing errors 
-          $scope.isPaymentSuccess = false;
+          $rootScope.state.isPaymentSuccess = false;
           $scope.card_errors = []
           for (var i =0; i < data.errors.length; i++){
             $scope.card_errors.push({message: data.errors[i].detail})
           }
-        }else if (data.status == 200) {
+        } else if (status == 200) {
           console.log(data);
-          $scope.isPaymentSuccess = true;
+          $rootScope.state.isPaymentSuccess = true;
+          $rootScope.state.payment_info = data;
+          $rootScope.state.SubmitToWarioInternal($http, $rootScope.state);
         }
-        $scope.isProcessing = false;
+        $rootScope.state.isProcessing = false;
       }).error(function(){
-        $scope.isPaymentSuccess = false;
-        $scope.isProcessing = false;
+        $rootScope.state.isPaymentSuccess = false;
+        $rootScope.state.isProcessing = false;
         $scope.card_errors = [{message: "Processing error, please try again!"}];
       })
-
     }
-
 
     $scope.buildForm = function() {
       if (!$scope.isBuilt) {
@@ -1576,7 +1518,6 @@ function UpdateLeadTime() {
       }
       return $scope.isBuilt;
     }
-
   }]);
 
   $j(".scrolltotop").click(function () {

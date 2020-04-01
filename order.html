@@ -1,11 +1,32 @@
+<style>
+.sq-card-form-wrapper {
+  box-shadow: 0px 2px 6px rgba(0, 0, 0, .9), 0px 4px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+.button-credit-card {
+  width: 100%;
+  height: 56px;
+  background: #4A90E2;
+  border-radius: 6px;
+  cursor: pointer;
+  display: block;
+  color: #FFFFFF;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-align: center;
+  -webkit-transition: background .2s ease-in-out;
+     -moz-transition: background .2s ease-in-out;
+      -ms-transition: background .2s ease-in-out;
+          transition: background .2s ease-in-out;
+}
+
+.button-credit-card:hover {
+  background: rgb(107, 170, 243);
+}
+</style>
 <div ng-cloak class="orderform" ng-app="WCPOrder" ng-controller="OrderController as orderCtrl">
-  <span>Subtotal: {{orderCtrl.s.computed_subtotal}}</span><br />
-  <span>computed_tax: {{orderCtrl.s.computed_tax}}</span><br />
-  <span>custom_tip_value: {{orderCtrl.s.custom_tip_value}}</span><br />
-  <span>tip_value: {{orderCtrl.s.tip_value}}</span><br />
-  <span>total: {{orderCtrl.s.total}}</span><br />
-  <span>autograt: {{orderCtrl.s.autograt}}</span><br />
-  <span>selected tip: {{orderCtrl.s.selected_tip}}</span><br />
   <span id="ordertop"></span>
   <div ng-show="orderCtrl.s.stage === 1 || orderCtrl.s.stage === 2" ng-controller="PizzaMenuController as pmenuCtrl">
     <div class="ordering-menu menu-list menu-list__dotted" ng-show="orderCtrl.s.stage === 1 && !pmenuCtrl.selection">
@@ -394,18 +415,19 @@
         </div>
     </div>
     <label><input type="checkbox" ng-model="orderCtrl.s.acknowledge_instructions_dialogue" ng-change="orderCtrl.ClearSpecialInstructions()">
-    I need to specify some special instructions and am aware this may delay my order or change the cost. I will not be able to pre-pay for this order immediately.</label>
+    I need to specify some special instructions (which may delay my order or change its cost) or wish to pay later.</label>
     <textarea ng-show="orderCtrl.s.acknowledge_instructions_dialogue" ng-model="orderCtrl.s.special_instructions"></textarea>
     <div ng-repeat="res in orderCtrl.s.special_instructions_responses" class="wpcf7-response-output wpcf7-validation-errors">{{res}}</div>
     <div class="order-nav">
+      <span ng-show="false" cf7bridge class="cf7bridge scrolltotop" orderinfo="orderCtrl"></span>
       <button type="submit" class="btn scrolltotop" ng-show="orderCtrl.HasPreviousStage()" ng-click="orderCtrl.PreviousStage()">Previous</button>
-      <button type="submit" class="btn scrolltotop" ng-show="orderCtrl.HasNextStage()" ng-click="orderCtrl.NextStage();">Next</button>
+      <button type="submit" class="btn scrolltotop" ng-show="orderCtrl.HasNextStage() && !orderCtrl.s.acknowledge_instructions_dialogue" ng-click="orderCtrl.NextStage();">Next</button>
+      <button type="submit" class="btn scrolltotop" ng-show="orderCtrl.s.acknowledge_instructions_dialogue" ng-click="orderCtrl.SubmitToWario()">Submit Order</button>
     </div>
     <div ng-hide="orderCtrl.s.tip_value === 0">* Gratuity is distributed to the staff that worked on the day services are rendered. </div>
   </div>
-  <div ng-show="orderCtrl.s.stage === 6">
-    <!-- tip page -->
-    <h3 ng-show="orderCtrl.computeDefaultTipIfClean()" class="flush--top">Add gratuity to your order.</h3>
+  <div ng-if="orderCtrl.s.stage === 6">
+    <h3 ng-show="orderCtrl.computeDefaultTipIfClean()" class="flush--top">Add gratuity to your order and settle up!</h3>
     <h5>All gratuity is distributed to the staff that worked to make and serve your food on that day.</h5>
     <div class="flexbox">
       <div ng-hide="(orderCtrl.s.autograt === 0 && $index === 3) || (orderCtrl.s.autograt !== 0 && $index === 0)" class="flexbox__item one-third soft-quarter"  ng-repeat="tip in orderCtrl.s.tip_options" >
@@ -423,39 +445,149 @@
         </button>
       </div>
     </div>
-    <div class="order-nav">
-      <button type="submit" class="btn scrolltotop" ng-show="orderCtrl.HasPreviousStage()" ng-click="orderCtrl.PreviousStage()">Previous</button>
-      <button type="submit" class="btn scrolltotop" ng-show="orderCtrl.HasNextStage()" ng-click="orderCtrl.NextStage();">Next</button>
+    <div class="cart">
+      <div class="content border-bottom border-none-at-medium">
+        <table class="cart-table table-collapse-until-medium table-border-rows table-pad-line valign-middle header-color">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th class="hide-until-medium">
+                <div class="grid-flex grid-valign-middle">
+                  <span class="column no-shrink">Quantity</span>
+                  <span class="column no-shrink">×</span>
+                  <span class="column no-shrink">Price</span>
+                </div>
+              </th>
+              <th class="align-right">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="item in orderCtrl.s.cart.pizza" class="cart-item">
+              <td class="cart-item-description">
+                <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
+                  <div class="menu-list__item">
+                    <wcppizzacartitem pizza="item[1]" description="true" dots="false" price="false"></wcppizzacartitem>
+                  </div>
+                </div>
+              </td>
+              <td class="cart-item-quantity-price no-wrap">
+                <div class="grid-flex grid-valign-middle">
+                  <span class="column no-shrink menu-list__item-price">{{item[0]}}</span>
+                  <span class="column no-shrink">×</span>
+                  <span class="column no-shrink menu-list__item-price">{{item[1].price}}</span>
+                </div>
+              </td>
+              <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{item[1].price * item[0] | number:2}}</span></td>
+            </tr>
+            <tr ng-repeat="item in orderCtrl.s.cart.extras" class="cart-item">
+              <td class="cart-item-description">
+                <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
+                  <div class="menu-list__item">
+                    <h4 class="menu-list__item-title"><span class="item_title">{{item[1].name}}</span></h4>
+                    <p class="menu-list__item-desc"><span class="desc__content">{{item[1].description}}</span></p>
+                  </div>
+                </div>
+              </td>
+              <td class="cart-item-quantity-price no-wrap">
+                <div class="grid-flex grid-valign-middle">
+                  <span class="column no-shrink menu-list__item-price">{{item[0]}}</span>
+                  <span class="column no-shrink">×</span>
+                  <span class="column no-shrink menu-list__item-price">{{item[1].price}}</span>
+                </div>
+              </td>
+              <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{item[1].price * item[0] | number:2}}</span></td>
+            </tr>
+            <tr ng-repeat="item in orderCtrl.s.cart.beverages" class="cart-item">
+              <td class="cart-item-description">
+                <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
+                  <div class="menu-list__item">
+                    <h4 class="menu-list__item-title"><span class="item_title">{{item[1].name}}</span></h4>
+                    <p class="menu-list__item-desc"><span class="desc__content">{{item[1].description}}</span></p>
+                  </div>
+                </div>
+              </td>
+              <td class="cart-item-quantity-price no-wrap">
+                <div class="grid-flex grid-valign-middle">
+                  <span class="column no-shrink menu-list__item-price">{{item[0]}}</span>
+                  <span class="column no-shrink">×</span>
+                  <span class="column no-shrink menu-list__item-price">{{item[1].price}}</span>
+                </div>
+              </td>
+              <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{item[1].price * item[0] | number:2}}</span></td>
+            </tr>
+            <tr class="cart-item" ng-if="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY">
+              <td class="cart-item-description">
+                <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
+                  <div class="cart-item-title-subtitle column menu-list__item">
+                    <h4 class="menu-list__item-title"><span class="item_title">Delivery Fee<span ng-show="orderCtrl.s.delivery_fee === 0"> (waived)</span></h4>
+                  </div>
+                </div>
+              </td>
+              <td class="cart-item-quantity-price no-wrap"></td>
+              <td class="cart-item-subtotal no-wrap">
+                <span ng-show="orderCtrl.s.delivery_fee === 0" class="menu-list__item-price"><strike>{{5 | number:2}}</strike></span>
+                <span ng-show="orderCtrl.s.delivery_fee !== 0" class="menu-list__item-price">{{orderCtrl.s.delivery_fee | number:2}}</span>
+              </td>
+            </tr>
+            <tr class="cart-item" ng-hide="orderCtrl.s.tip_value === 0">
+              <td class="cart-item-description">
+                <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
+                  <div class="cart-item-title-subtitle column menu-list__item">
+                    <h4 class="menu-list__item-title"><span class="item_title">Gratuity*</span></h4>
+                  </div>
+                </div>
+              </td>
+              <td class="cart-item-quantity-price no-wrap"></td>
+              <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{orderCtrl.s.tip_value | number:2}}</span></td>
+            </tr>
+            <tr class="cart-item">
+              <td class="cart-item-description">
+                <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
+                  <div class="cart-item-title-subtitle column menu-list__item">
+                    <h4 class="menu-list__item-title"><span class="item_title">Sales Tax ({{orderCtrl.CONFIG.TAX_RATE * 100 | number:1}}%)</span></h4>
+                  </div>
+                </div>
+              </td>
+              <td class="cart-item-quantity-price no-wrap"></td>
+              <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{orderCtrl.s.computed_tax | number:2}}</span></td>
+            </tr>
+            <tr class="cart-item">
+              <td class="cart-item-description">
+                <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
+                  <div class="cart-item-title-subtitle column menu-list__item">
+                    <h4 class="menu-list__item-title"><span class="item_title">Total</span></h4>
+                  </div>
+                </div>
+              </td>
+              <td class="cart-item-quantity-price no-wrap"></td>
+              <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{(orderCtrl.s.computed_subtotal + orderCtrl.s.delivery_fee + orderCtrl.s.tip_value + orderCtrl.s.computed_tax) | number: 2}}</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
-  </div>
-  <div ng-if="orderCtrl.s.stage === 7">
     <div ng-controller="PaymentController as pmntCtrl">
       <div ng-show="buildForm()"></div>
-      <div id="successNotification" ng-show="isPaymentSuccess">
+      <div id="successNotification" ng-show="orderCtrl.s.isPaymentSuccess">
         Card Charged Succesfully!!
       </div>
-      <div id="form-container" ng-hide="isPaymentSuccess">
-        <div ng-model="data.card.card_number" id="sq-card-number"></div>
-        <div ng-model="data.card.expiration_date" class="third" id="sq-expiration-date"></div>
-        <div ng-model="data.card.cvv" class="third" id="sq-cvv"></div>
-        <div ng-model="data.card.postal_code" class="third" id="sq-postal-code"></div>
-        <button id="sq-creditcard" class="btn" ng-click="submitForm()" ng-disabled="isProcessing">Pay ${{orderCtrl.s.total | number:2}}</button>
+      <div id="form-container">
+        <div id="sq-card" ></div>
       </div>
       <div class="order-nav">
-        <button type="submit" class="btn scrolltotop" ng-show="orderCtrl.HasPreviousStage()" ng-click="orderCtrl.PreviousStage()">Previous</button>
-        <button type="submit" class="btn scrolltotop"  ng-click="orderCtrl.SubmitToWario()">Previous</button>
-        <button type="submit" class="btn" disabled ng-show="!orderCtrl.s.is_paid && !orderCtrl.s.payment_in_person">Select a payment option to continue</button>
-        <span ng-show="orderCtrl.s.is_paid || orderCtrl.s.payment_in_person" ng-click="orderCtrl.Submit()" cf7bridge class="cf7bridge scrolltotop" orderinfo="orderCtrl">
-          [contact-form-7 id="28805" title="Order Form Bridge"]
-        </span>
+        <button type="submit" class="btn scrolltotop" ng-disabled="orderCtrl.s.isProcessing" ng-show="orderCtrl.HasPreviousStage()" ng-click="orderCtrl.PreviousStage()">Previous</button>
+        <button id="sq-creditcard" class="btn scrolltotop" ng-click="submitForm()" ng-disabled="orderCtrl.s.isProcessing">Pay ${{orderCtrl.s.total | number:2}} and submit order!</button>
       </div>
     </div>
   </div>
-  <div ng-show="orderCtrl.s.stage === 8">      
-    <div class="wpcf7 wpcf7-response-output wpcf7-mail-sent-ok">Submitting order! This can take between 5-15 seconds.<span class="ajax-loader is-active"></span></div>
-  </div>
-  <div class="submitsuccess wpcf7-response-output wpcf7-mail-sent-ok" ng-show="orderCtrl.s.stage === 9">
-    Order submitted successfully! Please check your email.
+  <div ng-show="orderCtrl.s.stage >= 7">      
+    <div ng-if="orderCtrl.s.isPaymentSuccess">
+      <h3>Payment of ${{orderCtrl.s.payment_info.result.payment.total_money.amount / 100 | number:2}} received from card ending in: {{orderCtrl.s.payment_info.result.payment.card_details.card.last_4}}!</h3>
+      <h6>You might get a few emails that sound like you still need to pay, but you don't. We JUST rolled out pre-payment and it might take a moment to fix the loose ends.</h6>
+      Here's your <a ng-href="{{orderCtrl.s.payment_info.result.payment.receipt_url}}" target="_blank">receipt</a>.
+    </div>
+    <div ng-show="orderCtrl.s.stage === 7" class="wpcf7 wpcf7-response-output wpcf7-mail-sent-ok">Submitting order! This can take a few seconds.<span class="ajax-loader is-active"></span></div>
+    <div ng-show="orderCtrl.s.stage === 8" class="submitsuccess wpcf7-response-output wpcf7-mail-sent-ok" >Order submitted successfully! Please check your email.</div>
   </div>
 </div>
 <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.12/angular-material.min.css">
