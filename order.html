@@ -1,31 +1,3 @@
-<style>
-.sq-card-form-wrapper {
-  box-shadow: 0px 2px 6px rgba(0, 0, 0, .9), 0px 4px 8px rgba(0, 0, 0, 0.1) !important;
-}
-
-.button-credit-card {
-  width: 100%;
-  height: 56px;
-  background: #4A90E2;
-  border-radius: 6px;
-  cursor: pointer;
-  display: block;
-  color: #FFFFFF;
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 700;
-  letter-spacing: 0;
-  text-align: center;
-  -webkit-transition: background .2s ease-in-out;
-     -moz-transition: background .2s ease-in-out;
-      -ms-transition: background .2s ease-in-out;
-          transition: background .2s ease-in-out;
-}
-
-.button-credit-card:hover {
-  background: rgb(107, 170, 243);
-}
-</style>
 <div ng-cloak class="orderform" ng-app="WCPOrder" ng-controller="OrderController as orderCtrl">
   <span id="ordertop"></span>
   <div ng-show="orderCtrl.s.stage === 1 || orderCtrl.s.stage === 2" ng-controller="PizzaMenuController as pmenuCtrl">
@@ -414,9 +386,11 @@
           </table>
         </div>
     </div>
-    <label><input type="checkbox" ng-model="orderCtrl.s.acknowledge_instructions_dialogue" ng-change="orderCtrl.ClearSpecialInstructions()">
-    I need to specify some special instructions (which may delay my order or change its cost) or wish to pay later.</label>
-    <textarea ng-show="orderCtrl.s.acknowledge_instructions_dialogue" ng-model="orderCtrl.s.special_instructions"></textarea>
+    <div ng-show="orderCtrl.s.service_type !== orderCtrl.CONFIG.DELIVERY">
+      <label><input type="checkbox" ng-model="orderCtrl.s.acknowledge_instructions_dialogue" ng-change="orderCtrl.ClearSpecialInstructions()">
+      I need to specify some special instructions (which may delay my order or change its cost) or wish to pay later.</label>
+      <textarea ng-show="orderCtrl.s.acknowledge_instructions_dialogue" ng-model="orderCtrl.s.special_instructions"></textarea>
+    </div>
     <div ng-repeat="res in orderCtrl.s.special_instructions_responses" class="wpcf7-response-output wpcf7-validation-errors">{{res}}</div>
     <div class="order-nav">
       <span ng-show="false" cf7bridge class="cf7bridge scrolltotop" orderinfo="orderCtrl"></span>
@@ -591,7 +565,7 @@
   </div>
 </div>
 <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.12/angular-material.min.css">
-<script type="text/javascript" src="https://js.squareupsandbox.com/v2/paymentform"></script>
+<script type="text/javascript" src="https://js.squareup.com/v2/paymentform"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.11/angular.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.11/angular-animate.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mailcheck/1.1.2/mailcheck.min.js"></script>
@@ -600,4 +574,4 @@
 <script src="https://www.windycitypie.com/wp-includes/js/socket.io.js"></script>
 <script src="https://www.windycitypie.com/wp-includes/js/socket.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
-<script src="https://www.windycitypie.com/wp-includes/js/WCPMenu_6.js"></script>
+<script src="https://www.windycitypie.com/wp-includes/js/WCPMenu_1.js"></script>

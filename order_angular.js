@@ -402,7 +402,7 @@ var WCPOrderHelper = function () {
           service_time_print,
           " at our Phinney Ridge home (5918 Phinney Ave N, 98103).\n\n",
           this.cfg.NOTE_DI,
-          this.cfg.NOTE_PAYMENT
+          ispaid ? this.cfg.NOTE_ALREADY_PAID : this.cfg.NOTE_PAYMENT
         ];
         break;
       default:
@@ -1019,7 +1019,7 @@ function UpdateLeadTime() {
       var old_time = this.s.service_time;
       this.ValidateDate();
       // only bump someone to the time selection page if they're already at least that far
-      if (old_time != this.s.service_time && this.s.stage >= 4) {
+      if (old_time != this.s.service_time && this.s.stage >= 4 && this.s.stage < 6) {
         this.SlowSubmitterTrigger();
       }
     };
@@ -1256,7 +1256,6 @@ function UpdateLeadTime() {
           var special_instructions_lower = scope.orderinfo.s.special_instructions ? scope.orderinfo.s.special_instructions.toLowerCase() : "";
           if (wcpconfig.REQUEST_HALF && special_instructions_lower.indexOf("split") >= 0 || special_instructions_lower.indexOf("half") >= 0 || special_instructions_lower.indexOf("1/2") >= 0) {
             scope.orderinfo.s.special_instructions_responses.push(wcpconfig.REQUEST_HALF);
-
           }
           if (wcpconfig.REQUEST_SLICING && special_instructions_lower.indexOf("slice") >= 0 || special_instructions_lower.indexOf("cut") >= 0) {
             scope.orderinfo.s.special_instructions_responses.push(wcpconfig.REQUEST_SLICING);
@@ -1339,7 +1338,9 @@ function UpdateLeadTime() {
           EventTitleSetter();
           EventDetailSetter();
         }, true);
-
+        scope.$watch("orderinfo.s.isPaymentSuccess", function () {
+          ConfirmationBodySetter();
+        }, true);
         function UpdateCurrentTime() {
           var time_diff = moment().valueOf() - timing_info.browser_load_time.valueOf();
           if (time_diff < timing_info.load_time_diff) {
