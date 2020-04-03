@@ -672,13 +672,18 @@ salad_menu = {
     9,
     "Extra-Large House-Made Meatball (3) + Marinara + Pecorino Romano + Fresh Basil"
   ),
+  // SLInsta: new WCPSalad("Instagram Special Slice!",
+  //   "SLInsta",
+  //   5,
+  //   "Slice of: This Bleu Shall Pass (check our instagram for details!)"
+  // ),
   SLTod: new WCPSalad("Toddler Slice",
     "SLTod",
     4,
     "Slice of: Wisconsin Brick & Mozzarella Blend + Red Sauce + Fresh Basil"
   ),
   SLPepp: new WCPSalad("Pepperoni Paint Job Slice",
-    "Mb",
+    "SLPepp",
     4.5,
     "Slice of: Wisconsin Brick & Mozzarella Blend + Baked-In Pepperoni + Red Sauce + Crispy Pepperoni"
   ),
@@ -688,3 +693,10 @@ salad_menu = {
     "Slice of: Vegan Cheese Blend + Red Sauce + Spinach + Red Bell Pepper + Artichoke Heart + Vegan Chick-un Sausage"
   ),    
 };
+
+extras_menu = [
+  {
+    menu_name: "Small Plates",
+    menu: salad_menu
+  },
+];

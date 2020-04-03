@@ -6,6 +6,8 @@ var DATE_STRING_INTERNAL_FORMAT = "YYYYMMDD";
 
 var DELIVERY_INTERVAL_TIME = 30;
 
+var WARIO_ENDPOINT = "https://wario.breezytownpizza.com/";
+
 function ScrollTopJQ() {
   $j("html, body").animate({
     scrollTop: $j("#ordertop").offset().top - 150
@@ -94,7 +96,7 @@ var BTPStoreConfig = function () {
   this.TIME_STEP = [WCP_time_step];
 
   // menu related
-  this.EXTRAS_MENU = salad_menu;
+  this.EXTRAS_MENU = extras_menu;
   this.PIZZA_MENU = pizza_menu;
   this.TOPPINGS = toppings_array;
   this.SAUCES = sauces;
@@ -105,32 +107,32 @@ var BTPStoreConfig = function () {
 
   // user messaging
   this.AREA_CODES = {
-    "217": "Central Illinois, running west from the Illinois-Indiana border through Danville, Effingham, Champaign–Urbana, Decatur, Springfield, Quincy until Illinois' western border with Iowa.",
-    "309": "Central-Western Illinois including Bloomington–Normal, Peoria, and all the way west to the Illinois part of the Quad Cities including Moline, and Rock Island.",
-    "312": "Chicago, the central city area including the Chicago Loop and the Near North Side.",
-    "630": "West suburbs of Chicago in DuPage County and Kane County including Wheaton, Naperville, and Aurora.",
-    "331": "West suburbs of Chicago in DuPage County and Kane County including Wheaton, Naperville, and Aurora.",
-    "618": "Southern Illinois, including Carbondale and most of the Metro East region of St. Louis suburbs in Illinois",
-    "708": "South suburbs and inner west suburbs of Chicago, including the Chicago Southland and most west and south suburbs in Cook County such as Oak Park, Oak Lawn, Chicago Heights, and Orland Park.",
-    "773": "Chicago, covers most of the geographical area of Chicago except the downtown Chicago Loop, which is in area code 312.",
-    "815": "Northern Illinois outside of the immediate Chicago area including Joliet, Kankakee, LaSalle, DeKalb, and Rockford.",
-    "779": "Northern Illinois outside of the immediate Chicago area including Joliet, Kankakee, LaSalle, DeKalb, and Rockford.",
-    "847": "North and northwest suburbs of Chicago including all of Lake County, part of McHenry County, northern Cook County, and northeastern Kane County.",
-    "224": "North and northwest suburbs of Chicago including all of Lake County, part of McHenry County, northern Cook County, and northeastern Kane County.",
-    "872": "City of Chicago, overlaying area codes 312 and 773.",
-    "231": "Northwestern Lower Michigan: Traverse City, Ludington, Muskegon, Petoskey and Cheboygan",
-    "248": "Northern Metro Detroit: All of Oakland County, Northville, and most of Northville Township; overlays with area code 947",
-    "269": "Southwestern Michigan: Battle Creek, Benton Harbor, Allegan, Hastings, Kalamazoo, and St Joseph",
-    "313": "Wayne County: Detroit, Dearborn, Redford Township, and the Grosse Pointes",
-    "517": "South Central Michigan: Lansing, East Lansing, Jackson, Charlotte, Coldwater, Howell, Deerfield, and Addison",
-    "586": "Northeastern Metro Detroit: All of Macomb County",
-    "616": "Western Michigan: Grand Rapids, Holland, Greenville, Grand Haven, Zeeland, and Ionia",
-    "734": "Western and Down River/ Southeastern Michigan Metro Detroit: Ann Arbor, Monroe, Wayne, and Ypsilanti",
-    "810": "Southern Flint/Tri-Cities and The Thumb: Port Huron, Flint, Flushing, Otisville, Davison, Brighton, Sandusky, and Lapeer",
-    "906": "Upper Peninsula: Marquette, Sault Ste. Marie, St. Ignace, Escanaba, Iron Mountain, Munising, and Mackinac Island",
-    "947": "Northern Metro Detroit: All of Oakland County, Northville, and most of Northville Township; overlays with area code 248",
-    "989": "Northern, Flint/Tri-Cities and Northeastern Lower Michigan: Alpena, Mt. Pleasant, Bay City, Saginaw, Midland, Owosso, Gaylord, and Bad Axe",
-    "679": "A future overlay with Area code 313",
+    "217": true,
+    "309": true,
+    "312": true,
+    "630": true,
+    "331": true,
+    "618": true,
+    "708": true,
+    "773": true,
+    "815": true,
+    "779": true,
+    "847": true,
+    "224": true,
+    "872": true,
+    "231": true,
+    "248": true,
+    "269": true,
+    "313": true,
+    "517": true,
+    "586": true,
+    "616": true,
+    "734": true,
+    "810": true,
+    "906": true,
+    "947": true,
+    "989": true,
+    "679": true,
   };
   this.NOTE_LOCATION = "inside Clock-Out Lounge (4864 Beacon Ave S, 98108) at the Breezy Town Pizza counter under the slice sign."
   this.NOTE_SPECIAL_INSTRUCTIONS = "Since you specified special instructions, we will let you know if we can accommodate your request. We may need your confirmation if your instructions will incur an additional cost or we cannot accommodate them, so please watch your email.";
@@ -145,7 +147,7 @@ var BTPStoreConfig = function () {
   this.NOTE_DELIVERY_BETA = "Our delivery service is now in beta. Delivery times are rough estimates and we will make every attempt to be prompt. We'll contact you to confirm the order shortly.";
   this.NOTE_DELIVERY_SERVICE = "We appreciate your patience as our in-house delivery service is currently in its infancy. Delivery times are estimated. We might be a little earlier, or a little later. A 20% gratuity will be applied and is distributed among the Breezy Town Pizza family.";
   this.NOTE_PAYMENT = "We happily accept any major credit card or cash for payment upon arrival.";
-
+  this.NOTE_ALREADY_PAID = "You've already paid, so unless there's an issue with the order, there's no need to handle payment from this point forward.";
   this.REQUEST_HALF = "While half toppings are not on the menu, we can do them but they are charged the same as full toppings. As such, we recommend against them as they're not a good value for the customer and an imbalance of toppings will cause uneven baking of your pizza.";
   // END user messaging
 
@@ -184,12 +186,6 @@ var WCPOrderHelper = function () {
   this.IsPreviousDay = function (date) {
     // dateis a moment
     return this.IsFirstDatePreviousDayToSecond(date, timing_info.current_time);
-  };
-
-  this.MinutesToHMS = function (time) {
-    var hour = Math.floor(time / 60);
-    var minute = time - (hour * 60);
-    return String(hour) + (minute < 10 ? "0" : "") + String(minute) + "00";
   };
 
   this.DateToMinutes = function (date) {
@@ -374,7 +370,7 @@ var WCPOrderHelper = function () {
     return encodeURI(service_type + " for " + name + " on " + date_string + " - " + service_time);
   };
 
-  this.EmailBodyStringBuilder = function (service_type, date, time, phone, delivery_address) {
+  this.EmailBodyStringBuilder = function (service_type, date, time, phone, delivery_address, ispaid) {
     if (date === null || isNaN(time)) {
       return "";
     }
@@ -392,7 +388,7 @@ var WCPOrderHelper = function () {
           ` to ${delivery_address}.\n\n`,
           this.cfg.NOTE_DELIVERY_SERVICE,
           " ",
-          this.cfg.NOTE_PAYMENT
+          ispaid ? this.cfg.NOTE_ALREADY_PAID : this.cfg.NOTE_PAYMENT
         ];
         break;
       case this.cfg.PICKUP:
@@ -401,7 +397,7 @@ var WCPOrderHelper = function () {
           "We've got your order and we'll see you at ",
           service_time_print,
           " ", this.cfg.NOTE_LOCATION, "\n\n",
-          this.cfg.NOTE_PAYMENT
+          ispaid ? this.cfg.NOTE_ALREADY_PAID : this.cfg.NOTE_PAYMENT
         ];
         break;
       case this.cfg.DINEIN:
@@ -413,7 +409,7 @@ var WCPOrderHelper = function () {
           this.cfg.NOTE_DI,
           " We do not reserve seating. ",
           this.cfg.NOTE_ADULT_HOURS_BTP,
-          this.cfg.NOTE_PAYMENT
+          ispaid ? this.cfg.NOTE_ALREADY_PAID : this.cfg.NOTE_PAYMENT
         ];
         break;
       default:
@@ -427,7 +423,6 @@ var WCPOrderHelper = function () {
     if (!customer || cart.pizza.length === 0) {
       return "";
     }
-    customer = customer.replace(/\s/g, "+").replace(/[&]/g, "and");
     var service_string = "";
     if (service == this.cfg.PICKUP) {
       service_string = "P" + (sliced ? "+SLICED" : "");
@@ -445,47 +440,46 @@ var WCPOrderHelper = function () {
       var quantity = cart.pizza[i][0];
       var shortcode = cart.pizza[i][1].shortcode;
       num_pizzas = num_pizzas + quantity;
-      pizza_shortcodes = pizza_shortcodes + Array(quantity + 1).join("+" + shortcode);
+      pizza_shortcodes = pizza_shortcodes + Array(quantity + 1).join(" " + shortcode);
     }
     var extras_shortcodes = "";
     for (var j in cart.extras) {
       var quantity = cart.extras[j][0];
       var shortcode = cart.extras[j][1].shortcode;
-      extras_shortcodes = extras_shortcodes + "+" + quantity.toString(10) + "x" + shortcode;
+      extras_shortcodes = extras_shortcodes + " " + quantity.toString(10) + "x" + shortcode;
     }
-    var customer_encoded = encodeURI(customer);
     var pizzas_title = num_pizzas + "x" + pizza_shortcodes;
-    var extras_title = extras_shortcodes.length > 0 ? "+Extras" + extras_shortcodes : "";
-    return service_string + "+" + customer_encoded + "+" + pizzas_title + extras_title + (has_special_instructions ? "+%2A" : "");
+    var extras_title = extras_shortcodes.length > 0 ? " Extras" + extras_shortcodes : "";
+    return service_string + " " + customer + " " + pizzas_title + extras_title + (has_special_instructions ? "*" : "");
   };
 
   this.EventDateTimeStringBuilder = function (date, time, service_type) {
     if (!date || !date.isValid() || isNaN(time) || time < 0) {
       return "";
     }
-    var dateString = String(date.year()) + (date.month() < 9 ? "0" : "") + String(date.month() + 1) + (date.date() < 10 ? "0" : "") + String(date.date()) + "T";
-    var timeString;
+    var date_lower = moment(date);
+    var date_upper = moment(date);
     time = String(time).split(",");
-    if (time.length == 1) {
-      var ts = this.MinutesToHMS(time[0]);
-      timeString = [ts, service_type === wcporderhelper.cfg.DELIVERY ? this.MinutesToHMS(parseInt(time[0]) + DELIVERY_INTERVAL_TIME) : ts];
+    date_lower.add(time[0], "minutes");
+    if (time.length === 1) {
+      date_upper = moment(date_lower);
+      date_upper = service_type === wcporderhelper.cfg.DELIVERY ? date_upper.add(DELIVERY_INTERVAL_TIME, "minutes") : date_upper;
     } else {
-      timeString = [this.MinutesToHMS(parseInt(time[0])), this.MinutesToHMS(parseInt(time[1]))];
+      date_upper.add(time[1], "minutes");
     }
-    return dateString + timeString[0] + "/" + dateString + timeString[1];
+    return [date_lower.format("YYYY-MM-DDTHH:mm:ssZ"), date_upper.format("YYYY-MM-DDTHH:mm:ssZ")];
   };
 
   this.EventDetailStringBuilder = function (order, phone, special_instructions) {
     if (!order || !phone) {
       return "";
     }
-    var es = encodeURI(order.replace(/[&]/g, "and")).replace(/[\n\f]/gm, "%0A").replace(/\+/g, "%2B").replace(/\s/g, "+") + "%0Aph:+" + phone.replace(/\D/g, "");
+    var es = order.replace(/[&]/g, "and") + "\nph: " + phone.replace(/\D/g, "");
     if (special_instructions.length > 0) {
-      es = es + encodeURI(("\n" + special_instructions).replace(/[&]/g, "and")).replace(/[\n\f]/gm, "%0A").replace(/\s/g, "+");
+      es = es + "\nSpecial Instructions:" + special_instructions;
     }
     return es;
   };
-
 };
 
 var wcporderhelper = new WCPOrderHelper();
@@ -518,7 +512,7 @@ function UpdateLeadTime() {
   });
 
   app.factory('socket', function ($rootScope) {
-    var socket = io.connect("https://wario.breezytownpizza.com/nsRO");
+    var socket = io.connect(`${WARIO_ENDPOINT}nsRO`);
     return {
       on: function (eventName, callback) {
         socket.on(eventName, function () {
@@ -567,7 +561,144 @@ function UpdateLeadTime() {
       for (var j in this.cart.extras) {
         val += this.cart.extras[j][0] * this.cart.extras[j][1].price;
       }
-      return val;
+      this.computed_subtotal = val;
+    }
+
+    this.updateCustomTipInternal = function () {
+      var val = this.custom_tip_value;
+      if (typeof val === "string" || val instanceof String) {
+        val = parseFloat(val);
+      }
+      if (val === null || val < 0.0) {
+        val = 0.0;
+      }
+      val = parseFloat(val.toFixed(2));
+      this.custom_tip_value = val;
+      this.tip_value = val;
+    }
+
+    this.selectPercentageTip = function (idx) {
+      this.tip_clean = false;
+      this.selected_tip = idx;
+      this.show_custom_tip_input = false;
+      var compute_tip_from = this.computed_subtotal + this.computed_tax + this.delivery_fee;
+      var newtip = this.tip_options[idx] * compute_tip_from;
+      this.custom_tip_value = this.custom_tip_value < newtip ? newtip : this.custom_tip_value;
+      this.tip_value = newtip;
+      this.TotalsUpdate();
+    }
+
+    this.selectCustomTip = function () {
+      // set it to the index of the last percentage + 1
+      this.tip_clean = false;
+      this.selected_tip = this.tip_options.length;
+      this.show_custom_tip_input = true;
+      this.updateCustomTipInternal();
+      this.TotalsUpdate();
+    }
+
+    // call this after an address is validated (or not)
+    this.SetDeliveryState = function (validated) {
+      if (validated) {
+        this.is_address_validated = true;
+        this.delivery_fee = 0;//5;
+        this.autograt = .2;
+        this.address_invalid = false;
+        this.TotalsUpdate();
+      }
+      else {
+        this.is_address_validated = false;
+        this.address_invalid = true;
+      }
+    };
+
+    this.TotalsUpdate = function () {
+      // must run with up to date subtotal and order size;
+      this.computed_tax = (this.delivery_fee + this.computed_subtotal) * cfg.TAX_RATE;
+      this.autograt = this.num_pizza >= 5 || this.service_type === cfg.DELIVERY ? .2 : 0;
+      var compute_tip_from = (this.computed_tax + this.delivery_fee + this.computed_subtotal);
+      var mintip = compute_tip_from * this.autograt;
+      mintip = parseFloat(mintip.toFixed(2));
+      if (this.tip_clean) {
+        this.custom_tip_value = compute_tip_from * .2
+        this.tip_value = this.tip_value < mintip ? mintip : 0;
+      }
+      else {
+        if (this.tip_value < mintip) {
+          //if autograt, set selected to autograt level if dirty value is below autograt level
+          this.selected_tip = 1;
+          this.show_custom_tip_input = false;
+          this.tip_value = mintip;
+          this.custom_tip_value = mintip;
+        }
+        else if (this.selected_tip === this.tip_options.length - 1 && this.autograt === 0) {
+          // in the case someone has selected a tip level above a previously required autograt but doesn't have autograt
+          // set the tip to a custom value equalling their previously selected value
+          this.custom_tip_value = this.tip_value;
+          this.selectCustomTip();
+        }
+      }
+      this.custom_tip_value = this.custom_tip_value < mintip ? mintip : this.custom_tip_value;
+      this.total = this.computed_subtotal + this.computed_tax + this.delivery_fee + this.tip_value;
+    }
+
+    this.StatePostCartUpdate = function () {
+      this.RecomputeOrderSize();
+      this.ComputeSubtotal();
+      this.ComputeCartBasedLeadTime();
+      this.TotalsUpdate();
+    }
+
+    this.SubmitToWarioInternal = function (http_provider, state) {
+
+      var onSuccess = function (response) {
+        if (response.status === 200) {
+          state.stage = 8;
+        }
+        else {
+          state.submit_failed = true;
+          state.stage = 3;
+          console.log("FAILWHALE");
+        }
+      };
+      var onFail = function (response) {
+        state.submit_failed = true;
+        state.stage = 3;
+        console.log("FAILWHALE");
+      };
+      state.stage = 7;
+      http_provider({
+        method: "POST",
+        url: `${WARIO_ENDPOINT}api/v1/order/`,
+        data: { 
+          service_option: state.formdata.service_option,
+          customer_name: state.formdata.customer_name,
+          service_date: state.formdata.service_date,
+          service_time: state.formdata.service_time,
+          phonenum: state.formdata.phonenum,
+          user_email: state.formdata.user_email,
+          address: state.formdata.address,
+          delivery_instructions: state.formdata.delivery_instructions,
+          short_order: state.formdata.short_order,
+          referral: state.formdata.referral,
+          calendar_event_title: state.formdata.calendar_event_title,
+          calendar_event_dates: state.formdata.calendar_event_dates,
+          calendar_event_detail: state.formdata.calendar_event_detail,
+          calendar_event_address: state.validated_delivery_address,
+          confirmation_subject_escaped: state.formdata.confirmation_subject_escaped,
+          confirmation_body_escaped: state.formdata.confirmation_body_escaped,
+          special_instructions: state.formdata.special_instructions,
+          additional_message: state.formdata.additional_message,
+          load_time: state.formdata.load_time, 
+          time_selection_time: state.formdata.time_selection_time,
+          submittime: moment().format("MM-DD-YYYY HH:mm:ss"),
+          useragent: navigator.userAgent,
+          order_long: state.formdata.order_long,
+          automated_instructions: state.formdata.automated_instructions,
+          ispaid: state.isPaymentSuccess,
+          payment_info: state.isPaymentSuccess === true ? state.payment_info : ""
+        }
+      }).then(onSuccess).catch(onFail);
     }
 
     this.date_string = ""; // friendly version of the date, for the UI
@@ -580,8 +711,10 @@ function UpdateLeadTime() {
     this.service_time = "Please select a valid date";
     this.customer_name = "";
     this.phone_number = "";
-    this.delivery_address = "";
-    this.delivery_zipcode = "";
+    this.delivery_address = ""; // customer input, not validated
+    this.delivery_address_2 = ""; // customer input, not validated/required
+    this.delivery_zipcode = ""; // customer input, not validated
+    this.delivery_instructions = ""; // customer input, not required
     this.validated_delivery_address = "";
     this.is_address_validated = false;
     this.address_invalid = false;
@@ -591,9 +724,11 @@ function UpdateLeadTime() {
       extras: []
     };
     this.cartstring = "";
+    this.cartlist = [];
     this.num_pizza = 0;
     this.cart_based_lead_time = 0;
     this.shortcartstring = "";
+    this.shortcartlist = [];
     this.referral = "";
     this.acknowledge_instructions_dialogue = false;
     this.special_instructions = "";
@@ -601,9 +736,24 @@ function UpdateLeadTime() {
     this.additional_message = "";
     this.enable_split_toppings = false;
     this.enable_delivery = enable_delivery;
-    this.delivery_fee = 0;
-    this.slice_pizzas = false;
     this.EMAIL_REGEX = EMAIL_REGEX;
+
+    this.delivery_fee = 0;
+    this.autograt = 0;
+    this.computed_subtotal = 0;
+    this.computed_tax = 0;
+    this.tip_value = 0;
+    this.total = 0;
+    this.tip_options = [.15, .2, .25, .3];
+    this.selected_tip = 1;
+    this.show_custom_tip_input = false;
+    this.custom_tip_value = 0;
+    this.tip_clean = true;
+    this.payment_info = {};
+    this.isPaymentSuccess = false;
+    this.isProcessing = false;
+
+    this.formdata = {};
 
     this.service_type_functors = [
       // PICKUP
@@ -616,18 +766,19 @@ function UpdateLeadTime() {
       },
       // DELIVERY
       function (state) {
-        return true;
+        return state.enable_delivery;
       }
     ];
 
-    // stage 0: menu/cart controller: cart display // pie selection // customize pie, add to cart
-    // stage 1: salads
-    // stage 2: customer name, phone, email address, address , referral info
-    // stage 3: select service_type date/time
-    // stage 4: review order, special instructions
-    // stage 5: pressed submit, waiting validation
-    // stage 6: submitted successfully
-    this.stage = 0;
+    // stage 1: menu/cart controller: cart display // pie selection // customize pie, add to cart
+    // stage 2: everything else
+    // stage 3: customer name, phone, email address, address , referral info
+    // stage 4: select service_type date/time
+    // stage 5: review order, special instructions
+    // stage 6: tip entering, payment
+    // stage 7: pressed submit, waiting validation
+    // stage 8: submitted successfully
+    this.stage = 1;
 
     // flag for when submitting fails according to submission backend
     this.submit_failed = false;
@@ -636,7 +787,8 @@ function UpdateLeadTime() {
     this.selected_time_timeout = false;
   };
 
-  app.controller("OrderController", ["OrderHelper", "$filter", "$http", "$location", "$scope", "socket", function (OrderHelper, $filter, $http, $location, $scope, $socket) {
+  app.controller("OrderController", ["OrderHelper", "$filter", "$http", "$location", "$scope", "$rootScope", "socket", 
+  function (OrderHelper, $filter, $http, $location, $scope, $rootScope, $socket) {
     this.ORDER_HELPER = OrderHelper;
     this.CONFIG = wcpconfig;
     this.toppings = toppings_array;
@@ -645,13 +797,11 @@ function UpdateLeadTime() {
     this.crusts = crusts;
     this.split_toppings = $location.search().split === true;
     var enable_delivery = true;
-
     this.ScrollTop = ScrollTopJQ;
-
-    this.s = $scope.state = new WCPOrderState(this.CONFIG, enable_delivery, this.split_toppings);
+    this.s = $rootScope.state = new WCPOrderState(this.CONFIG, enable_delivery, this.split_toppings);
 
     this.Reset = function () {
-      this.s = $scope.state = new WCPOrderState(this.CONFIG, enable_delivery, this.split_toppings);
+      this.s = $rootScope.state = new WCPOrderState(this.CONFIG, enable_delivery, this.split_toppings);
     };
 
     this.ServiceTimeChanged = function () {
@@ -661,13 +811,17 @@ function UpdateLeadTime() {
     };
 
     this.ClearAddress = function () {
+      this.s.RecomputeOrderSize();
       this.s.delivery_zipcode = "";
       this.s.delivery_address = "";
+      this.s.delivery_address_2 = "";
+      this.s.delivery_instructions = "";
       this.s.validated_delivery_address = "";
       this.s.is_address_validated = false;
       this.s.address_invalid = false;
       this.s.delivery_fee = 0;
-      this.s.autograt = 0;
+      this.s.autograt = this.s.num_pizza >= 5 ? .2 : 0;
+      this.s.TotalsUpdate();
     };
 
     this.ClearSlicing = function () {
@@ -679,28 +833,26 @@ function UpdateLeadTime() {
     };
 
     this.ValidateDeliveryAddress = function () {
-      $scope.state.address_invalid = false;
+      $rootScope.state.address_invalid = false;
 
       var onSuccess = function (response) {
         if (response.status === 200 && response.data.found) {
-          $scope.state.validated_delivery_address = response.data.validated_address;
+          $rootScope.state.validated_delivery_address = response.data.validated_address;
           if (response.data.in_area) {
-            $scope.state.is_address_validated = true;
-            $scope.state.delivery_fee = 0;
-            //$scope.state.autograt = $scope.state.ComputeSubtotal() * .2;
+            $rootScope.state.SetDeliveryState(true);
           }
         }
         else {
-          $scope.state.address_invalid = true;
+          $rootScope.state.SetDeliveryState(false);
         }
       };
       var onFail = function (response) {
-        $scope.state.address_invalid = true;
+        $rootScope.state.SetDeliveryState(false);
         console.log(response);
       };
       $http({
         method: "GET",
-        url: "https://wario.breezytownpizza.com/api/v1/addresses/validate",
+        url: `${WARIO_ENDPOINT}api/v1/addresses/validate`,
         params: { address: this.s.delivery_address, zipcode: this.s.delivery_zipcode, city: "Seattle", state: "WA" }
       }).then(onSuccess).catch(onFail);
     }
@@ -750,34 +902,42 @@ function UpdateLeadTime() {
     this.rebuildCartString = function () {
       var str_builder = "";
       var short_builder = "";
+      var cart = [];
+      var shortcart = [];
 
       // process cart for pizzas
       for (var i in this.s.cart.pizza) {
         var quantity = this.s.cart.pizza[i][0];
         var item = this.s.cart.pizza[i][1];
-        str_builder = str_builder + quantity + "x: " + item.name + (this.s.slice_pizzas ? " (Sliced)" : "") + "\n";
-        short_builder = short_builder + quantity + "x: " + item.shortname + (this.s.slice_pizzas ? " SLICED" : "") + "\n";
+        cart.push(quantity + "x: " + item.name);
+        shortcart.push(quantity + "x: " + item.shortname);
+        str_builder = str_builder + quantity + "x: " + item.name + "\n";
+        short_builder = short_builder + quantity + "x: " + item.shortname + "\n";
       }
 
       // process cart for extras
       for (var j in this.s.cart.extras) {
         var quantity = this.s.cart.extras[j][0];
         var item_name = this.s.cart.extras[j][1].name;
+        cart.push(quantity + "x: " + item_name);
+        shortcart.push(quantity + "x: " + item_name);
         str_builder = str_builder + quantity + "x: " + item_name + "\n";
         short_builder = short_builder + quantity + "x: " + item_name + "\n";
       }
 
       if (this.s.validated_delivery_address) {
         str_builder = str_builder + "\n Delivery Address: " + this.s.validated_delivery_address;
+        cart.push("Delivery Address: " + this.s.validated_delivery_address);
       }
 
       this.s.cartstring = str_builder;
       this.s.shortcartstring = short_builder;
+      this.s.shortcartlist = shortcart;
+      this.s.cartlist = cart;
     };
 
     this.PostCartUpdate = function () {
-      this.s.RecomputeOrderSize();
-      this.s.ComputeCartBasedLeadTime();
+      this.s.StatePostCartUpdate();
       this.ValidateDate();
     };
 
@@ -827,7 +987,7 @@ function UpdateLeadTime() {
     };
 
     this.subtotal = function () {
-      return this.s.ComputeSubtotal();
+      return this.s.computed_subtotal;
     };
 
     this.fixQuantities = function (clear_if_invalid) {
@@ -840,31 +1000,30 @@ function UpdateLeadTime() {
       this.PostCartUpdate();
     };
 
-    this.Submit = function () {
-      this.s.stage = 5;
-    };
+    this.updateCustomTip = function () {
+      this.s.updateCustomTipInternal();
+      this.s.TotalsUpdate();
+    }
 
-    this.CF7SubmitFailed = function () {
-      this.s.submit_failed = true;
-      this.s.stage = 2;
-    };
-
-    this.CF7SubmitSuccess = function () {
-      this.s.stage = 6;
-    };
+    this.computeDefaultTipIfClean = function() {
+      if (this.s.tip_clean) {
+        this.s.selectPercentageTip(this.s.selected_tip);
+      }
+      return true;
+    }
 
     this.SlowSubmitterTrigger = function () {
       // set flag for user notification that too much time passed
       this.s.selected_time_timeout = true;
-      // set stage to 3 (time selection)
-      this.s.stage = 3;
+      // set stage to 4 (time selection)
+      this.s.stage = 4;
     };
 
     this.SlowSubmitterCheck = function () {
       var old_time = this.s.service_time;
       this.ValidateDate();
       // only bump someone to the time selection page if they're already at least that far
-      if (old_time != this.s.service_time && this.s.stage >= 3) {
+      if (old_time != this.s.service_time && this.s.stage >= 4 && this.s.stage < 6) {
         this.SlowSubmitterTrigger();
       }
     };
@@ -876,11 +1035,15 @@ function UpdateLeadTime() {
       this.s.stage = this.s.stage - 1;
     };
     this.HasPreviousStage = function () {
-      return this.s.stage > 0 && this.s.stage <= 4;
+      return this.s.stage > 1 && this.s.stage <= 6;
     };
     this.HasNextStage = function () {
-      return this.s.stage < 4;
+      return this.s.stage < 7;
     };
+
+    this.SubmitToWario = function () {
+      return this.s.SubmitToWarioInternal($http, this.s);
+    }
 
     // this binding means we need to have this block here.
     var UpdateBlockedOffFxn = function (message) {
@@ -897,8 +1060,23 @@ function UpdateLeadTime() {
     };
     const BoundUpdateLeadTimeFxn = UpdateLeadTimeFxn.bind(this);
     $socket.on("WCP_LEAD_TIMES", BoundUpdateLeadTimeFxn);
-
   }]);
+
+  app.controller("AccordionController", function () {
+    this.accordionstate = [];
+    for (var i in wcpconfig.EXTRAS_MENU) {
+      this.accordionstate.push(i == 0);
+    }
+
+    this.toggleAccordion = function (idx) {
+      if (this.accordionstate[idx]) {
+        return;
+      }
+      for (var i in this.accordionstate) {
+        this.accordionstate[i] = i == idx;
+      }
+    };
+  });
 
   app.controller("PizzaMenuController", function () {
     this.pizza_menu = wcpconfig.PIZZA_MENU;
@@ -1032,40 +1210,41 @@ function UpdateLeadTime() {
         orderinfo: "=orderinfo",
       },
       link: function (scope, element, attrs) {
-        // add event handler for invalid/spam/mailsent/mailfailed/submit
-        $j(element).on("wpcf7mailfailed", function () {
-          scope.orderinfo.CF7SubmitFailed();
-          scope.$apply();
-        });
-        $j(element).on("wpcf7mailsent", function () {
-          scope.orderinfo.CF7SubmitSuccess();
-          scope.$apply();
-        });
-
         // set load time field once
-        $j(element).find("span.load-time input").val(timing_info.load_time.format("H:mm:ss"));
+        var formatted_load_time = timing_info.load_time.format("H:mm:ss");
+        scope.orderinfo.s.formdata.load_time = formatted_load_time;
 
         var EventTitleSetter = function () {
           var event_title = OrderHelper.EventTitleStringBuilder(scope.orderinfo.s.service_type, scope.orderinfo.s.customer_name, scope.orderinfo.s.cart, scope.orderinfo.s.special_instructions, scope.orderinfo.s.slice_pizzas);
-          $j(element).find("span.eventtitle input").val(event_title);
+          scope.orderinfo.s.formdata.calendar_event_title = event_title;
         };
         var EventDetailSetter = function () {
-          var eventdetail = OrderHelper.EventDetailStringBuilder(scope.orderinfo.s.shortcartstring, scope.orderinfo.s.phone_number, scope.orderinfo.s.special_instructions, scope.orderinfo.s.slice_pizzas);
-          $j(element).find("span.eventdetail textarea").val(eventdetail);
+          var eventdetail = OrderHelper.EventDetailStringBuilder(scope.orderinfo.s.shortcartstring, scope.orderinfo.s.phone_number, scope.orderinfo.s.special_instructions);
+          scope.orderinfo.s.formdata.calendar_event_detail = eventdetail;
         };
         var AutomatedInstructionsSetter = function () {
           var confirmation_body = OrderHelper.AutomatedInstructionsBuilder(scope.orderinfo.s.service_type, scope.orderinfo.s.selected_date, scope.orderinfo.s.service_time, scope.orderinfo.s.special_instructions, timing_info.order_placed_during_dining);
-          $j(element).find("span.automated_instructions textarea").val(confirmation_body);
+          scope.orderinfo.s.formdata.automated_instructions = confirmation_body;
         };
         var ConfirmationSubjectSetter = function () {
           var selected_date_string = scope.orderinfo.s.selected_date ? scope.orderinfo.s.selected_date.format("dddd, MMMM DD, Y") : "";
-          var confirmation_subject = OrderHelper.EmailSubjectStringBuilder(scope.orderinfo.s.service_type, scope.orderinfo.s.customer_name, selected_date_string, scope.orderinfo.s.service_time);
-          $j(element).find("span.confirmation-subject textarea").val(confirmation_subject);
+          scope.orderinfo.s.formdata.confirmation_subject_escaped = OrderHelper.EmailSubjectStringBuilder(scope.orderinfo.s.service_type, scope.orderinfo.s.customer_name, selected_date_string, scope.orderinfo.s.service_time);
         };
         var ConfirmationBodySetter = function () {
-          var confirmation_body = OrderHelper.EmailBodyStringBuilder(scope.orderinfo.s.service_type, scope.orderinfo.s.selected_date, scope.orderinfo.s.service_time, scope.orderinfo.s.phone_number, scope.orderinfo.s.validated_delivery_address);
-          $j(element).find("span.confirmation-body textarea").val(confirmation_body);
+          var confirmation_body = OrderHelper.EmailBodyStringBuilder(scope.orderinfo.s.service_type, scope.orderinfo.s.selected_date, scope.orderinfo.s.service_time, scope.orderinfo.s.phone_number, scope.orderinfo.s.validated_delivery_address, scope.orderinfo.s.isPaymentSuccess);
+          scope.orderinfo.s.formdata.confirmation_body_escaped = confirmation_body;
         };
+        var EventDateSetter = function() {
+          var eventdate = OrderHelper.EventDateTimeStringBuilder(scope.orderinfo.s.selected_date, scope.orderinfo.s.service_time, scope.orderinfo.s.service_type);
+          scope.orderinfo.s.formdata.calendar_event_dates = eventdate
+        }
+        var AddressSetter = function() {
+          var full_address_info = scope.orderinfo.s.validated_delivery_address;
+          if (full_address_info && scope.orderinfo.s.delivery_address_2) {
+            full_address_info = full_address_info + ", Unit Info: " + scope.orderinfo.s.delivery_address_2;
+          }
+          scope.orderinfo.s.formdata.address = full_address_info;
+        }
 
         var ParseSpecialInstructionsAndPopulateResponses = function () {
           scope.orderinfo.s.special_instructions_responses = [];
@@ -1076,72 +1255,81 @@ function UpdateLeadTime() {
         };
 
         scope.$watch("orderinfo.s.debug_info", function () {
-          $j(element).find("span.time-selection-time input").val(scope.orderinfo.s.debug_info["time-selection-time"] ? scope.orderinfo.s.debug_info["time-selection-time"].format("H:mm:ss") : "");
+          var time_selection_time = scope.orderinfo.s.debug_info["time-selection-time"] ? scope.orderinfo.s.debug_info["time-selection-time"].format("H:mm:ss") : "";
+          scope.orderinfo.s.formdata.time_selection_time = time_selection_time;
         }, true);
 
         scope.$watch("orderinfo.s.service_type", function () {
-          $j(element).find("span.service-option input").val(scope.orderinfo.CONFIG.SERVICE_TYPES[scope.orderinfo.s.service_type][0]);
+          var service_option = scope.orderinfo.CONFIG.SERVICE_TYPES[scope.orderinfo.s.service_type][0];
+          scope.orderinfo.s.formdata.service_option = service_option;
           EventTitleSetter();
+          EventDateSetter();
           ConfirmationSubjectSetter();
           ConfirmationBodySetter();
           AutomatedInstructionsSetter();
+          scope.orderinfo.s.TotalsUpdate();
         }, true);
         scope.$watch("orderinfo.s.customer_name", function () {
-          $j(element).find("span.user-name input").val(scope.orderinfo.s.customer_name);
+          scope.orderinfo.s.formdata.customer_name = scope.orderinfo.s.customer_name;
           EventTitleSetter();
           ConfirmationSubjectSetter();
         }, true);
         scope.$watch("orderinfo.s.selected_date", function () {
           var selected_date_string = scope.orderinfo.s.selected_date ? scope.orderinfo.s.selected_date.format("dddd, MMMM DD, Y") : "";
-          $j(element).find("span.service-date input").val(selected_date_string);
-          $j(element).find("span.additional_message input").val(scope.orderinfo.s.additional_message);
-          var eventdate = OrderHelper.EventDateTimeStringBuilder(scope.orderinfo.s.selected_date, scope.orderinfo.s.service_time, scope.orderinfo.s.service_type);
-          $j(element).find("span.eventdate input").val(eventdate);
+          scope.orderinfo.s.formdata.service_date = selected_date_string;
+          scope.orderinfo.s.formdata.additional_message = scope.orderinfo.s.additional_message;
+          EventDateSetter();
           ConfirmationSubjectSetter();
           ConfirmationBodySetter();
           AutomatedInstructionsSetter();
         }, true);
         scope.$watch("orderinfo.s.service_time", function () {
-          $j(element).find("span.service-time input").val($filter("MinutesToPrintTime")(scope.orderinfo.s.service_time, scope.orderinfo.s.service_type));
-          var eventdate = OrderHelper.EventDateTimeStringBuilder(scope.orderinfo.s.selected_date, scope.orderinfo.s.service_time, scope.orderinfo.s.service_type);
-          $j(element).find("span.eventdate input").val(eventdate);
+          var service_time = $filter("MinutesToPrintTime")(scope.orderinfo.s.service_time, scope.orderinfo.s.service_type);
+          scope.orderinfo.s.formdata.service_time = service_time;
+          EventDateSetter();
+          EventTitleSetter();
           ConfirmationSubjectSetter();
           ConfirmationBodySetter();
           AutomatedInstructionsSetter();
         }, true);
         scope.$watch("orderinfo.s.phone_number", function () {
-          $j(element).find("span.phonenum input").val(scope.orderinfo.s.phone_number);
+          scope.orderinfo.s.formdata.phonenum = scope.orderinfo.s.phone_number;
           EventDetailSetter();
           ConfirmationBodySetter();
         }, true);
         scope.$watch("orderinfo.s.email_address", function () {
-          $j(element).find("span.user-email input").val(scope.orderinfo.s.email_address);
+          scope.orderinfo.s.formdata.user_email = scope.orderinfo.s.email_address;
         }, true);
         scope.$watch("orderinfo.s.validated_delivery_address", function () {
-          $j(element).find("span.address input").val(scope.orderinfo.s.validated_delivery_address);
-          var encoded_event_address = scope.orderinfo.s.validated_delivery_address ? "&location=" +
-            encodeURI(scope.orderinfo.s.validated_delivery_address.replace(/[&]/g, "and")).replace(/[\n\f]/gm, "%0A").replace(/\+/g, "%2B").replace(/\s/g, "+") : "";
-          $j(element).find("span.eventaddress input").val(encoded_event_address);
+          AddressSetter();
           ConfirmationBodySetter();
         }, true);
+        scope.$watch("orderinfo.s.delivery_address_2", function () {
+          AddressSetter();
+        }, true);
+        scope.$watch("orderinfo.s.delivery_instructions", function () {
+          scope.orderinfo.s.formdata.delivery_instructions = scope.orderinfo.s.delivery_instructions;
+        }, true);
         scope.$watch("orderinfo.s.referral", function () {
-          $j(element).find("span.howdyouhear input").val(scope.orderinfo.s.referral);
+          scope.orderinfo.s.formdata.referral = scope.orderinfo.s.referral;
         }, true);
         scope.$watch("orderinfo.s.special_instructions", function () {
           ParseSpecialInstructionsAndPopulateResponses();
           var temp = scope.orderinfo.s.special_instructions.length > 0 ? "Special instructions: " + scope.orderinfo.s.special_instructions : "";
-          $j(element).find("span.special_instructions input").val(temp);
+          scope.orderinfo.s.formdata.special_instructions = temp;
           EventTitleSetter();
           EventDetailSetter();
           AutomatedInstructionsSetter();
         }, true);
         scope.$watch("orderinfo.s.cartstring", function () {
-          $j(element).find("span.your-order textarea").val(scope.orderinfo.s.cartstring);
-          $j(element).find("span.your-order-short textarea").val(scope.orderinfo.s.shortcartstring);
+          scope.orderinfo.s.formdata.short_order = scope.orderinfo.s.shortcartlist;
+          scope.orderinfo.s.formdata.order_long = scope.orderinfo.s.cartlist;
           EventTitleSetter();
           EventDetailSetter();
         }, true);
-
+        scope.$watch("orderinfo.s.isPaymentSuccess", function () {
+          ConfirmationBodySetter();
+        }, true);
         function UpdateCurrentTime() {
           var time_diff = moment().valueOf() - timing_info.browser_load_time.valueOf();
           if (time_diff < timing_info.load_time_diff) {
@@ -1237,6 +1425,98 @@ function UpdateLeadTime() {
       }
     };
   });
+  
+  app.controller('PaymentController', ['$scope', '$rootScope', '$http', 'OrderHelper', function($scope, $rootScope, $http, OrderHelper) {
+    //for showing #successNotification div
+    $scope.isBuilt = false;
+
+    $scope.submitForm = function() {
+      $rootScope.state.isProcessing = true;
+      $scope.paymentForm.requestCardNonce();
+      return false
+    }
+
+    $scope.paymentForm = new SqPaymentForm({
+      applicationId: "sq0idp-5Sc3Su9vHj_1Xf4t6-9CZg",
+      inputClass: 'sq-input',
+      autoBuild: false,
+      inputStyles: [{
+        fontSize: '16px',
+        lineHeight: '24px',
+        padding: '16px',
+        placeholderColor: '#a0a0a0',
+        backgroundColor: 'transparent',
+      }],
+      card: {
+        elementId: 'sq-card',
+  },
+      callbacks: {
+        cardNonceResponseReceived: function(errors, nonce, cardData) {
+          if (errors){
+            $scope.card_errors = errors
+            $rootScope.state.isProcessing = false;
+            $scope.$apply();
+            $rootScope.$apply();
+          }else{
+            $scope.card_errors = []
+            $scope.chargeCardWithNonce(nonce);
+          }
+          
+        },
+        unsupportedBrowserDetected: function() {
+          alert("Unfortunately, your browser or settings don't allow for pre-payment. Please go back and select that you'd like to pay later or try your order on a newer browser.");
+        }
+      }
+    });
+
+    $scope.chargeCardWithNonce = function(nonce) {
+      var data = {
+        nonce: nonce,
+        amount_money: $rootScope.state.total - $rootScope.state.tip_value,
+        tip_money: $rootScope.state.tip_value,
+        email_title: decodeURIComponent($rootScope.state.formdata.confirmation_subject_escaped)
+      };
+      $http.post(`${WARIO_ENDPOINT}api/v1/payments/payment`, data).success(function(data, status) {
+        if (status == 200) {
+          $rootScope.state.isPaymentSuccess = true;
+          $rootScope.state.formdata.confirmation_body_escaped = OrderHelper.EmailBodyStringBuilder($rootScope.state.service_type, $rootScope.state.selected_date, $rootScope.state.service_time, $rootScope.state.phone_number, $rootScope.state.validated_delivery_address, $rootScope.state.isPaymentSuccess);
+          $rootScope.state.payment_info = data;
+          $rootScope.state.SubmitToWarioInternal($http, $rootScope.state);
+        }
+        else {
+          // display server side card processing errors 
+          $rootScope.state.isPaymentSuccess = false;
+          $scope.card_errors = []
+          var errors = JSON.parse(data.result);
+          for (var i =0; i < errors.length; i++){
+            $scope.card_errors.push({message: errors[i].detail})
+          }
+        } 
+        $rootScope.state.isProcessing = false;
+      }).error(function(data){
+        $rootScope.state.isPaymentSuccess = false;
+        $rootScope.state.isProcessing = false;
+        if (data && data.result) {
+          $scope.card_errors = [];
+          var errors = JSON.parse(data.result).errors;
+          for (var i =0; i < errors.length; i++){
+            $scope.card_errors.push({message: errors[i].detail})
+          }
+        } else {
+          $scope.card_errors = [{message: "Processing error, please try again! If you continue to have issues, text us."}];
+        }
+      });
+    }
+
+    $scope.buildForm = function() {
+      if (!$scope.isBuilt) {
+        $scope.isBuilt = true;
+        $scope.paymentForm.build();
+      }
+      return $scope.isBuilt;
+    }
+  }]);
+
 
   $j(".scrolltotop").click(function () {
     ScrollTopJQ();

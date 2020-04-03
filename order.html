@@ -58,32 +58,32 @@
       </div>
     </div>
     <md-content ng-show="orderCtrl.s.stage === 2" ng-controller="AccordionController as accordionCtrl">
-    <h3 class="flush--top"><strong>Add small plates or beverages to your order.</strong></h3>
-    <div class="ordering-menu menu-list menu-list__dotted md-accordion" ng-repeat="submenu in pmenuCtrl.extras_menu">
-      <md-toolbar ng-click="accordionCtrl.toggleAccordion($index)" role="button">
-        <div class="md-toolbar-tools">
-          <h2>
-            <span><strong>{{submenu.menu_name}}</strong></span>
-            <span style="color: red;" ng-if="submenu.in_red"><strong>{{submenu.in_red}}</strong></span>
-          </h2>
-          <span flex="" class="flex"></span>
-          <span ng-class="{expandCollapse:true, active:accordionCtrl.accordionstate[$index]}"></span> 
-        </div>
-      </md-toolbar> 
-      <ul ng-class="{dataContent:true, activeContent:accordionCtrl.accordionstate[$index]}" class="menu-list__items">
-        <li class="menu-list__item" ng-if="submenu.subtitle"><strong>{{submenu.subtitle}}</strong></li>
-        <li class="menu-list__item" ng-repeat="extra in submenu.menu">
-          <div class="offer-link" ng-click="orderCtrl.ScrollTop(); orderCtrl.addExtraToOrder(extra)">
-            <h4 class="menu-list__item-title"><span class="item_title">{{extra.name}}</span><span class="dots"></span></h4>
-            <p class="menu-list__item-desc">
-              <span class="desc__content">{{extra.description}}</span>
-            </p>
-            <span class="dots"></span>
-            <span class="menu-list__item-price">{{extra.price}}</span>
+      <h3 class="flush--top"><strong>Add small plates or beverages to your order.</strong></h3>
+      <div class="ordering-menu menu-list menu-list__dotted md-accordion" ng-repeat="submenu in pmenuCtrl.extras_menu">
+        <md-toolbar ng-click="accordionCtrl.toggleAccordion($index)" role="button">
+          <div class="md-toolbar-tools">
+            <h2>
+              <span><strong>{{submenu.menu_name}}</strong></span>
+              <span style="color: red;" ng-if="submenu.in_red"><strong>{{submenu.in_red}}</strong></span>
+            </h2>
+            <span flex="" class="flex"></span>
+            <span ng-class="{expandCollapse:true, active:accordionCtrl.accordionstate[$index]}"></span> 
           </div>
-        </li>
-      </ul>
-    </div>
+        </md-toolbar> 
+        <ul ng-class="{dataContent:true, activeContent:accordionCtrl.accordionstate[$index]}" class="menu-list__items">
+          <li class="menu-list__item" ng-if="submenu.subtitle"><strong>{{submenu.subtitle}}</strong></li>
+          <li class="menu-list__item" ng-repeat="extra in submenu.menu">
+            <div class="offer-link" ng-click="orderCtrl.ScrollTop(); orderCtrl.addExtraToOrder(extra)">
+              <h4 class="menu-list__item-title"><span class="item_title">{{extra.name}}</span><span class="dots"></span></h4>
+              <p class="menu-list__item-desc">
+                <span class="desc__content">{{extra.description}}</span>
+              </p>
+              <span class="dots"></span>
+              <span class="menu-list__item-price">{{extra.price}}</span>
+            </div>
+          </li>
+        </ul>
+      </div>
     </md-content>
     <div class="cart" ng-if="orderCtrl.s.cart.pizza.length > 0 || orderCtrl.s.cart.extras.length > 0">
       <hr class="separator">
@@ -224,10 +224,7 @@
         <input type="text" name="delivery_instructions" size="40" ng-model="orderCtrl.s.delivery_instructions">
       </span>
     </span>
-  </span>
-
     <button type="submit" class="btn" ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && !(stage4.address.$error.address || stage4.zipcode.$error.zipcode) && !orderCtrl.s.is_address_validated" ng-click="orderCtrl.ValidateDeliveryAddress()">Validate Delivery Address</button>
-    </form>
     <span ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && orderCtrl.s.validated_delivery_address" class="">
       <div class="wpcf7-response-output wpcf7-mail-sent-ok" ng-show="orderCtrl.s.is_address_validated">
         Found an address in our delivery area: <br />
@@ -236,6 +233,7 @@
       <div class="wpcf7-response-output wpcf7-mail-sent-ng" ng-show="!orderCtrl.s.is_address_validated">The address {{orderCtrl.s.validated_delivery_address}} isn't in our <a target="_blank" href="http://bit.ly/2QsrfV8">delivery area</a></div>
     </span>
     <div class="wpcf7-response-output wpcf7-mail-sent-ng" ng-show="orderCtrl.s.address_invalid">Unable to determine the specified address. Send us a text or email if you continue having issues.</div>
+    </form>
     <div class="order-nav">
       <button type="submit" class="btn scrolltotop" ng-show="orderCtrl.HasPreviousStage()" ng-click="orderCtrl.PreviousStage()">Previous</button>
       <button type="submit" class="btn scrolltotop" ng-disabled="!orderCtrl.s.date_valid || (orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && (!orderCtrl.s.is_address_validated))" ng-show="orderCtrl.HasNextStage()" ng-click="orderCtrl.rebuildCartString(); orderCtrl.NextStage();">Next</button>
@@ -262,7 +260,7 @@
         </tr>
         <tr ng-if="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY">
           <td>Address</td>
-          <td>{{orderCtrl.s.validated_delivery_address}}</td>
+          <td>{{orderCtrl.s.validated_delivery_address}}{{orderCtrl.s.delivery_address_2 ? ", " + orderCtrl.s.delivery_address_2 : ""}}</td>
         </tr>
       </table>
       <div class="cart">
@@ -300,24 +298,6 @@
                 <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{item[1].price * item[0] | number:2}}</span></td>
               </tr>
               <tr ng-repeat="item in orderCtrl.s.cart.extras" class="cart-item">
-                <td class="cart-item-description">
-                  <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
-                    <div class="menu-list__item">
-                      <h4 class="menu-list__item-title"><span class="item_title">{{item[1].name}}</span></h4>
-                      <p class="menu-list__item-desc"><span class="desc__content">{{item[1].description}}</span></p>
-                    </div>
-                  </div>
-                </td>
-                <td class="cart-item-quantity-price no-wrap">
-                  <div class="grid-flex grid-valign-middle">
-                    <span class="column no-shrink menu-list__item-price">{{item[0]}}</span>
-                    <span class="column no-shrink">×</span>
-                    <span class="column no-shrink menu-list__item-price">{{item[1].price}}</span>
-                  </div>
-                </td>
-                <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{item[1].price * item[0] | number:2}}</span></td>
-              </tr>
-              <tr ng-repeat="item in orderCtrl.s.cart.beverages" class="cart-item">
                 <td class="cart-item-description">
                   <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
                     <div class="menu-list__item">
@@ -454,24 +434,6 @@
               <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{item[1].price * item[0] | number:2}}</span></td>
             </tr>
             <tr ng-repeat="item in orderCtrl.s.cart.extras" class="cart-item">
-              <td class="cart-item-description">
-                <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
-                  <div class="menu-list__item">
-                    <h4 class="menu-list__item-title"><span class="item_title">{{item[1].name}}</span></h4>
-                    <p class="menu-list__item-desc"><span class="desc__content">{{item[1].description}}</span></p>
-                  </div>
-                </div>
-              </td>
-              <td class="cart-item-quantity-price no-wrap">
-                <div class="grid-flex grid-valign-middle">
-                  <span class="column no-shrink menu-list__item-price">{{item[0]}}</span>
-                  <span class="column no-shrink">×</span>
-                  <span class="column no-shrink menu-list__item-price">{{item[1].price}}</span>
-                </div>
-              </td>
-              <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{item[1].price * item[0] | number:2}}</span></td>
-            </tr>
-            <tr ng-repeat="item in orderCtrl.s.cart.beverages" class="cart-item">
               <td class="cart-item-description">
                 <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
                   <div class="menu-list__item">

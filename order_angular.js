@@ -614,6 +614,7 @@
         this.autograt = this.num_pizza >= 5 || this.service_type === cfg.DELIVERY ? .2 : 0;
         var compute_tip_from = (this.computed_tax + this.delivery_fee + this.computed_subtotal);
         var mintip = compute_tip_from * this.autograt;
+        mintip = parseFloat(mintip.toFixed(2));
         if (this.tip_clean) {
           this.custom_tip_value = compute_tip_from * .2
           this.tip_value = this.tip_value < mintip ? mintip : 0;
@@ -1499,14 +1500,15 @@
           $rootScope.state.isPaymentSuccess = false;
           $rootScope.state.isProcessing = false;
           if (data && data.result) {
-            $scope.card_errors = []
-            for (var i =0; i < data.result.errors.length; i++){
-              $scope.card_errors.push({message: data.result.errors[i].detail})
+            $scope.card_errors = [];
+            var errors = JSON.parse(data.result).errors;
+            for (var i =0; i < errors.length; i++){
+              $scope.card_errors.push({message: errors[i].detail})
             }
           } else {
             $scope.card_errors = [{message: "Processing error, please try again! If you continue to have issues, text us."}];
           }
-        })
+        });
       }
 
       $scope.buildForm = function() {
