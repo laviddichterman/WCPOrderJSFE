@@ -398,11 +398,11 @@
       <button type="submit" class="btn scrolltotop" ng-show="orderCtrl.HasNextStage() && !orderCtrl.s.acknowledge_instructions_dialogue" ng-click="orderCtrl.NextStage();">Next</button>
       <button type="submit" class="btn scrolltotop" ng-show="orderCtrl.s.acknowledge_instructions_dialogue" ng-click="orderCtrl.SubmitToWario()">Submit Order</button>
     </div>
-    <div ng-hide="orderCtrl.s.tip_value === 0">* Gratuity is distributed to the staff that worked on the day services are rendered. </div>
+    <div ng-hide="orderCtrl.s.tip_value === 0">* Gratuity is shared among the entire team.</div>
   </div>
   <div ng-if="orderCtrl.s.stage === 6">
     <h3 ng-show="orderCtrl.computeDefaultTipIfClean()" class="flush--top">Add gratuity to your order and settle up!</h3>
-    <h5>All gratuity is distributed to the staff that worked to make and serve your food on that day.</h5>
+    <h5>The Windy City Pie family is working hard to serve you, safely. All gratuity is shared with the entire staff. Everyone, from our team that makes the house-made dough, to the staff that handles your order appreciates your support!</h5>
     <div class="flexbox">
       <div ng-hide="(orderCtrl.s.autograt === 0 && $index === 3) || (orderCtrl.s.autograt !== 0 && $index === 0)" class="flexbox__item one-third soft-quarter"  ng-repeat="tip in orderCtrl.s.tip_options" >
         <button ng-click="orderCtrl.s.selectPercentageTip($index)" ng-class="{btn:true, tipbtn:true, 'flexbox__item':true, 'one-whole':true, 'selected':orderCtrl.s.selected_tip==$index}" >
@@ -542,15 +542,13 @@
     </div>
     <div ng-controller="PaymentController as pmntCtrl">
       <div ng-show="buildForm()"></div>
-      <div id="successNotification" ng-show="orderCtrl.s.isPaymentSuccess">
-        Card Charged Succesfully!!
-      </div>
       <div id="form-container">
         <div id="sq-card" ></div>
+        <div ng-repeat="e in card_errors" class="wpcf7-response-output wpcf7-mail-sent-ng">{{e.message}}</div>
       </div>
       <div class="order-nav">
         <button type="submit" class="btn scrolltotop" ng-disabled="orderCtrl.s.isProcessing" ng-show="orderCtrl.HasPreviousStage()" ng-click="orderCtrl.PreviousStage()">Previous</button>
-        <button id="sq-creditcard" class="btn scrolltotop" ng-click="submitForm()" ng-disabled="orderCtrl.s.isProcessing">Pay ${{orderCtrl.s.total | number:2}} and submit order!</button>
+        <button id="sq-creditcard" class="btn scrolltotop" ng-click="submitForm()" ng-disabled="orderCtrl.s.isProcessing">Pay and submit order!</button>
       </div>
     </div>
   </div>
@@ -574,4 +572,4 @@
 <script src="https://www.windycitypie.com/wp-includes/js/socket.io.js"></script>
 <script src="https://www.windycitypie.com/wp-includes/js/socket.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
-<script src="https://www.windycitypie.com/wp-includes/js/WCPMenu_1.js"></script>
+<script src="https://www.windycitypie.com/wp-includes/js/WCPMenu_2.js"></script>

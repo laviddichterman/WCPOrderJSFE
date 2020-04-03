@@ -1449,7 +1449,7 @@ function UpdateLeadTime() {
     }
 
     $scope.paymentForm = new SqPaymentForm({
-      applicationId: "sq0idp-C1A7WMB-lGqPkebOGHS8Pw",
+      applicationId: "sq0idp-5Sc3Su9vHj_1Xf4t6-9CZg",
       inputClass: 'sq-input',
       autoBuild: false,
       inputStyles: [{
@@ -1491,24 +1491,32 @@ function UpdateLeadTime() {
         email_title: decodeURIComponent($rootScope.state.formdata.confirmation_subject_escaped)
       };
       $http.post(uri, data).success(function(data, status) {
-        if (status == 400){
-          // display server side card processing errors 
-          $rootScope.state.isPaymentSuccess = false;
-          $scope.card_errors = []
-          for (var i =0; i < data.errors.length; i++){
-            $scope.card_errors.push({message: data.errors[i].detail})
-          }
-        } else if (status == 200) {
-          console.log(data);
+        if (status == 200) {
           $rootScope.state.isPaymentSuccess = true;
           $rootScope.state.payment_info = data;
           $rootScope.state.SubmitToWarioInternal($http, $rootScope.state);
         }
+        else {
+          // display server side card processing errors 
+          $rootScope.state.isPaymentSuccess = false;
+          $scope.card_errors = []
+          var errors = JSON.parse(data.result);
+          for (var i =0; i < errors.length; i++){
+            $scope.card_errors.push({message: errors[i].detail})
+          }
+        } 
         $rootScope.state.isProcessing = false;
-      }).error(function(){
+      }).error(function(data){
         $rootScope.state.isPaymentSuccess = false;
         $rootScope.state.isProcessing = false;
-        $scope.card_errors = [{message: "Processing error, please try again!"}];
+        if (data && data.result) {
+          $scope.card_errors = []
+          for (var i =0; i < data.result.errors.length; i++){
+            $scope.card_errors.push({message: data.result.errors[i].detail})
+          }
+        } else {
+          $scope.card_errors = [{message: "Processing error, please try again! If you continue to have issues, text us."}];
+        }
       })
     }
 
