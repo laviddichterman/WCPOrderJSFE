@@ -31,12 +31,19 @@
         </div>
         <div>Cheese:</div>
         <div class="flexitems">
-          <div class="flexitem">
-            <input type="checkbox" id="{{pmenuCtrl.cheese_options['ex_mozz'].shortname}}_whole" class="input-whole" ng-model="pmenuCtrl.selection.cheese_option" ng-true-value="'ex_mozz'" ng-false-value="'regular'" ng-change="pmenuCtrl.updateSelection()">
+          <div class="flexitem" ng-if="pmenuCtrl.cheese_selection_mode === 2">
+            <input type="checkbox" id="{{pmenuCtrl.cheese_options['ex_chz'].shortname}}_whole" class="input-whole" ng-model="pmenuCtrl.cheese_toggle" ng-true-value="true" ng-false-value="false" ng-change="pmenuCtrl.updateSelection()">
             <span class="option-circle-container">
-              <label for="{{pmenuCtrl.cheese_options['ex_mozz'].shortname}}_whole" class="option-whole option-circle"></label>
+              <label for="{{pmenuCtrl.cheese_options['ex_chz'].shortname}}_whole" class="option-whole option-circle"></label>
             </span>
-            <label class="topping_text" for="{{pmenuCtrl.cheese_options['ex_mozz'].shortname}}_whole">{{pmenuCtrl.cheese_options['ex_mozz'].name}}</label>
+            <label class="topping_text" for="{{pmenuCtrl.cheese_options['ex_chz'].shortname}}_whole">{{pmenuCtrl.cheese_options['ex_chz'].name}}</label>
+          </div>
+          <div class="flexitem" ng-if="pmenuCtrl.cheese_selection_mode > 2" ng-repeat="cheese in pmenuCtrl.cheese_options" >
+            <input id="{{cheese.shortname}}_whole" class="input-whole" ng-model="pmenuCtrl.selection.cheese_option" ng-value="cheese" ng-disabled="!cheese.ShowOption(pmenuCtrl.selection)" type="radio" ng-change="pmenuCtrl.updateSelection()">
+            <span class="option-circle-container">
+              <label for="{{cheese.shortname}}_whole" class="option-whole option-circle"></label>
+            </span>
+            <label class="topping_text" for="{{cheese.shortname}}_whole">{{cheese.name}}</label>
           </div>
         </div>
         <div>Toppings:</div>
@@ -60,7 +67,7 @@
     <md-content ng-show="orderCtrl.s.stage === 2" ng-controller="AccordionController as accordionCtrl">
       <h3 class="flush--top"><strong>Add small plates or beverages to your order.</strong></h3>
       <div class="ordering-menu menu-list menu-list__dotted md-accordion" ng-repeat="submenu in pmenuCtrl.extras_menu">
-        <md-toolbar ng-click="accordionCtrl.toggleAccordion($index)" role="button">
+        <md-toolbar ng-click="accordionCtrl.toggleAccordion($index); orderCtrl.ScrollTop()" role="button">
           <div class="md-toolbar-tools">
             <h2>
               <span><strong>{{submenu.menu_name}}</strong></span>
@@ -236,7 +243,7 @@
     </form>
     <div class="order-nav">
       <button type="submit" class="btn scrolltotop" ng-show="orderCtrl.HasPreviousStage()" ng-click="orderCtrl.PreviousStage()">Previous</button>
-      <button type="submit" class="btn scrolltotop" ng-disabled="!orderCtrl.s.date_valid || (orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && (!orderCtrl.s.is_address_validated))" ng-show="orderCtrl.HasNextStage()" ng-click="orderCtrl.rebuildCartString(); orderCtrl.NextStage();">Next</button>
+      <button type="submit" class="btn scrolltotop" ng-disabled="!orderCtrl.s.date_valid || (orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && (!orderCtrl.s.is_address_validated))" ng-show="orderCtrl.HasNextStage()" ng-click="orderCtrl.NextStage()">Next</button>
     </div>
   </div>
   <div ng-show="orderCtrl.s.stage === 5">
@@ -522,6 +529,7 @@
     </div>
     <div ng-show="orderCtrl.s.stage === 7" class="wpcf7 wpcf7-response-output wpcf7-mail-sent-ok">Submitting order! This can take a few seconds.<span class="ajax-loader is-active"></span></div>
     <div ng-show="orderCtrl.s.stage === 8" class="submitsuccess wpcf7-response-output wpcf7-mail-sent-ok" >Order submitted successfully! Please check your email.</div>
+    <div ng-show="orderCtrl.s.stage === 9" class="wpcf7-response-output wpcf7-validation-errors" >We had some issues processing your order. Please send us a text message or email so we can look into it.</div>
   </div>
 </div>
 <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.12/angular-material.min.css">
@@ -534,4 +542,4 @@
 <script src="https://www.windycitypie.com/wp-includes/js/socket.io.js"></script>
 <script src="https://www.windycitypie.com/wp-includes/js/socket.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
-<script src="https://www.windycitypie.com/wp-includes/js/WCPMenu_3.js"></script>
+<script src="https://www.windycitypie.com/wp-includes/js/WCPMenu18.js"></script>

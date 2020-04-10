@@ -36,26 +36,19 @@ var TOPPING_WHOLE = 3;
 var FLAVOR_MAX = 5;
 var BAKE_MAX = 5;
 
-var cheese_options = {
-  regular: {
-    name: "Mozzarella",
-    shortname: "regular",
-    price: 0,
-    enable: no_restriction
-  },
-  ex_mozz: {
-    name: "Extra Mozzarella",
-    shortname: "ex_mozz",
-    price: 2,
-    enable: no_restriction
-  }
-};
-
 var WCPSauce = function (name, shortname, price, enable_filter) {
   WCPOption.call(this, name, shortname, price);
   this.enable = enable_filter;
   this.ShowOption = function (pizza) {
     return pizza && (this.enable(pizza) || pizza.sauce == this.shortname);
+  };
+};
+
+var WCPCheese = function (name, shortname, price, enable_filter) {
+  WCPOption.call(this, name, shortname, price);
+  this.enable = enable_filter;
+  this.ShowOption = function (pizza) {
+    return pizza && (this.enable(pizza) || pizza.cheese_option == this.shortname);
   };
 };
 
@@ -97,6 +90,11 @@ var WCPTopping = function (name, shortname, price, index, enable_filter, flavor_
 var sauces = {
   red: new WCPSauce("Red Sauce", "red", 0, disable_on_brussels_sprout),
   white: new WCPSauce("White Sauce", "white", 2, no_restriction)
+};
+
+var cheese_options = {
+  regular: new WCPCheese("Mozzarella", "regular", 0, no_restriction),
+  ex_chz: new WCPCheese("Extra Mozzarella", "ex_chz", 2, no_restriction)
 };
 
 var crust_flavors = {
@@ -171,7 +169,7 @@ var WCPPizza = function (name, shortcode, crust, cheese, sauce, toppings) {
   function ComputePrice(pizza) {
     var val = 19;
     val = val + pizza.crust.price;
-    val = val + cheese_options[pizza.cheese_option].price;
+    val = val + pizza.cheese_option.price;
     val = val + pizza.sauce.price;
     for (var i in pizza.toppings_tracker) {
       if (pizza.toppings_tracker[i] > 0) {
@@ -211,8 +209,8 @@ var WCPPizza = function (name, shortcode, crust, cheese, sauce, toppings) {
     if (pizza.crust.flavor.shortname != "regular") {
       ret.push(getter(pizza.crust.flavor));
     }
-    if (verbose || pizza.cheese_option != cheese_options.regular.shortname) {
-      ret.push(getter(cheese_options[pizza.cheese_option]));
+    if (verbose || pizza.cheese_option.shortname != cheese_options.regular.shortname) {
+      ret.push(getter(pizza.cheese_option));
     }
     return ret;
   }
@@ -306,7 +304,7 @@ var WCPPizza = function (name, shortcode, crust, cheese, sauce, toppings) {
     // 2 exact match
     var sauce_match = this.sauce == other.sauce ? 2 : 1;
     var crust_match = (this.crust.flavor == other.crust.flavor) ? 2 : (other.crust.flavor.shortname == "regular") ? 1 : 0;
-    var cheese_match = this.cheese_option == other.cheese_option ? 2 : (other.cheese_option == "regular" ? 1 : 0);
+    var cheese_match = this.cheese_option == other.cheese_option ? 2 : (other.cheese_option.shortname == "regular" ? 1 : 0);
     var dough_match = (this.crust.dough == other.crust.dough) ? 2 : (other.crust.dough.shortname == "regular") ? 1 : 0;
     var toppings_match = [[], []];
     var non_topping_match = Math.min(sauce_match, crust_match, cheese_match, dough_match);
@@ -403,7 +401,7 @@ var WCPPizza = function (name, shortcode, crust, cheese, sauce, toppings) {
           // first pull out any sauce, dough, crust, cheese differences
           if (menu_compare === "byo") {
             name_components.sauce = pizza.sauce;
-            name_components.cheese = cheese_options[pizza.cheese_option];
+            name_components.cheese = pizza.cheese_option;
           }
           if (comparison_info.sauce === 1) {
             shortname_components.sauce = name_components.sauce = pizza.sauce;
@@ -415,7 +413,7 @@ var WCPPizza = function (name, shortcode, crust, cheese, sauce, toppings) {
             shortname_components.crust = name_components.crust = pizza.crust.flavor;
           }
           if (comparison_info.cheese === 1) {
-            shortname_components.cheese = name_components.cheese = cheese_options[pizza.cheese_option];
+            shortname_components.cheese = name_components.cheese = pizza.cheese_option;
           }
 
           // determine what toppings are additions for the matching pizza
@@ -514,7 +512,7 @@ var WCPPizza = function (name, shortcode, crust, cheese, sauce, toppings) {
       else if (menu_match[0] === pizza_menu["byo"]) {
         // we've got a build your own pizza, make sure sauce and cheese name components are present
         name_components.sauce = name_components.sauce !== null ? name_components.sauce : menu_match[0].sauce;
-        name_components.cheese = name_components.cheese !== null ? name_components.cheese : cheese_options[menu_match[0].cheese_option];
+        name_components.cheese = name_components.cheese !== null ? name_components.cheese : menu_match[0].cheese_option;
         name_components_list = BuildComponentsList(name_components, function (x) { return x.name; });
         shortname_components_list = BuildComponentsList(shortname_components, function (x) { return x.shortname; });
       }
@@ -550,6 +548,18 @@ var WCPPizza = function (name, shortcode, crust, cheese, sauce, toppings) {
     this.toppings_sections = this.DisplayToppings();
   };
 
+  this.ToDTO = function () {
+    return {
+      name: this.name,
+      shortname: this.shortname,
+      shortcode: this.shortcode,
+      crust: this.crust.shortname,
+      cheese: this.cheese_option.shortname,
+      sauce: this.sauce.shortname,
+      toppings: this.GenerateToppingsList().map(function (x) { return [x[0], x[1].shortname]; })
+    };
+  };
+
   // begin initialization
   this.crust = crust;
   this.cheese_option = cheese;
@@ -571,11 +581,15 @@ var WCPPizza = function (name, shortcode, crust, cheese, sauce, toppings) {
   // end initialization
 };
 
+function WCPPizzaFromDTO(dto) {
+  return new WCPPizza(dto.name, dto.shortcode, crusts[dto.crust], cheese_options[dto.cheese], sauces[dto.sauce], dto.toppings.map(function (x) { return [x[0], toppings_dict[x[1]]] }));
+}
+
 pizza_menu = {
   omnivore: new WCPPizza("Omnivore",
     "O",
     crusts.regular,
-    "regular",
+    cheese_options.regular,
     sauces.red,
     [[TOPPING_WHOLE, toppings_dict.pepperoni],
     [TOPPING_WHOLE, toppings_dict.sausage],
@@ -586,7 +600,7 @@ pizza_menu = {
   mamma_mia: new WCPPizza("Mamma Mia",
     "A",
     crusts.regular,
-    "regular",
+    cheese_options.regular,
     sauces.red,
     [[TOPPING_WHOLE, toppings_dict.sport],
     [TOPPING_WHOLE, toppings_dict.meatball],
@@ -596,7 +610,7 @@ pizza_menu = {
   four_pepper: new WCPPizza("4 Pepper",
     "F",
     crusts.regular,
-    "regular",
+    cheese_options.regular,
     sauces.red,
     [[TOPPING_WHOLE, toppings_dict.rbp],
     [TOPPING_WHOLE, toppings_dict.greenbp],
@@ -607,7 +621,7 @@ pizza_menu = {
   classic: new WCPPizza("Classic",
     "C",
     crusts.regular,
-    "regular",
+    cheese_options.regular,
     sauces.red,
     [[TOPPING_WHOLE, toppings_dict.sausage],
     [TOPPING_WHOLE, toppings_dict.rbp],
@@ -617,7 +631,7 @@ pizza_menu = {
   popeye: new WCPPizza("Popeye",
     "P",
     crusts.regular,
-    "regular",
+    cheese_options.regular,
     sauces.red,
     [[TOPPING_WHOLE, toppings_dict.bleu],
     [TOPPING_WHOLE, toppings_dict.kala],
@@ -627,7 +641,7 @@ pizza_menu = {
   sweet_pete: new WCPPizza("Sweet Pete",
     "S",
     crusts.regular,
-    "regular",
+    cheese_options.regular,
     sauces.red,
     [[TOPPING_WHOLE, toppings_dict.giard],
     [TOPPING_WHOLE, toppings_dict.bacon],
@@ -637,7 +651,7 @@ pizza_menu = {
   hot_island: new WCPPizza("Hot Island",
     "H",
     crusts.regular,
-    "regular",
+    cheese_options.regular,
     sauces.red,
     [[TOPPING_WHOLE, toppings_dict.sausage],
     [TOPPING_WHOLE, toppings_dict.pine],
@@ -647,7 +661,7 @@ pizza_menu = {
   meatza: new WCPPizza("Meatza",
     "M",
     crusts.regular,
-    "regular",
+    cheese_options.regular,
     sauces.red,
     [[TOPPING_WHOLE, toppings_dict.bacon],
     [TOPPING_WHOLE, toppings_dict.pepperoni],
@@ -656,7 +670,7 @@ pizza_menu = {
   tuscany_raider: new WCPPizza("Tuscany Raider",
     "T",
     crusts.regular,
-    "regular",
+    cheese_options.regular,
     sauces.white,
     [[TOPPING_WHOLE, toppings_dict.chix],
     [TOPPING_WHOLE, toppings_dict.shp],
@@ -665,7 +679,7 @@ pizza_menu = {
   brussels_snout: new WCPPizza("Brussels Snout",
     "R",
     crusts.regular,
-    "regular",
+    cheese_options.regular,
     sauces.white,
     [[TOPPING_WHOLE, toppings_dict.bacon],
     [TOPPING_WHOLE, toppings_dict.brussels],
@@ -674,7 +688,7 @@ pizza_menu = {
   blue_pig: new WCPPizza("Blue Pig",
     "B",
     crusts.regular,
-    "regular",
+    cheese_options.regular,
     sauces.red,
     [[TOPPING_WHOLE, toppings_dict.bleu],
     [TOPPING_WHOLE, toppings_dict.bacon]]
@@ -682,7 +696,7 @@ pizza_menu = {
   byo: new WCPPizza("Build-Your-Own",
     "z",
     crusts.regular,
-    "regular",
+    cheese_options.regular,
     sauces.red,
     []
   ),
@@ -708,60 +722,80 @@ salad_menu = {
 
 
 beverage_menu = {
-  citraipa: new WCPSalad("Stoup - Citra IPA Crowler",
-    "StCit",
-    14,
-    "Images of tropical fruit and citrus thanks to a healthy dose of Citra® hops - ABV 5.9% - IBU 50 - 32oz"
+  // blackbeer: new WCPSalad("Holy Mountain - Black Beer Crowler",
+  //   "HMBlk",
+  //   14,
+  //   "Session black ale brewed with roasted and flaked barley and hopped with East Kent Golding. ABV 4.5% - 32oz"
+  // ),
+  // lowdrone: new WCPSalad("Holy Mountain - Low Drone Crowler",
+  //   "HMLow",
+  //   14,
+  //   "Hoppy Lager brewed with a combination of German Pilsner Malt and Malted Wheat. Hopped entirely with whole-leaf Citra and Strata during the boil. - 5.4% ABV - 32oz"
+  // ),
+  HMSorcery: new WCPSalad("Holy Mountain - Ambient Sorcery Saison Crowler",
+    "HMSorcery",
+    15,
+    "Brewed with German Pilsner, Maris Otter, and locally grown Lyon Pilsner, hopped w/ Styrain Golding and Loral hops and fermented w/ a house blend of Saison yeast. Then conditioned on top of grapefruit peel and Grains of Paradise for a week. Beautifully aromatic, spicy and dry. - 4.7% ABV - 32oz"
   ),
-  pistolipa: new WCPSalad("Stoup - Bonus Cup IPA Crowler",
-    "StBCp",
+  OSBeglian: new WCPSalad("Old Stove - Belgian Blonde Crowler",
+    "OSBeglian",
     14,
-    "Brewed with Galaxy, Citra and Cascade hops. A beer packed with citrus, passionfruit and pine! - ABV 6.5% - 32oz"
+    "Bright golden in color, medium bodied, and piquant. Fragrant hints of banana, clove, and coriander highlight this enjoyable Abbey-style Belgian beer. - 7.3% ABV - 23 IBU - 32oz"
   ),
-  whitelodge: new WCPSalad("Holy Mountain - White Lodge Wit Crowler",
-    "HMWit",
+  OSBBSour: new WCPSalad("Old Stove - Blackberry Sour Crowler",
+    "OSBBSour",
     14,
-    "Belgian-Style Witbier wih pilsner malt and oats and fermented with a traditional Belgian strain. ABV 4.8% - 32oz"
+    "A tart and sweet kettle sour, lightly hopped with Mt. Hood, as well as 170 pounds of Blackberry puree! - 4.8% ABV - 8.7 IBU - 32oz"
   ),
-  blackbeer: new WCPSalad("Holy Mountain - Black Beer Crowler",
-    "HMBlk",
+  OSMPale: new WCPSalad("Old Stove - Mulligan Pale Ale Crowler",
+    "OSMPale",
     14,
-    "Session black ale brewed with roasted and flaked barley and hopped with East Kent Golding. ABV 4.5% - 32oz"
+    "A tropically fragrant and smooth American Pale Ale with South African Southern Passion hops. Notes of Guava, melon, and citrus above a slightly bready and clean malt profile. - 5.6% ABV – 37 IBU - 32oz"
   ),
-  witherer: new WCPSalad("Holy Mountain - Witherer Crowler",
-    "HMWitherer",
-    14,
-    "Coconut Session Porter brewed with a special variety of British Two Row, and a variety of specialty dark crystal and roasted malts. - ABV 5% - 32oz"
+  StSports: new WCPSalad("Stoup - Sportsball Lyte Lager Crowler",
+    "StSports",
+    15,
+    "A collaboration with Old Stove Brewing, the goal was to create an authentically American light lager. Success! Aged on beachwood sourced from local Seattle beaches for a bright and crushable beer that is perfect to enjoy on your balcony or binge watching tv on the couch! - 4.9% ABV - 13 IBU - SRM 2 - 32oz"
   ),
-  lowdrone: new WCPSalad("Holy Mountain - Low Drone Crowler",
-    "HMLow",
-    14,
-    "Hoppy Lager brewed with a combination of German Pilsner Malt and Malted Wheat. Hopped entirely with whole-leaf Citra and Strata during the boil. ABV 5.4% - 32oz"
+  StHellYeah: new WCPSalad("Stoup - Hell Yeah IPA Crowler",
+    "StHellYeah",
+    15,
+    "This delicious IPA will bring you to your knees with delight. It's brewed with Galaxy, Citra and Cascade hops. This beer is crazy packed with citrus, passionfruit and pine!...or something like that. - 6.4 ABV -  65 IBU - SRM 3 - 32oz"
   ),
-  altarpiece: new WCPSalad("Holy Mountain - Altarpiece Crowler",
-    "HMAlt",
-    14,
-    "American Pale Ale with aromas and flavors of citrus, tropical fruit, peach, and hints of sticky pine. ABV 5.2% - 32oz"
+  StMIADIPA: new WCPSalad("Stoup - Make it a Double (Hazy) DIPA Crowler",
+    "StMIADIPA",
+    15,
+    "This double IPA gives the crazy delicious combo of Southern Hemisphere hops their opportunity to show off. New Zealand Wai-iti and Wiamea hops throw off heavy citrus and peach while Australian Enigma packs a tropical punch. Keeping it local, the addition of Mosaic hops add a little mango and blueberry vibe. - 7.9% ABV - 37 IBU - SRM 5 - 32oz"
+  ),
+  GFNChill: new WCPSalad("Schilling - Grapefruit and Chill Tall Boy",
+    "GFNChill",
+    8,
+    "Pours a hazy pale yellow with generous carbonation. Aromas of grapefruit, citrus, and ginger on the nose. Tart and crisp with a dry finish. Highly refreshing. - 6.0% ABV - 3.5 brix - 16oz"
+  ),
+  AllTheWorld: new WCPSalad("Temperance Beer Co - All The World Is Here",
+    "AllTheWorld",
+    7,
+    "Temperance Beer Co, the Field Museum, and the Chicago Brewseum collaboration on a dry-hopped cream ale in the style of those at the 1893 World's Columbian Exposition - 5.0% ABV - 12oz"
   ),
   oly6pk: new WCPSalad("Olympia Tall Boy 6 Pack",
     "Oly6pk",
     11,
-    "It's the water, y'all. ABV 4.78% - 6 x 16oz"
+    "It's the water, y'all. - 4.78% ABV - 6 x 16oz"
   ),
-  zitrone4k: new WCPSalad("Stiegel Zitrone Radler Tall Boy - 4 x 16.9oz",
-    "StZitrone4pk",
-    14,
-    "Summer in a glass... err can. ABV 2.0% - 4 x 16.9oz"
+  BitBurger: new WCPSalad("Bitburger Brauerei - Bitburger Drive NA",
+    "BitBurger",
+    6,
+    "A non-alcoholic Pilsner that actually tastes like beer. - 0.0% ABV - 11.2oz"
   ),
-  moderntms4pk: new WCPSalad("Modern Times Orderville IPA Tall Boy - 4 x 16oz",
-    "ModernTms4pk",
-    19,
-    "Orderville is an aggressive, fragrant IPA that blends the fruit-forward character of Mosaic hops with resinous stickiness from a mélange of dank hops. ABV 7.2% IBU 75 - 4 x 16.9oz"
-  ),
+  // ModernTimeUT: new WCPSalad("Modern Times Orderville IPA Tall Boy - 4 x 16oz",
+  //   "ModernTms4pk",
+  //   19,
+  //   "Orderville is an aggressive, fragrant IPA that blends the fruit-forward character of Mosaic hops with resinous stickiness from a mélange of dank hops. 7.2% ABV - IBU 75 - 4 x 16.9oz"
+  // ),
   oly1pk: new WCPSalad("Olympia Tall Boy",
     "Oly1pk",
     3,
-    "It's the water, y'all. ABV 4.78% - 16oz"
+    "It's the water, y'all. - 4.78% ABV - 16oz"
   ),
 };
 
@@ -807,18 +841,18 @@ growler_fill_menu = {
     "HBC 630, Mandarina Bavaria, Wai-iti, Citra and Loral for an unquestionable orange citrus, lime, and raspberry candy hop presence. ABV 5.7% - IBU 38 - 64oz"
   ),
   growler: new WCPSalad("Empty Growler",
-  "growler",
-  6,
-  "Required for delivery growler purchases. If not selected for a pick-up growler fill, we will assume you're bringing your own (which we will sanitize)."
-)
+    "growler",
+    6,
+    "Required for delivery growler purchases. If not selected for a pick-up growler fill, we will assume you're bringing your own (which we will sanitize)."
+  )
 };
 
 wine_bottles_menu = {
-  CapaSang: new WCPSalad("Red - Caparzo - Sangiovese - 2018",
-    "CapaSang",
-    26,
-    "Full bodied and slightly fruity, with ripe blackberries, wild strawberries, and spiced vanilla."
-  ),
+  // CapaSang: new WCPSalad("Red - Caparzo - Sangiovese - 2018",
+  //   "CapaSang",
+  //   26,
+  //   "Full bodied and slightly fruity, with ripe blackberries, wild strawberries, and spiced vanilla."
+  // ),
   HighMalbec: new WCPSalad("Red - High Note - Malbec - 2017",
     "HighMalbec",
     20,
@@ -892,11 +926,213 @@ wine_bottles_menu = {
 };
 
 spirits_menu = {
-  malortbtl: new WCPSalad("Carl Jeppson Company - Jeppson's Malört - 750mL",
+  PCVod: new WCPSalad("Pike & Clark Vodka - 1L",
+    "PCVod",
+    28,
+    "Crisp, Clear, as refreshing as vodka gets. Comes with some free “ugly” limes for your Moscow Mule!"
+  ),
+  KetelOneBtl: new WCPSalad("Ketel One - Vodka - 1L",
+    "KetelOneBtl",
+    36,
+    "Bright, clean, It's been \“voted\” best seller for a reason."
+  ),
+  KetelCitroen: new WCPSalad("Ketel One - Citroen - 1L",
+    "KetelCitroen",
+    37,
+    "Same deal as the standard but with citrus zest, plus it makes one great Cosmo, or four!"
+  ),
+  GreyGoose: new WCPSalad("Grey Goose - Vodka - 1L",
+    "GreyGoose",
+    39,
+    "For the decadent vodka drinker."
+  ),
+  CoyoteSotol: new WCPSalad("Coyote - Sotol - 750mL",
+    "CoyoteSotol",
+    48,
+    "Mineral, fierce in the best way, and one of Ray’s favorites!"
+  ),
+  BanhezBtl: new WCPSalad("Banhez - Mezcal - 1L",
+    "BanhezBtl",
+    38,
+    "Earthy and vegetal with enough smoke for an agave aficionado or a newcomer."
+  ),
+  PVTequila: new WCPSalad("Pueblo Viejo - Tequila - 1L",
+    "PVTequila",
+    32,
+    "100% estate grown agave that has a crisp citrus note on the palate and lingering black pepper finish."
+  ),
+  Bacardi: new WCPSalad("Bacardi - Rum - 1L",
+    "Bacardi",
+    17,
+    "Vanilla and almond notes are filtered through a blend of charcoal for a distinctive smoothness. Also you can mix it with Coke."
+  ),
+  PCGin: new WCPSalad("Pike & Clark - Gin - 1L",
+    "PCGin",
+    30,
+    "Perfect balance of juniper and coriander without tasting too much like a pine tree."
+  ),
+  CWGin: new WCPSalad("Copperworks - Gin - 750mL",
+    "CWGin",
+    39,
+    "Local distillery love! This gin dances in the mixing glass."
+  ),
+  Genever: new WCPSalad("Bols - Genever - 1L",
+    "Genever",
+    46,
+    "Gin’s beautiful, malty, Dutch cousin. Take your taste buds on a journey!"
+  ),
+  Singani: new WCPSalad("Singani 63 - 750mL",
+    "Singani",
+    40,
+    "A wondeful floral Bolivian spirit popularized by a famous director and brought to us by a dear friend."
+  ),
+  Bache: new WCPSalad("Bache - Cognac - 750mL",
+    "Bache",
+    39,
+    "Can't go wrong with Norway's top selling grape distillate. A bright and crisp Cognac you won’t find anywhere else."
+  ),
+  FRYellow: new WCPSalad("Four Roses - Yellow Label Bourbon - 1L",
+    "FRYellow",
+    30,
+    "Bourbon that tastes just as lovely as its origin story."
+  ),
+  Dickle: new WCPSalad("Dickle - Rye - 1L",
+    "Dickle",
+    37,
+    "This Indiana rye is boasting 95% rye mash bill but is mellowed out by their charcoal filtration process; leaving you with a nice, lightly spiced, but smooth drinking rye."
+  ),
+
+  HWDblRye: new WCPSalad("High West - Double Rye! - 750mL",
+    "HWDblRye",
+    52,
+    "This interesting rye is the product of blending two ryes into one! The spunk and spice of a young two year column still rye and the maturity of an aged pot-still rye creates a complex and balanced whiskey ready for anything you throw at it."
+  ),
+  HWAPBourbon: new WCPSalad("High West American Prairie Bourbon - 750mL",
+    "HWAPBourbon",
+    52,
+    "Bringing attention to the beautiful and important work being done for the American Prairie Reserve. This lovely bourbon has notes of vanilla, corn bread and caramel apple. An enjoyable sipper for any web chat party!"
+  ),
+
+  Rus6yrRye: new WCPSalad("Russell's Reserve - 6yr Rye - 750mL",
+    "Rus6yrRye",
+    48,
+    "Jimmy Russel’s personal special creation! Lovely amount of spice and character, just like him."
+  ),
+
+  Rus10yrBourbon: new WCPSalad("Russell's Reserve - 10yr Bourbon - 750mL",
+    "Rus10yrBourbon",
+    36,
+    "Another gem from Jimmy, this one is nice and smooth and round."
+  ),
+
+
+  RittRye: new WCPSalad("Rittenhouse - Rye - 750mL",
+    "RittRye",
+    31,
+    "Our go-to bottled-in-bond rye whiskey. Big, bold, and spicy... just how I like my rye.",
+  ),
+
+  Rye1776: new WCPSalad("1776 - Rye - 750mL",
+    "Rye1776",
+    38,
+    "High rye mash bill drives big spicy notes, with a subtle touch of orange, clove, and cinnamon that sing during a long finish."
+  ),
+
+  JDWhiskey: new WCPSalad("Jack Daniel's - American Whiskey - 1L",
+    "JDWhiskey",
+    38,
+    "Jack and Coke anyone? We got both for ya!"
+  ),
+
+  JamesonWhis: new WCPSalad("Jameson - Irish Whiskey - 1L",
+    "JamesonWhis",
+    41,
+    "Seems like a no brainer!"
+  ),
+
+  Monty: new WCPSalad("Montenegro - Amaro - 1L",
+    "Monty",
+    55,
+    "Light floral but still has those bitter notes we love. Close your eyes let this take you across the world."
+  ),
+
+  MalortBtl: new WCPSalad("Carl Jeppson Company - Jeppson's Malört - 750mL",
     "malortbtl",
     30,
     "The Chicago wormwood classic enjoyed by two-fisted drinkers the world over."
-  )
+  ),
+  LBBesk: new WCPSalad("Letherbee - Besk - 750mL",
+    "LBBesk",
+    38,
+    "Orignally called Letherbee's Malört, but a lawsuit fixed that. Higher proof than the original, but without the burn on the finish. Think grapefruit pith."
+  ),
+
+  LBFernet: new WCPSalad("Letherbee - Fernet - 750mL",
+    "LBFernet",
+    43,
+    "Chicago's take on this bitter and mentholated spirit features heavy Bergamot notes."
+  ),
+
+  CHAmargo: new WCPSalad("CH - Amargo de Chile - 750mL",
+    "CHAmargo",
+    40,
+    "Peppery, bitter, not too spicy plus it's from Chicago! Great addition to a margarita."
+  ),
+  Cointreau: new WCPSalad("Cointreau - 1L",
+    "Cointreau",
+    49,
+    "Margaritas anyone? We’ve also got the limes (free) and agave spirits (not free)!"
+  ),
+
+  Campari: new WCPSalad("Campari - 1L",
+    "Campari",
+    49,
+    "Orange and dry, but rich--a perfect staple for every home bar. Play with it with any base spirit or just with a little soda."
+  ),
+
+  CHRubin: new WCPSalad("CH - Rubin - 750mL",
+    "CHRubin",
+    39,
+    "Chicago-made bitter grapefruit liquor. Similar to Campari but with its own \"twist.\""
+  ),
+
+  DolinDry: new WCPSalad("Dolin - Dry Vermouth - 750mL",
+    "DolinDry",
+    28,
+    "Looking to make a martini? Look no further!"
+  ),
+
+  YzaRojo: new WCPSalad("Yzaguirre - Vermouth Rojo - 1L",
+    "YzaRojo",
+    28,
+    "Negronis and boulevardiers but via Spain!"
+  ),
+
+  YzaBlanco: new WCPSalad("Yzaguirre - Vermouth Blanco - 1L",
+    "YzaBlanco",
+    28,
+    "This Spanish white vermouth calls to be sipped or mixed for a crisp Spring patio crusher."
+  ),
+
+
+};
+
+na_menu = {
+  MexiCoke: new WCPSalad("Mexican Coke - 12oz",
+    "MexiCoke",
+    3.25,
+    "The cane sugar classic!"
+  ),
+  CBGinger: new WCPSalad("Cock'n Bull Ginger Beer - 12oz",
+    "CBGinger",
+    3.25,
+    "These guys invented the Moscow Mule with this ginger beer."
+  ),
+  AranFico: new WCPSalad("Sanpellegrino Arancia & Fico d'India - 330mL",
+    "AranFico",
+    2.75,
+    "These words mean orange and prickly pear in Sermo Vulgaris."
+  ),
 };
 
 extras_menu = [
@@ -920,7 +1156,13 @@ extras_menu = [
   },
   {
     menu_name: "Bottled Spirits",
-    subtitle: "Looking for a different bottle? Let us know in your order special instructions and we'll see what we can do for you!",
+    in_red: "Crazy liquor tax included.",
+    subtitle: "Looking for a different bottle? Let us know in your order special instructions and we'll see what we can do for you! Free ugly limes with bottle purchase.",
     menu: spirits_menu
-  }
+  },
+  {
+    menu_name: "Pop",
+    subtitle: "Making Moscow Mules? Grab a vodka and we'll throw in some free limes.",
+    menu: na_menu
+  },
 ];
