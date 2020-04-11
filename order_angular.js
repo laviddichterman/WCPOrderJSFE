@@ -102,9 +102,11 @@ var WCPStoreConfig = function () {
   // END menu related
 
   // user messaging
-  this.REQUEST_SLICING = "In order to ensure the quality of our pizzas, we will not slice them. We'd recommend bringing anything from a bench scraper to a butter knife to slice the pizza. Slicing the whole pizza when it's hot inhibits the crust from properly setting, and can cause the crust to get soggy both during transit and as the pie is eaten. We want your pizza to be the best possible and bringing a tool with which to slice the pie will make a big difference.";
+  this.REQUEST_ANY = "By adding any special instructions, you will only be able to pay in person.";
+  this.REQUEST_SLICING = "In order to ensure the quality of our pizzas, we will not slice them. We'd recommend bringing anything from a bench scraper to a butter knife to slice the pizza. Slicing the whole pizza when it's hot inhibits the crust from properly setting, and can cause the crust to get soggy both during transit and as the pie is eaten. We want your pizza to be the best possible and bringing a tool with which to slice the pie will make a big difference. You will need to remove this request to continue with your order.";
   this.REQUEST_VEGAN = "Our pizzas cannot be made vegan or without cheese. If you're looking for a vegan option, our Beets By Schrute salad can be made vegan by omitting the bleu cheese.";
   this.REQUEST_HALF = "While half toppings are not on the menu, we can do them (with the exception of half roasted garlic or half red sauce, half white sauce) but they are charged the same as full toppings. As such, we recommend against them as they're not a good value for the customer and an imbalance of toppings will cause uneven baking of your pizza.";
+  this.REQUEST_SOONER = "It looks like you're trying to ask us to make your pizza sooner. While we would love to do so, the times you were able to select represents our real-time availability. Please send us a text if you're looking for your pizza earlier and it's not a Friday, Saturday, or Sunday, otherwise, you'll need to remove this request to continue with your order.";
   // END user messaging
 
   this.UpdateBlockedOffVal = function (bo) {
@@ -488,7 +490,7 @@ function UpdateLeadTime() {
           address: state.formdata.address,
           referral: state.referral,
           load_time: state.formdata.load_time,
-          time_selection_time: state.formdata.time_selection_time,
+          time_selection_time: state.debug_info["time-selection-time"] ? state.debug_info["time-selection-time"].format("H:mm:ss") : "",
           submittime: moment().format("MM-DD-YYYY HH:mm:ss"),
           useragent: navigator.userAgent,
           ispaid: state.isPaymentSuccess,
@@ -549,6 +551,7 @@ function UpdateLeadTime() {
     this.payment_info = {};
     this.isPaymentSuccess = false;
     this.isProcessing = false;
+    this.disableorder = false;
 
     this.formdata = {};
 
@@ -601,10 +604,14 @@ function UpdateLeadTime() {
         this.s = $rootScope.state = new WCPOrderState(this.CONFIG, enable_delivery, this.split_toppings);
       };
 
+      this.ClearTimeoutFlag = function () { 
+        this.s.selected_time_timeout = false;        
+      }
+
       this.ServiceTimeChanged = function () {
         // time has changed so log the selection time and clear the timeout flag
         this.s.debug_info["time-selection-time"] = moment(timing_info.current_time);
-        this.s.selected_time_timeout = false;
+        this.ClearTimeoutFlag();
       };
 
       this.ClearAddress = function () {
@@ -627,6 +634,7 @@ function UpdateLeadTime() {
 
       this.ClearSpecialInstructions = function () {
         this.s.special_instructions = "";
+        this.s.disableorder = false;
       };
 
       this.ValidateDeliveryAddress = function () {
@@ -767,19 +775,18 @@ function UpdateLeadTime() {
         return true;
       }
 
-      this.SlowSubmitterTrigger = function () {
-        // set flag for user notification that too much time passed
-        this.s.selected_time_timeout = true;
-        // set stage to 4 (time selection)
-        this.s.stage = 4;
-      };
-
       this.SlowSubmitterCheck = function () {
         var old_time = this.s.service_time;
         this.ValidateDate();
         // only bump someone to the time selection page if they're already at least that far
-        if (old_time != this.s.service_time && this.s.stage >= 4 && this.s.stage < 6) {
-          this.SlowSubmitterTrigger();
+        if (old_time != this.s.service_time && this.s.stage >= 4) {
+          // set flag for user notification that too much time passed
+          this.s.selected_time_timeout = true;
+          // if they're not at payment yet, bump them back to time selection for effect
+          if (this.s.stage < 6) {
+            // set stage to 4 (time selection)
+            this.s.stage = 4;
+          }
         }
       };
       this.NextStage = function () {
@@ -983,27 +990,31 @@ function UpdateLeadTime() {
 
         var ParseSpecialInstructionsAndPopulateResponses = function () {
           scope.orderinfo.s.special_instructions_responses = [];
+          scope.orderinfo.s.disableorder = false;
           var special_instructions_lower = scope.orderinfo.s.special_instructions ? scope.orderinfo.s.special_instructions.toLowerCase() : "";
-          if (wcpconfig.REQUEST_HALF && special_instructions_lower.indexOf("split") >= 0 || special_instructions_lower.indexOf("half") >= 0 || special_instructions_lower.indexOf("1/2") >= 0) {
+          if (wcpconfig.REQUEST_ANY && scope.orderinfo.s.acknowledge_instructions_dialogue) {
+            scope.orderinfo.s.special_instructions_responses.push(wcpconfig.REQUEST_ANY);
+          }
+          if (wcpconfig.REQUEST_HALF && (special_instructions_lower.indexOf("split") >= 0 || special_instructions_lower.indexOf("half") >= 0 || special_instructions_lower.indexOf("1/2") >= 0)) {
             scope.orderinfo.s.special_instructions_responses.push(wcpconfig.REQUEST_HALF);
           }
-          if (wcpconfig.REQUEST_SLICING && special_instructions_lower.indexOf("slice") >= 0 || special_instructions_lower.indexOf("cut") >= 0) {
+          if (wcpconfig.REQUEST_SLICING && (special_instructions_lower.indexOf("slice") >= 0 || special_instructions_lower.indexOf("cut") >= 0)) {
+            scope.orderinfo.s.disableorder = true;
             scope.orderinfo.s.special_instructions_responses.push(wcpconfig.REQUEST_SLICING);
+          }
+          if (wcpconfig.REQUEST_SOONER && (special_instructions_lower.indexOf("soon") >= 0 || special_instructions_lower.indexOf("earl") >= 0 || special_instructions_lower.indexOf("time") >= 0)) {
+            scope.orderinfo.s.disableorder = true;
+            scope.orderinfo.s.special_instructions_responses.push(wcpconfig.REQUEST_SOONER);
           }
           if (wcpconfig.REQUEST_VEGAN && special_instructions_lower.indexOf("no cheese") >= 0 || special_instructions_lower.indexOf("vegan") >= 0 || special_instructions_lower.indexOf("without cheese") >= 0) {
             scope.orderinfo.s.special_instructions_responses.push(wcpconfig.REQUEST_VEGAN);
           }
         };
-
-        scope.$watch("orderinfo.s.debug_info", function () {
-          var time_selection_time = scope.orderinfo.s.debug_info["time-selection-time"] ? scope.orderinfo.s.debug_info["time-selection-time"].format("H:mm:ss") : "";
-          scope.orderinfo.s.formdata.time_selection_time = time_selection_time;
-        }, true);
-
         scope.$watch("orderinfo.s.special_instructions", function () {
           ParseSpecialInstructionsAndPopulateResponses();
-          var temp = scope.orderinfo.s.special_instructions.length > 0 ? "Special instructions: " + scope.orderinfo.s.special_instructions : "";
-          scope.orderinfo.s.formdata.special_instructions = temp;
+        }, true);
+        scope.$watch("orderinfo.s.acknowledge_instructions_dialogue", function () {
+          ParseSpecialInstructionsAndPopulateResponses();
         }, true);
         function UpdateCurrentTime() {
           var time_diff = moment().valueOf() - timing_info.browser_load_time.valueOf();
