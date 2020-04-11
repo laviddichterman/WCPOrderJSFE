@@ -767,32 +767,42 @@ beverage_menu = {
     15,
     "This double IPA gives the crazy delicious combo of Southern Hemisphere hops their opportunity to show off. New Zealand Wai-iti and Wiamea hops throw off heavy citrus and peach while Australian Enigma packs a tropical punch. Keeping it local, the addition of Mosaic hops add a little mango and blueberry vibe. - 7.9% ABV - 37 IBU - SRM 5 - 32oz"
   ),
-  GFNChill: new WCPSalad("Schilling - Grapefruit and Chill Tall Boy",
-    "GFNChill",
-    8,
-    "Pours a hazy pale yellow with generous carbonation. Aromas of grapefruit, citrus, and ginger on the nose. Tart and crisp with a dry finish. Highly refreshing. - 6.0% ABV - 3.5 brix - 16oz"
-  ),
-  AllTheWorld: new WCPSalad("Temperance Beer Co - All The World Is Here",
-    "AllTheWorld",
-    7,
-    "Temperance Beer Co, the Field Museum, and the Chicago Brewseum collaboration on a dry-hopped cream ale in the style of those at the 1893 World's Columbian Exposition - 5.0% ABV - 12oz"
-  ),
   oly6pk: new WCPSalad("Olympia Tall Boy 6 Pack",
     "Oly6pk",
     11,
     "It's the water, y'all. - 4.78% ABV - 6 x 16oz"
   ),
+  DKTropStout6pk: new WCPSalad("Diamond Knot - Tropical Island Stout 6 Pack",
+  "DKTropStout6pk",
+  13,
+  "Fruity aromas from a specialty yeast lay atop roasted coffee notes and dark rum. Reminiscent of Caribbean rum, smooth undertones of brown sugar are followed by a roasted barley backbone. - 6% ABV - 35 IBU - 6 x 12oz"
+),
+DKTropStout1: new WCPSalad("Diamond Knot - Tropical Island Stout Single",
+"DKTropStout1",
+4,
+"Fruity aromas from a specialty yeast lay atop roasted coffee notes and dark rum. Reminiscent of Caribbean rum, smooth undertones of brown sugar are followed by a roasted barley backbone. - 6% ABV - 35 IBU - 12oz"
+),
   BitBurger: new WCPSalad("Bitburger Brauerei - Bitburger Drive NA",
     "BitBurger",
     6,
     "A non-alcoholic Pilsner that actually tastes like beer. - 0.0% ABV - 11.2oz"
   ),
-  // ModernTimeUT: new WCPSalad("Modern Times Orderville IPA Tall Boy - 4 x 16oz",
-  //   "ModernTms4pk",
-  //   19,
-  //   "Orderville is an aggressive, fragrant IPA that blends the fruit-forward character of Mosaic hops with resinous stickiness from a mélange of dank hops. 7.2% ABV - IBU 75 - 4 x 16.9oz"
-  // ),
-  oly1pk: new WCPSalad("Olympia Tall Boy",
+  ModernTimesUT: new WCPSalad("Modern Times Orderville IPA \"Tallest Boy\"",
+    "ModernTimesUT",
+    5,
+    "Orderville is an aggressive, fragrant IPA that blends the fruit-forward character of Mosaic hops with resinous stickiness from a mélange of dank hops. The cracker-dry body keeps the focus squarely on the massive, incredibly delicious hop characters. 7.2% ABV - IBU 75 - 19.2oz"
+  ),
+  GFNChill: new WCPSalad("Schilling - Grapefruit and Chill Tall Boy",
+  "GFNChill",
+  8,
+  "Pours a hazy pale yellow with generous carbonation. Aromas of grapefruit, citrus, and ginger on the nose. Tart and crisp with a dry finish. Highly refreshing. - 6.0% ABV - 3.5 brix - 16oz"
+),
+AllTheWorld: new WCPSalad("Temperance Beer Co - All The World Is Here",
+  "AllTheWorld",
+  7,
+  "Temperance Beer Co, the Field Museum, and the Chicago Brewseum collaboration on a dry-hopped cream ale in the style of those at the 1893 World's Columbian Exposition - 5.0% ABV - 12oz"
+),
+  oly1pk: new WCPSalad("Olympia Tall Boy Single",
     "Oly1pk",
     3,
     "It's the water, y'all. - 4.78% ABV - 16oz"
@@ -835,11 +845,11 @@ growler_fill_menu = {
     20,
     "Belgian-Style Witbier wih pilsner malt and oats and fermented with a traditional Belgian strain. ABV 4.8% - 64oz"
   ),
-  stpket: new WCPSalad("Stoup - Ketel To Table IPA",
-    "stpket",
-    20,
-    "HBC 630, Mandarina Bavaria, Wai-iti, Citra and Loral for an unquestionable orange citrus, lime, and raspberry candy hop presence. ABV 5.7% - IBU 38 - 64oz"
-  ),
+  // stpket: new WCPSalad("Stoup - Ketel To Table IPA",
+  //   "stpket",
+  //   20,
+  //   "HBC 630, Mandarina Bavaria, Wai-iti, Citra and Loral for an unquestionable orange citrus, lime, and raspberry candy hop presence. ABV 5.7% - IBU 38 - 64oz"
+  // ),
   growler: new WCPSalad("Empty Growler",
     "growler",
     6,
