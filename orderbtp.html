@@ -248,7 +248,7 @@
     </form>
     <div class="order-nav">
       <button type="submit" class="btn scrolltotop" ng-show="orderCtrl.HasPreviousStage()" ng-click="orderCtrl.PreviousStage()">Previous</button>
-      <button type="submit" class="btn scrolltotop" ng-disabled="!orderCtrl.s.date_valid || (orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && (!orderCtrl.s.is_address_validated))" ng-show="orderCtrl.HasNextStage()" ng-click="orderCtrl.NextStage()">Next</button>
+      <button type="submit" class="btn scrolltotop" ng-disabled="!orderCtrl.s.date_valid || (orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && (!orderCtrl.s.is_address_validated))" ng-show="orderCtrl.HasNextStage()" ng-click="orderCtrl.NextStage(); orderCtrl.ClearTimeoutFlag();">Next</button>
     </div>
   </div>
   <div ng-show="orderCtrl.s.stage === 5">
@@ -372,7 +372,7 @@
                   </div>
                 </td>
                 <td class="cart-item-quantity-price no-wrap"></td>
-                <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{(orderCtrl.s.computed_subtotal + orderCtrl.s.delivery_fee + orderCtrl.s.tip_value + orderCtrl.s.computed_tax) | number: 2}}</span></td>
+                <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{orderCtrl.s.total | number: 2}}</span></td>
               </tr>
             </tbody>
           </table>
@@ -388,7 +388,7 @@
       <span ng-show="false" cf7bridge class="cf7bridge scrolltotop" orderinfo="orderCtrl"></span>
       <button type="submit" class="btn scrolltotop" ng-show="orderCtrl.HasPreviousStage()" ng-click="orderCtrl.PreviousStage()">Previous</button>
       <button type="submit" class="btn scrolltotop" ng-show="orderCtrl.HasNextStage() && !orderCtrl.s.acknowledge_instructions_dialogue" ng-click="orderCtrl.NextStage();">Next</button>
-      <button type="submit" class="btn scrolltotop" ng-show="orderCtrl.s.acknowledge_instructions_dialogue" ng-click="orderCtrl.SubmitToWario()">Submit Order</button>
+      <button type="submit" class="btn scrolltotop" ng-disabled="orderCtrl.s.disableorder" ng-show="orderCtrl.s.acknowledge_instructions_dialogue" ng-click="orderCtrl.SubmitToWario()">Submit Order</button>
     </div>
     <div ng-hide="orderCtrl.s.tip_value === 0">* Gratuity is shared among the entire team.</div>
   </div>
@@ -514,6 +514,7 @@
         </table>
       </div>
     </div>
+    <div class="wpcf7-response-output wpcf7-mail-sent-ng" ng-if="orderCtrl.s.selected_time_timeout">The previously selected service time has expired. We've updated your service time to {{orderCtrl.s.service_time | MinutesToPrintTime : orderCtrl.s.service_type}}.</div>
     <div ng-controller="PaymentController as pmntCtrl">
       <div ng-show="buildForm()"></div>
       <div id="form-container">

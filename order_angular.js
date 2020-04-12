@@ -364,7 +364,7 @@ function UpdateLeadTime() {
       this.selected_tip = idx;
       this.show_custom_tip_input = false;
       var compute_tip_from = this.computed_subtotal + this.computed_tax + this.delivery_fee;
-      var newtip = this.tip_options[idx] * compute_tip_from;
+      var newtip = parseFloat(Number(this.tip_options[idx] * compute_tip_from).toFixed(2));
       this.custom_tip_value = this.custom_tip_value < newtip ? newtip : this.custom_tip_value;
       this.tip_value = newtip;
       this.TotalsUpdate();
@@ -396,13 +396,13 @@ function UpdateLeadTime() {
 
     this.TotalsUpdate = function () {
       // must run with up to date subtotal and order size;
-      this.computed_tax = (this.delivery_fee + this.computed_subtotal) * cfg.TAX_RATE;
+      this.computed_tax = parseFloat(Number((this.delivery_fee + this.computed_subtotal) * cfg.TAX_RATE).toFixed(2));
       this.autograt = this.num_pizza >= 5 || this.service_type === cfg.DELIVERY ? .2 : 0;
       var compute_tip_from = (this.computed_tax + this.delivery_fee + this.computed_subtotal);
       var mintip = compute_tip_from * this.autograt;
       mintip = parseFloat(mintip.toFixed(2));
       if (this.tip_clean) {
-        this.custom_tip_value = compute_tip_from * .2
+        this.custom_tip_value = parseFloat(Number(compute_tip_from * .2).toFixed(2));
         this.tip_value = this.tip_value < mintip ? mintip : 0;
       }
       else {
@@ -487,9 +487,8 @@ function UpdateLeadTime() {
             tip: state.tip_value,
             total: state.total
           },
-          address: state.formdata.address,
           referral: state.referral,
-          load_time: state.formdata.load_time,
+          load_time: state.debug_info.load_time,
           time_selection_time: state.debug_info["time-selection-time"] ? state.debug_info["time-selection-time"].format("H:mm:ss") : "",
           submittime: moment().format("MM-DD-YYYY HH:mm:ss"),
           useragent: navigator.userAgent,
@@ -552,8 +551,6 @@ function UpdateLeadTime() {
     this.isPaymentSuccess = false;
     this.isProcessing = false;
     this.disableorder = false;
-
-    this.formdata = {};
 
     this.service_type_functors = [
       // PICKUP
@@ -782,8 +779,8 @@ function UpdateLeadTime() {
         if (old_time != this.s.service_time && this.s.stage >= 4) {
           // set flag for user notification that too much time passed
           this.s.selected_time_timeout = true;
-          // if they're not at payment yet, bump them back to time selection for effect
-          if (this.s.stage < 6) {
+          // if they're not at payment yet, bump them back to time selection for effect, unless the day expired
+          if (this.s.stage < 6 || !this.s.date_valid) {
             // set stage to 4 (time selection)
             this.s.stage = 4;
           }
@@ -985,8 +982,7 @@ function UpdateLeadTime() {
       },
       link: function (scope, element, attrs) {
         // set load time field once
-        var formatted_load_time = timing_info.load_time.format("H:mm:ss");
-        scope.orderinfo.s.formdata.load_time = formatted_load_time;
+        scope.orderinfo.s.debug_info.load_time = timing_info.load_time.format("H:mm:ss");
 
         var ParseSpecialInstructionsAndPopulateResponses = function () {
           scope.orderinfo.s.special_instructions_responses = [];

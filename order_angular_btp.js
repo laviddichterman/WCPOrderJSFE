@@ -105,7 +105,9 @@ var BTPStoreConfig = function () {
   // END menu related
 
   // user messaging
+  this.REQUEST_ANY = "By adding any special instructions, you will only be able to pay in person.";
   this.REQUEST_HALF = "While half toppings are not on the menu, we can do them but they are charged the same as full toppings. As such, we recommend against them as they're not a good value for the customer and an imbalance of toppings will cause uneven baking of your pizza.";
+  this.REQUEST_SOONER = "It looks like you're trying to ask us to make your pizza sooner. While we would love to do so, the times you were able to select represents our real-time availability. Please send us a text if you're looking for your pizza earlier and it's not a Friday, Saturday, or Sunday, otherwise, you'll need to remove this request to continue with your order.";
   // END user messaging
 
   this.UpdateBlockedOffVal = function (bo) {
@@ -363,7 +365,7 @@ var WCPOrderHelper = function () {
         this.selected_tip = idx;
         this.show_custom_tip_input = false;
         var compute_tip_from = this.computed_subtotal + this.computed_tax + this.delivery_fee;
-        var newtip = this.tip_options[idx] * compute_tip_from;
+        var newtip = parseFloat(Number(this.tip_options[idx] * compute_tip_from).toFixed(2));
         this.custom_tip_value = this.custom_tip_value < newtip ? newtip : this.custom_tip_value;
         this.tip_value = newtip;
         this.TotalsUpdate();
@@ -395,13 +397,13 @@ var WCPOrderHelper = function () {
 
       this.TotalsUpdate = function () {
         // must run with up to date subtotal and order size;
-        this.computed_tax = (this.delivery_fee + this.computed_subtotal) * cfg.TAX_RATE;
+        this.computed_tax = parseFloat(Number((this.delivery_fee + this.computed_subtotal) * cfg.TAX_RATE).toFixed(2));
         this.autograt = this.num_pizza >= 5 || this.service_type === cfg.DELIVERY ? .2 : 0;
         var compute_tip_from = (this.computed_tax + this.delivery_fee + this.computed_subtotal);
         var mintip = compute_tip_from * this.autograt;
         mintip = parseFloat(mintip.toFixed(2));
         if (this.tip_clean) {
-          this.custom_tip_value = compute_tip_from * .2
+          this.custom_tip_value = parseFloat(Number(compute_tip_from * .2).toFixed(2));
           this.tip_value = this.tip_value < mintip ? mintip : 0;
         }
         else {
@@ -486,10 +488,9 @@ var WCPOrderHelper = function () {
               tip: state.tip_value,
               total: state.total
             },
-            address: state.formdata.address,
             referral: state.referral,
-            load_time: state.formdata.load_time,
-            time_selection_time: state.formdata.time_selection_time,
+            load_time: state.debug_info.load_time,
+            time_selection_time: state.debug_info["time-selection-time"] ? state.debug_info["time-selection-time"].format("H:mm:ss") : "",
             submittime: moment().format("MM-DD-YYYY HH:mm:ss"),
             useragent: navigator.userAgent,
             ispaid: state.isPaymentSuccess,
@@ -550,8 +551,7 @@ var WCPOrderHelper = function () {
       this.payment_info = {};
       this.isPaymentSuccess = false;
       this.isProcessing = false;
-
-      this.formdata = {};
+      this.disableorder = false;
 
       this.service_type_functors = [
         // PICKUP
@@ -602,10 +602,14 @@ var WCPOrderHelper = function () {
           this.s = $rootScope.state = new WCPOrderState(this.CONFIG, enable_delivery, this.split_toppings);
         };
 
+        this.ClearTimeoutFlag = function () { 
+          this.s.selected_time_timeout = false;        
+        }
+
         this.ServiceTimeChanged = function () {
-          // time has changed so log the selection time and clear the timeout flag
+          // time has changed so log the selection time
           this.s.debug_info["time-selection-time"] = moment(timing_info.current_time);
-          this.s.selected_time_timeout = false;
+          this.ClearTimeoutFlag();
         };
 
         this.ClearAddress = function () {
@@ -628,6 +632,7 @@ var WCPOrderHelper = function () {
 
         this.ClearSpecialInstructions = function () {
           this.s.special_instructions = "";
+          this.s.disableorder = false;
         };
 
         this.ValidateDeliveryAddress = function () {
@@ -768,19 +773,18 @@ var WCPOrderHelper = function () {
           return true;
         }
 
-        this.SlowSubmitterTrigger = function () {
-          // set flag for user notification that too much time passed
-          this.s.selected_time_timeout = true;
-          // set stage to 4 (time selection)
-          this.s.stage = 4;
-        };
-
         this.SlowSubmitterCheck = function () {
           var old_time = this.s.service_time;
           this.ValidateDate();
           // only bump someone to the time selection page if they're already at least that far
-          if (old_time != this.s.service_time && this.s.stage >= 4 && this.s.stage < 6) {
-            this.SlowSubmitterTrigger();
+          if (old_time != this.s.service_time && this.s.stage >= 4) {
+            // set flag for user notification that too much time passed
+            this.s.selected_time_timeout = true;
+            // if they're not at payment yet, bump them back to time selection for effect, unless the day expired
+            if (this.s.stage < 6 || !this.s.date_valid) {
+              // set stage to 4 (time selection)
+              this.s.stage = 4;
+            }
           }
         };
         this.NextStage = function () {
@@ -974,23 +978,27 @@ var WCPOrderHelper = function () {
         },
         link: function (scope, element, attrs) {
           // set load time field once
-          var formatted_load_time = timing_info.load_time.format("H:mm:ss");
-          scope.orderinfo.s.formdata.load_time = formatted_load_time;
+          scope.orderinfo.s.debug_info.load_time = timing_info.load_time.format("H:mm:ss");
 
           var ParseSpecialInstructionsAndPopulateResponses = function () {
             scope.orderinfo.s.special_instructions_responses = [];
+            scope.orderinfo.s.disableorder = false;
             var special_instructions_lower = scope.orderinfo.s.special_instructions ? scope.orderinfo.s.special_instructions.toLowerCase() : "";
+            if (wcpconfig.REQUEST_ANY && scope.orderinfo.s.acknowledge_instructions_dialogue) {
+              scope.orderinfo.s.special_instructions_responses.push(wcpconfig.REQUEST_ANY);
+            }
             if (special_instructions_lower.indexOf("split") >= 0 || special_instructions_lower.indexOf("half") >= 0 || special_instructions_lower.indexOf("1/2") >= 0) {
               scope.orderinfo.s.special_instructions_responses.push(wcpconfig.REQUEST_HALF);
             }
+            if (wcpconfig.REQUEST_SOONER && (special_instructions_lower.indexOf("soon") >= 0 || special_instructions_lower.indexOf("earl") >= 0 || special_instructions_lower.indexOf("time") >= 0)) {
+              scope.orderinfo.s.disableorder = true;
+              scope.orderinfo.s.special_instructions_responses.push(wcpconfig.REQUEST_SOONER);
+            }
           };
-
-          scope.$watch("orderinfo.s.debug_info", function () {
-            var time_selection_time = scope.orderinfo.s.debug_info["time-selection-time"] ? scope.orderinfo.s.debug_info["time-selection-time"].format("H:mm:ss") : "";
-            scope.orderinfo.s.formdata.time_selection_time = time_selection_time;
-          }, true);
-
           scope.$watch("orderinfo.s.special_instructions", function () {
+            ParseSpecialInstructionsAndPopulateResponses();
+          }, true);
+          scope.$watch("orderinfo.s.acknowledge_instructions_dialogue", function () {
             ParseSpecialInstructionsAndPopulateResponses();
           }, true);
           function UpdateCurrentTime() {

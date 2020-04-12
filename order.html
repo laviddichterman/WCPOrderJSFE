@@ -243,7 +243,7 @@
     </form>
     <div class="order-nav">
       <button type="submit" class="btn scrolltotop" ng-show="orderCtrl.HasPreviousStage()" ng-click="orderCtrl.PreviousStage()">Previous</button>
-      <button type="submit" class="btn scrolltotop" ng-disabled="!orderCtrl.s.date_valid || (orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && (!orderCtrl.s.is_address_validated))" ng-show="orderCtrl.HasNextStage()" ng-click="orderCtrl.NextStage(); orderCtrl.ClearTimeoutFlag;">Next</button>
+      <button type="submit" class="btn scrolltotop" ng-disabled="!orderCtrl.s.date_valid || (orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && (!orderCtrl.s.is_address_validated))" ng-show="orderCtrl.HasNextStage()" ng-click="orderCtrl.NextStage(); orderCtrl.ClearTimeoutFlag();">Next</button>
     </div>
   </div>
   <div ng-show="orderCtrl.s.stage === 5">
@@ -503,7 +503,7 @@
                 </div>
               </td>
               <td class="cart-item-quantity-price no-wrap"></td>
-              <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{(orderCtrl.s.computed_subtotal + orderCtrl.s.delivery_fee + orderCtrl.s.tip_value + orderCtrl.s.computed_tax) | number: 2}}</span></td>
+              <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{orderCtrl.s.total | number: 2}}</span></td>
             </tr>
           </tbody>
         </table>
