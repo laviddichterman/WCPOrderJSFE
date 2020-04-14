@@ -465,7 +465,7 @@ function UpdateLeadTime() {
           service_option: state.service_type,
           service_date: state.selected_date.format(DATE_STRING_INTERNAL_FORMAT),
           service_time: state.service_time,
-          customer_name: state.customer_name,
+          customer_name: `${state.customer_name_first} ${state.customer_name_last}`,
           phonenum: state.phone_number,
           delivery_info: {
             address1: state.delivery_address,
@@ -491,7 +491,7 @@ function UpdateLeadTime() {
           load_time: state.debug_info.load_time,
           time_selection_time: state.debug_info["time-selection-time"] ? state.debug_info["time-selection-time"].format("H:mm:ss") : "",
           submittime: moment().format("MM-DD-YYYY HH:mm:ss"),
-          useragent: navigator.userAgent,
+          useragent: navigator.userAgent + " FEV1",
           ispaid: state.isPaymentSuccess,
           payment_info: state.payment_info
         }
@@ -506,7 +506,8 @@ function UpdateLeadTime() {
     this.service_type = cfg.PICKUP;
     this.selected_date = ""; // the moment object of the selected date
     this.service_time = "Please select a valid date";
-    this.customer_name = "";
+    this.customer_name_first = "";
+    this.customer_name_last = "";
     this.phone_number = "";
     this.delivery_address = ""; // customer input, not validated
     this.delivery_address_2 = ""; // customer input, not validated/required
@@ -702,7 +703,8 @@ function UpdateLeadTime() {
       };
 
       this.ChangedContactInfo = function () {
-        this.s.customer_name = this.s.customer_name.replace(/[\+\t\r\n\v\f]/g, '');
+        this.s.customer_name_first = this.s.customer_name_first.replace(/[\+\t\r\n\v\f]/g, '');
+        this.s.customer_name_last = this.s.customer_name_last.replace(/[\+\t\r\n\v\f]/g, '');
         // resets the submit failed flag as the contact info has changed
         this.s.submit_failed = false;
       };

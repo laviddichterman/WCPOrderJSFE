@@ -72,8 +72,8 @@ var BTPStoreConfig = function () {
 
   this.DELIVERY_HOURS = [
     [16 * 60, 21 * 60], //sunday
-    [16 * 60, 21 * 60], //monday
-    [16 * 60, 21 * 60], //tuesday
+    [1 * 60, 0 * 60], //monday
+    [1 * 60, 0 * 60], //tuesday
     [16 * 60, 21 * 60], //wednesday
     [16 * 60, 21 * 60], //thursday
     [16 * 60, 21 * 60], //friday
@@ -466,7 +466,7 @@ var WCPOrderHelper = function () {
             service_option: state.service_type,
             service_date: state.selected_date.format(DATE_STRING_INTERNAL_FORMAT),
             service_time: state.service_time,
-            customer_name: state.customer_name,
+            customer_name: `${state.customer_name_first} ${state.customer_name_last}`,
             phonenum: state.phone_number,
             delivery_info: {
               address1: state.delivery_address,
@@ -703,7 +703,8 @@ var WCPOrderHelper = function () {
         };
 
         this.ChangedContactInfo = function () {
-          this.s.customer_name = this.s.customer_name.replace(/[\+\t\r\n\v\f]/g, '');
+          this.s.customer_name_first = this.s.customer_name_first.replace(/[\+\t\r\n\v\f]/g, '');
+          this.s.customer_name_last = this.s.customer_name_last.replace(/[\+\t\r\n\v\f]/g, '');
           // resets the submit failed flag as the contact info has changed
           this.s.submit_failed = false;
         };

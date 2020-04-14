@@ -153,22 +153,38 @@
     <h3 class="flush--top">Tell us a little about you.</h3>
     <div class="wpcf7-response-output wpcf7-mail-sent-ng" ng-if="orderCtrl.s.submit_failed">There was an error submitting your order. This is generally caused by a bad email address. Please check your information and try again.</div>
     <form novalidate name="stage3">
-      <span class="customer-name-text">Name:</span>
-      <span class="wpcf7-form-control-wrap customer-name">
-        <input type="text" name="customer_name" size="40" ng-model="orderCtrl.s.customer_name" ng-change="orderCtrl.ChangedContactInfo()" required>
+      <span class="flexbox">
+        <span class="flexbox__item one-half">
+          <label for="customer_name_first">
+            <span class="customer-name-text">First Name:</span>
+          </label>
+          <input type="text" name="customer_name" id="customer_name_first" size="40" ng-model="orderCtrl.s.customer_name_first" ng-change="orderCtrl.ChangedContactInfo()" autocomplete="fname" required>
+        </span>
+        <span class="flexbox__item one-half soft-half--left">
+          <label for="customer_name_last">
+            <span class="customer-name-text">Family Name:</span>
+          </label>
+          <input type="text" name="customer_name_last" id="customer_name_last" size="40" ng-model="orderCtrl.s.customer_name_last" ng-change="orderCtrl.ChangedContactInfo()" autocomplete="lname" required>
+        </span>
       </span>
-      <span class="phone-number-text">Mobile Phone Number:</span>
-      <span class="wpcf7-form-control-wrap phonenum">
-        <input jqmaskedphone type="tel" name="phone_number" value="" size="40" ng-model="orderCtrl.s.phone_number" ng-change="orderCtrl.ChangedContactInfo()" required>
+      <label for="mobilenum">
+        <span class="phone-number-text">Mobile Phone Number:</span>
+      </label>
+      <span class="phonenum">
+        <input jqmaskedphone type="tel" id="mobilenum" name="phone_number" value="" size="40" ng-model="orderCtrl.s.phone_number" ng-change="orderCtrl.ChangedContactInfo()" autocomplete="tel" required>
       </span>
-      <span class="user-email-text">E-mail Address:</span>
-      <span class="wpcf7-form-control-wrap user-email">
-        <input type="email" name="user_email" value="" size="40" ng-model="orderCtrl.s.email_address" ng-change="orderCtrl.ChangedContactInfo()" ng-pattern="orderCtrl.s.EMAIL_REGEX" required>
+      <label for="user_email">
+        <span class="user-email-text">E-mail Address:</span>
+      </label>        
+      <span class="user-email">
+        <input type="email" name="user_email" id="user_email" value="" size="40" ng-model="orderCtrl.s.email_address" ng-change="orderCtrl.ChangedContactInfo()" ng-pattern="orderCtrl.s.EMAIL_REGEX" autocomplete="email" required>
       </span>
       <div class="user-email-tip"></div>
-      <span class="referral-text">Referral information:</span>
-      <span class="wpcf7-form-control-wrap referral-info">
-        <input type="text" name="referral_info" value="" size="40" ng-model="orderCtrl.s.referral">
+      <label for="referral_info">
+        <span class="referral-text">Referral information:</span>
+      </label>
+      <span class="referral-info">
+        <input type="text" name="referral_info" id="referral_info" value="" size="40" ng-model="orderCtrl.s.referral">
       </span>
     </form>
     <div class="order-nav">
@@ -186,49 +202,48 @@
         {{service[0]}}</label>
       </div>
     </div>
-    <span class="service-date-text">Date</span>
-    <span class="wpcf7-form-control-wrap service-date">
-      <input type="text" name="service-date" value="" size="40" ng-model="orderCtrl.s.date_string" ng-change="orderCtrl.ValidateDate()" jqdatepicker orderinfo="orderCtrl" required autocomplete="off">
+    <label for="service-date">
+      <span class="service-date-text">Date</span>
+    </label>
+    <span class="service-date">
+      <input type="text" name="service-date" id="service-date" value="" size="40" ng-model="orderCtrl.s.date_string" ng-change="orderCtrl.ValidateDate()" jqdatepicker orderinfo="orderCtrl" required autocomplete="off">
     </span>
-    <span class="service-time-text">Time</span>
-    <span class="wpcf7-form-control-wrap service-time">
-      <select ng-disabled="!orderCtrl.s.date_valid" name="service-time" ng-model="orderCtrl.s.service_time" ng-options="servicetime | MinutesToPrintTime:orderCtrl.s.service_type for servicetime in orderCtrl.s.service_times" ng-change="orderCtrl.ServiceTimeChanged()">
+    <label for="service-time">
+      <span class="service-time-text">Time</span>
+    </label>
+    <span class="service-time">
+      <select ng-disabled="!orderCtrl.s.date_valid" id="service-time" name="service-time" ng-model="orderCtrl.s.service_time" ng-options="servicetime | MinutesToPrintTime:orderCtrl.s.service_type for servicetime in orderCtrl.s.service_times" ng-change="orderCtrl.ServiceTimeChanged()">
       </select>
     </span>
     <div class="wpcf7-response-output wpcf7-mail-sent-ng" ng-if="orderCtrl.s.selected_time_timeout">The previously selected service time has expired.</div>
     <span class="flexbox" ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && !orderCtrl.s.is_address_validated">
-      <legend class="flexbox__item one-whole"></legend>
-        <span class="delivery-address-text">Delivery Information:</span>
-      </legend>
-    </span>
-    <span class="flexbox" ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && !orderCtrl.s.is_address_validated">
       <span class="flexbox__item one-half">
-        <legend>
+        <label for="address_1">
           <span class="delivery-address-text">Address:</span>
-        </legend>
-        <input type="text" name="address" size="40" ng-model="orderCtrl.s.delivery_address" address>
+        </label>
+        <input type="text" name="address" id="address_1" size="40" ng-model="orderCtrl.s.delivery_address" address>
       </span>
       <span class="flexbox__item one-quarter soft-half--sides">
-        <legend>
+        <label for="address_2">
           <span class="delivery-address-text">Apt/Unit:</span>
-        </legend>
-        <input type="text" name="address_2" size="10" ng-model="orderCtrl.s.delivery_address_2">
+        </label>
+        <input type="text" name="address_2" size="10" id="address_2" ng-model="orderCtrl.s.delivery_address_2">
       </span>
       <span class="flexbox__item one-quarter">
-        <legend >
+        <label for="zipcode" >
           <span class="delivery-zipcode-text">Zip Code:</span>
-        </legend>
+        </label>
         <span class="zipcode">
-          <input type="text" name="zipcode" size="10" ng-model="orderCtrl.s.delivery_zipcode" zipcode>
+          <input type="text" name="zipcode" id="zipcode" size="10" ng-model="orderCtrl.s.delivery_zipcode" zipcode>
         </span>
       </span>
     </span>
     <span class="flexbox" ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY">
       <span class="flexbox__item one-whole">
-        <legend>
+        <label for="delivery-instructions-text">
           <span class="delivery-instructions-text">Delivery Instructions (optional):</span>
-        </legend>
-        <input type="text" name="delivery_instructions" size="40" ng-model="orderCtrl.s.delivery_instructions">
+        </label>
+        <input type="text" id="delivery-instructions-text" name="delivery_instructions" size="40" ng-model="orderCtrl.s.delivery_instructions">
       </span>
     </span>
     <button type="submit" class="btn" ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && !(stage4.address.$error.address || stage4.zipcode.$error.zipcode) && !orderCtrl.s.is_address_validated" ng-click="orderCtrl.ValidateDeliveryAddress()">Validate Delivery Address</button>
@@ -256,7 +271,7 @@
       <table>
         <tr>
           <td>Name</td>
-          <td>{{orderCtrl.s.customer_name}}</td>
+          <td>{{orderCtrl.s.customer_name_first}} {{orderCtrl.s.customer_name_last}}</td>
         </tr>
         <tr>
           <td>Mobile Number</td>

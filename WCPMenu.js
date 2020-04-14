@@ -878,11 +878,11 @@ wine_bottles_menu = {
     41,
     "Light and rustic with bright, wild cherry and racy floral aromas with a juicy finish."
   ),
-  MonteCorv: new WCPSalad("Red - Monte Tondo - Corvina Veneto - 2016",
-    "MonteCorv",
-    20,
-    "Rich wine with hints of red licorice and cherry. The finish has mixed spices and pepper with moderate tannins and acidity."
-  ),
+  // MonteCorv: new WCPSalad("Red - Monte Tondo - Corvina Veneto - 2016",
+  //   "MonteCorv",
+  //   20,
+  //   "Rich wine with hints of red licorice and cherry. The finish has mixed spices and pepper with moderate tannins and acidity."
+  // ),
   CdBVerd: new WCPSalad("White - Conti di Buscareto - Verdicchio - 2016",
     "CdBVerd",
     28,
@@ -928,11 +928,11 @@ wine_bottles_menu = {
     18,
     "An extra dry DOC; very aromatic and fruity."
   ),
-  LamboEmma: new WCPSalad("Red Bubbles - Cantina di Carpi e Sorbara \"Emma\" - Lambrusco di Sorbara - N/V",
-    "LamboEmma",
-    26,
-    "Dark red berries, plum, and zesty cola notes on a refreshing, fuller bodied, tangy finish."
-  ),
+  // LamboEmma: new WCPSalad("Red Bubbles - Cantina di Carpi e Sorbara \"Emma\" - Lambrusco di Sorbara - N/V",
+  //   "LamboEmma",
+  //   26,
+  //   "Dark red berries, plum, and zesty cola notes on a refreshing, fuller bodied, tangy finish."
+  // ),
 };
 
 spirits_menu = {
