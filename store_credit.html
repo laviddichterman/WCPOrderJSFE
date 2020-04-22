@@ -1,0 +1,134 @@
+<div ng-cloak class="orderform" ng-app="WCPOrder">
+  <div ng-controller="PaymentController as pmntCtrl">
+    <div ng-show="stage === 6">
+      <h3 class="flush">Buy store credit!</h3>
+      <form novalidate name="SC">
+        <div class="flexbox">
+          <label for="credit_amount" class="flexbox__item one-quarter">
+            <h4>Amount:</h4>
+          </label>
+          <div class="flexbox__item three-quarters">
+          <input name="credit_amount" id="credit_amount" type="number" class="credit_amount" min=1 max=500
+            ng-model="credit_amount" ng-blur="pmntCtrl.updateCreditAmount()" required>
+          </div>
+        </div>
+        <div class="soft--top">
+          <div class="flexbox">
+            <h4 class="flexbox__item one-whole">Sender information:</h4>
+          </div>
+          <div class="soft-half">
+            <label for="sender_name">
+              <span class="customer-name-text">Sender's name:</span>
+            </label>
+            <input type="text" name="name" id="sender_name" size="60" ng-model="sender_name"
+              ng-change="pmntCtrl.UpdateInfo()" required>
+            <label for="sender_email_address">
+              <span class="user-email-text">{{sender_name && sender_name.length > 2 ? sender_name : "Sender"}}'s e-mail
+                address:</span>
+            </label>
+            <span class="sender_email_address">
+              <input type="email" name="sender_email_address" id="sender_email_address" size="40"
+                ng-model="sender_email_address" ng-change="pmntCtrl.UpdateInfo()" ng-pattern="pmntCtrl.EMAIL_REGEX"
+                autocomplete="email" required>
+            </span>
+            <div class="sender-email-tip"></div>
+          </div>
+        </div>
+        <div class="soft--top">
+          <div class="flexbox">
+            <h4 class="flexbox__item one-whole">Recipient information:</h4>
+          </div>
+          <div class="soft-half">
+            <div class="flexbox">
+              <div class="flexbox__item one-half">
+                <label for="recipient_name_first">
+                  <span class="customer-name-text">Recipient's first name:</span>
+                </label>
+                <input type="text" name="fname" id="recipient_name_first" size="30" ng-model="recipient_name_first"
+                  ng-change="pmntCtrl.UpdateInfo()" required>
+              </div>
+              <div class="flexbox__item one-half soft-half--left">
+                <label for="recipient_name_last">
+                  <span class="customer-name-text">Recipient's last name:</span>
+                </label>
+                <input type="text" name="lname" id="recipient_name_last" size="30" ng-model="recipient_name_last"
+                  ng-change="pmntCtrl.UpdateInfo()" required>
+              </div>
+            </div>
+            <label><input type="checkbox" ng-model="send_email_to_recipient" ng-change="pmntCtrl.UpdateInfo()">
+              Please send an e-mail to
+              {{recipient_name_first && recipient_name_first.length > 2 ? recipient_name_first : "the recipient"}} for
+              me!</label>
+            <div ng-show="send_email_to_recipient">
+              <label for="recipient_email_address">
+                <span
+                  class="user-email-text">{{recipient_name_first && recipient_name_first.length > 2 ? recipient_name_first : "Recipient"}}'s
+                  e-mail address:</span>
+              </label>
+              <span class="recipient_email_address">
+                <input type="email" name="recipient_email_address" id="recipient_email_address" size="40"
+                  ng-model="recipient_email_address" ng-change="pmntCtrl.UpdateInfo()" ng-pattern="pmntCtrl.EMAIL_REGEX"
+                  autocomplete="email">
+              </span>
+              <div class="recipient-email-tip"></div>
+              <label for="recipient_message">
+                <span class="customer-name-text">Additional message (optional):</span>
+              </label>
+              <textarea id="recipient_message" ng-model="recipient_message" ng-change="pmntCtrl.UpdateInfo()"></textarea>
+            </div>
+          </div>
+        </div>
+      </form>
+      <div ng-if="pmntCtrl.triggerBuild === true" class="store_credit_payment">
+        <div ng-show="buildForm()">
+          <div class="flexbox">
+            <h4 class="flexbox__item one-whole">Payment information:</h4>
+          </div>
+          <div id="form-container">
+            <div id="sq-card"></div>
+            <div ng-repeat="e in card_errors" class="wpcf7-response-output wpcf7-mail-sent-ng">{{e.message}}</div>
+          </div>
+          <div class="order-nav">
+            <button id="sq-creditcard" class="btn scrolltotop" ng-click="submitForm()"
+              ng-disabled="!SC.$valid || (send_email_to_recipient && (SC.recipient_email_address.$error.recipient_email_address || !recipient_email_address)) || isProcessing">Pay</button>
+          </div>
+        </div>
+      </div>
+      <div ng-if="pmntCtrl.triggerBuild === false">
+        <div class="order-nav">
+          <h5 class="order-nav-item float--right">First, fill out the form above</h5>
+        </div>
+      </div>
+    </div>
+    <div ng-show="stage >= 7">
+      <div ng-show="isPaymentSuccess">
+        <h3>Payment of ${{wario_response.payment_response.result.payment.total_money.amount / 100 | number:2}} received
+          from card ending in: {{wario_response.payment_response.result.payment.card_details.card.last_4}}!</h3>
+        <div>Store credit details:
+        <div class="flexbox">
+          <div class="flexbox__item one-third">
+            <span style="font-weight:bold;">Credit Amount: </span>
+            <span>${{credit_amount | number:2}}</span>
+          </div>
+          <div class="flexbox__item one-third soft-half--sides">
+            <span style="font-weight:bold;">Recipient: </span>
+            <span>{{recipient_name_first}} {{recipient_name_last}}</span>
+          </div>
+          <div class="flexbox__item one-third">
+            <span style="font-weight:bold;">Credit Code:</span>
+            <span>{{wario_response.joint_credit_code}}</span>
+          </div>
+        </div>
+        </p>
+        Here's your <a ng-href="{{wario_response.payment_response.result.payment.receipt_url}}"
+        target="_blank">receipt</a>.
+      </div>
+      <div ng-show="!isPaymentSuccess">Well... in a strange situation here. Somehow the payment failed. Send us a text
+        so we can look into this for you, please?</div>
+    </div>
+  </div>
+</div>
+<script type="text/javascript" src="https://js.squareup.com/v2/paymentform"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mailcheck/1.1.2/mailcheck.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.11/angular.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>

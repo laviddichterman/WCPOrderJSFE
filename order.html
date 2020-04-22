@@ -221,16 +221,16 @@
     </span>
     <span class="flexbox" ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && !orderCtrl.s.is_address_validated">
       <span class="flexbox__item one-half">
-        <label for="address_1">
+        <label for="address-line1">
           <span class="delivery-address-text">Address:</span>
         </label>
-        <input type="text" name="address" id="address_1" size="40" ng-model="orderCtrl.s.delivery_address" address>
+        <input type="text" name="address" id="address-line1" size="40" ng-model="orderCtrl.s.delivery_address" autocomplete="shipping address-line1" address>
       </span>
       <span class="flexbox__item one-quarter soft-half--sides">
-        <label for="address_2">
+        <label for="address-line2">
           <span class="delivery-address-text">Apt/Unit:</span>
         </label>
-        <input type="text" name="address_2" size="10" id="address_2" ng-model="orderCtrl.s.delivery_address_2">
+        <input type="text" name="address-line2" size="10" id="address-line2" ng-model="orderCtrl.s.delivery_address_2" autocomplete="shipping address-line2">
       </span>
       <span class="flexbox__item one-quarter">
         <label for="zipcode" >
