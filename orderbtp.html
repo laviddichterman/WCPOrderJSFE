@@ -52,9 +52,9 @@
           </div>
         </div>
       </div>
-      <span ng-if="!pmenuCtrl.suppress_guide && pmenuCtrl.messages.length">
+      <div ng-if="!pmenuCtrl.suppress_guide && pmenuCtrl.messages.length">
         <div class="wpcf7-response-output wpcf7-validation-errors" ng-repeat="msg in pmenuCtrl.messages">{{msg}}</div>
-      </span>
+      </div>
       <div class="order-nav">
         <span class="one-fifth">
           <button name="remove" class="btn button-remove scrolltotop" ng-click="pmenuCtrl.unsetPizza()">Cancel</button>
@@ -158,13 +158,13 @@
           <label for="customer_name_first">
             <span class="customer-name-text">First Name:</span>
           </label>
-          <input type="text" name="customer_name" id="customer_name_first" size="40" ng-model="orderCtrl.s.customer_name_first" ng-change="orderCtrl.ChangedContactInfo()" autocomplete="fname" required>
+          <input type="text" name="fname" id="customer_name_first" size="40" ng-model="orderCtrl.s.customer_name_first" ng-change="orderCtrl.ChangedContactInfo()" autocomplete="given-name" required>
         </span>
         <span class="flexbox__item one-half soft-half--left">
           <label for="customer_name_last">
             <span class="customer-name-text">Family Name:</span>
           </label>
-          <input type="text" name="customer_name_last" id="customer_name_last" size="40" ng-model="orderCtrl.s.customer_name_last" ng-change="orderCtrl.ChangedContactInfo()" autocomplete="lname" required>
+          <input type="text" name="lname" id="customer_name_last" size="40" ng-model="orderCtrl.s.customer_name_last" ng-change="orderCtrl.ChangedContactInfo()" autocomplete="family-name" required>
         </span>
       </span>
       <label for="mobilenum">
@@ -198,8 +198,10 @@
     <form novalidate name="stage4">
     <div class="flexitems">
       <div class="flexitem" ng-repeat="service in orderCtrl.CONFIG.SERVICE_TYPES track by $index">
-        <label ng-if="orderCtrl.s.service_type_functors[$index](orderCtrl.s)"><input type="radio" ng-change="orderCtrl.ValidateDate(); orderCtrl.ClearAddress();" ng-model="orderCtrl.s.service_type" ng-value="service[1]">
+        <div ng-if="orderCtrl.s.service_type_functors[$index](orderCtrl.s)">
+          <label><input type="radio" ng-change="orderCtrl.ValidateDate(); orderCtrl.ClearAddress();" ng-model="orderCtrl.s.service_type" ng-value="service[1]">
         {{service[0]}}</label>
+        </div>
       </div>
     </div>
     <label for="service-date">
@@ -234,7 +236,7 @@
           <span class="delivery-zipcode-text">Zip Code:</span>
         </label>
         <span class="zipcode">
-          <input type="text" name="zipcode" id="zipcode" size="10" ng-model="orderCtrl.s.delivery_zipcode" zipcode>
+          <input type="text" name="zipcode" id="zipcode" size="10" ng-model="orderCtrl.s.delivery_zipcode" autocomplete="postal-code" zipcode>
         </span>
       </span>
     </span>
@@ -266,7 +268,7 @@
       <button type="submit" class="btn scrolltotop" ng-disabled="!orderCtrl.s.date_valid || (orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && (!orderCtrl.s.is_address_validated))" ng-show="orderCtrl.HasNextStage()" ng-click="orderCtrl.NextStage(); orderCtrl.ClearTimeoutFlag();">Next</button>
     </div>
   </div>
-  <div ng-show="orderCtrl.s.stage === 5">
+  <div ng-show="orderCtrl.s.stage === 5 && !orderCtrl.s.isProcessing">
     <h3 class="flush--top">Everything look right?</h3>
       <table>
         <tr>
@@ -378,6 +380,17 @@
                 <td class="cart-item-quantity-price no-wrap"></td>
                 <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{orderCtrl.s.computed_tax | number:2}}</span></td>
               </tr>
+              <tr ng-if="orderCtrl.s.credit.validation_successful && orderCtrl.s.credit.type == 'MONEY'" class="cart-item">
+                <td class="cart-item-description">
+                  <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
+                    <div class="cart-item-title-subtitle column menu-list__item">
+                      <h4 class="menu-list__item-title"><span class="item_title">Store Credit Applied ({{orderCtrl.s.credit.code}})</span></h4>
+                    </div>
+                  </div>
+                </td>
+                <td class="cart-item-quantity-price no-wrap"></td>
+                <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">-{{orderCtrl.s.credit.amount_used | number: 2}}</span></td>
+              </tr>
               <tr class="cart-item">
                 <td class="cart-item-description">
                   <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
@@ -387,13 +400,13 @@
                   </div>
                 </td>
                 <td class="cart-item-quantity-price no-wrap"></td>
-                <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{orderCtrl.s.total | number: 2}}</span></td>
+                <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{orderCtrl.s.balance | number: 2}}</span></td>
               </tr>
             </tbody>
           </table>
         </div>
     </div>
-    <div ng-show="orderCtrl.s.service_type !== orderCtrl.CONFIG.DELIVERY">
+    <div ng-show="orderCtrl.s.service_type !== orderCtrl.CONFIG.DELIVERY && !orderCtrl.s.credit.validation_successful">
       <label><input type="checkbox" ng-model="orderCtrl.s.acknowledge_instructions_dialogue" ng-change="orderCtrl.ClearSpecialInstructions()">
         I need to specify some special instructions (which may delay my order or change its cost) or wish to pay later.</label>
         <textarea ng-show="orderCtrl.s.acknowledge_instructions_dialogue" ng-model="orderCtrl.s.special_instructions"></textarea>  
@@ -408,6 +421,7 @@
     <div ng-hide="orderCtrl.s.tip_value === 0">* Gratuity is shared among the entire team.</div>
   </div>
   <div ng-if="orderCtrl.s.stage === 6">
+    <div ng-hide="orderCtrl.s.isProcessing">
     <h3 ng-show="orderCtrl.computeDefaultTipIfClean()" class="flush--top">Add gratuity to your order and settle up!</h3>
     <h5>The Breezy Town Pizza family is working hard to serve you, safely. All gratuity is shared with the entire staff. Everyone, from our team that makes the house-made dough, to the staff that handles your order appreciates your support!</h5>
     <div class="flexbox">
@@ -514,6 +528,17 @@
               <td class="cart-item-quantity-price no-wrap"></td>
               <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{orderCtrl.s.computed_tax | number:2}}</span></td>
             </tr>
+            <tr ng-if="orderCtrl.s.credit.validation_successful && orderCtrl.s.credit.type == 'MONEY'" class="cart-item">
+              <td class="cart-item-description">
+                <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
+                  <div class="cart-item-title-subtitle column menu-list__item">
+                    <h4 class="menu-list__item-title"><span class="item_title">Store Credit Applied ({{orderCtrl.s.credit.code}})</span></h4>
+                  </div>
+                </div>
+              </td>
+              <td class="cart-item-quantity-price no-wrap"></td>
+              <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">-{{orderCtrl.s.credit.amount_used | number: 2}}</span></td>
+            </tr>
             <tr class="cart-item">
               <td class="cart-item-description">
                 <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
@@ -523,34 +548,65 @@
                 </div>
               </td>
               <td class="cart-item-quantity-price no-wrap"></td>
-              <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{(orderCtrl.s.computed_subtotal + orderCtrl.s.delivery_fee + orderCtrl.s.tip_value + orderCtrl.s.computed_tax) | number: 2}}</span></td>
+              <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{orderCtrl.s.balance | number: 2}}</span></td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
     <div class="wpcf7-response-output wpcf7-mail-sent-ng" ng-if="orderCtrl.s.selected_time_timeout">The previously selected service time has expired. We've updated your service time to {{orderCtrl.s.service_time | MinutesToPrintTime : orderCtrl.s.service_type}}.</div>
+    <div class="wpcf7-response-output wpcf7-mail-sent-ng" ng-if="orderCtrl.s.credit.validation_fail">Code entered looks to be invalid. Please check your input and try again. Credit codes are case sensitive.</div>
+    <div class="flexbox">
+      <h4 class="flexbox__item one-whole">Payment Information:</h4>
+    </div>
+    <div class="soft-half">
+      <div class="flexbox">
+        <input type="checkbox" class="flexbox__item" id="use_store_credit" ng-model="orderCtrl.s.use_store_credit" ng-change="orderCtrl.ToggleUseStoreCredit()" />
+        <label class="flexbox__item soft-half--left" for="use_store_credit">Use Digital Gift Card / Store Credit</label>
+      </div>
+      <div class="flexbox" ng-show="orderCtrl.s.use_store_credit">
+        <div class="flexbox__item one-tenth"><label for="store_credit_code">Code:</label></div>
+        <div class="flexbox__item soft-half--left three-quarters">
+          <span ng-show="!orderCtrl.s.credit.validation_successful && !orderCtrl.s.credit.validation_processing" class="float--right"><input jqmaskedstorecredit type="text" id="store_credit_code" name="store_credit_code" value="" size="20" ng-model="orderCtrl.s.credit.code"></span>
+          <span ng-show="orderCtrl.s.credit.validation_successful || orderCtrl.s.credit.validation_processing" class="float--right"><input type="text" disabled size="20" ng-model="orderCtrl.s.credit.code"></span>
+        </div>
+        <div class="flexbox__item soft-half--left">
+          <span ng-show="orderCtrl.s.credit.validation_successful" class="icon-check-circle"></span>
+          <span ng-show="orderCtrl.s.credit.validation_fail" class="icon-exclamation-circle"></span>
+        </div>
+      </div>
+    </div>
     <div ng-controller="PaymentController as pmntCtrl">
       <div ng-show="buildForm()"></div>
-      <div id="form-container">
-        <div id="sq-card" ></div>
-        <div ng-repeat="e in card_errors" class="wpcf7-response-output wpcf7-mail-sent-ng">{{e.message}}</div>
+      <div ng-hide="orderCtrl.s.balance == 0" id="form-container">
+        <div class="flexbox">
+          Credit Card Information
+        </div>     
+        <div class="flexbox soft-half--top">
+          <div id="sq-card" ></div>
+        </div>
+        <div ng-repeat="e in orderCtrl.s.card_errors" class="wpcf7-response-output wpcf7-mail-sent-ng">{{e.message}}</div>
       </div>
-      <div class="order-nav">
+      <div class="order-nav" ng-show="orderCtrl.s.stage === 6">
         <button type="submit" class="btn scrolltotop" ng-disabled="orderCtrl.s.isProcessing" ng-show="orderCtrl.HasPreviousStage()" ng-click="orderCtrl.PreviousStage()">Previous</button>
-        <button id="sq-creditcard" class="btn scrolltotop" ng-click="submitForm()" ng-disabled="orderCtrl.s.isProcessing">Pay and submit order!</button>
+        <button ng-show="orderCtrl.s.balance > 0" id="sq-creditcard" class="btn scrolltotop" ng-click="submitForm()" ng-disabled="orderCtrl.s.isProcessing">Pay and submit order!</button>
+        <button ng-show="orderCtrl.s.balance == 0" class="btn scrolltotop" ng-click="orderCtrl.SubmitToWario()" ng-disabled="orderCtrl.s.isProcessing">Pay and submit order!</button>
       </div>
     </div>
   </div>
+  <div ng-show="orderCtrl.s.isProcessing" class="wpcf7 wpcf7-response-output wpcf7-mail-sent-ok">Submitting order! This can take a few seconds.<span class="ajax-loader is-active"></span></div>
   <div ng-show="orderCtrl.s.stage >= 7">      
+    <div ng-show="orderCtrl.s.stage === 7" class="submitsuccess wpcf7-response-output wpcf7-mail-sent-ok" >Order submitted successfully! Please check your email.</div>
+    <div ng-show="orderCtrl.s.stage === 8" class="wpcf7-response-output wpcf7-validation-errors" >We had some issues processing your order. Please send us a text message or email so we can look into it.</div>
     <div ng-if="orderCtrl.s.isPaymentSuccess">
-      <h3>Payment of ${{orderCtrl.s.payment_info.result.payment.total_money.amount / 100 | number:2}} received from card ending in: {{orderCtrl.s.payment_info.result.payment.card_details.card.last_4}}!</h3>
-      <h6>You might get a few emails that sound like you still need to pay, but you don't. We JUST rolled out pre-payment and it might take a moment to fix the loose ends.</h6>
+      Payment of ${{orderCtrl.s.payment_info.result.payment.total_money.amount / 100 | number:2}} received from card ending in: {{orderCtrl.s.payment_info.result.payment.card_details.card.last_4}}!
       Here's your <a ng-href="{{orderCtrl.s.payment_info.result.payment.receipt_url}}" target="_blank">receipt</a>.
     </div>
-    <div ng-show="orderCtrl.s.stage === 7" class="wpcf7 wpcf7-response-output wpcf7-mail-sent-ok">Submitting order! This can take a few seconds.<span class="ajax-loader is-active"></span></div>
-    <div ng-show="orderCtrl.s.stage === 8" class="submitsuccess wpcf7-response-output wpcf7-mail-sent-ok" >Order submitted successfully! Please check your email.</div>
-    <div ng-show="orderCtrl.s.stage === 9" class="wpcf7-response-output wpcf7-validation-errors" >We had some issues processing your order. Please send us a text message or email so we can look into it.</div>
+    <div ng-if="orderCtrl.s.credit.amount_used > 0 && orderCtrl.s.stage === 7">
+      Digital Gift Card number {{orderCtrl.s.credit.code}} debited ${{orderCtrl.s.credit.amount_used | number:2}}.
+      <span ng-show="orderCtrl.s.credit.amount === orderCtrl.s.credit.amount_used">No balance remains.</span>
+      <span ng-show="orderCtrl.s.credit.amount !== orderCtrl.s.credit.amount_used">Balance of ${{(orderCtrl.s.credit.amount - orderCtrl.s.credit.amount_used) | number:2}} remains.</span>
+    </div>
   </div>
 </div>
 <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.12/angular-material.min.css">

@@ -2,6 +2,8 @@ var $j = jQuery.noConflict();
 
 var EMAIL_REGEX = new RegExp("^[_A-Za-z0-9\-]+(\\.[_A-Za-z0-9\-]+)*@[A-Za-z0-9\-]+(\\.[A-Za-z0-9\-]+)*(\\.[A-Za-z]{2,})$");
 
+var CREDIT_REGEX = new RegExp("[A-Za-z0-9]{3}-[A-Za-z0-9]{2}-[A-Za-z0-9]{3}-[A-Z0-9]{8}$");
+
 var DATE_STRING_INTERNAL_FORMAT = "YYYYMMDD";
 
 var DELIVERY_INTERVAL_TIME = 30;
@@ -321,6 +323,20 @@ var WCPOrderHelper = function () {
     app.service("OrderHelper", WCPOrderHelper);
 
     var WCPOrderState = function (cfg, enable_delivery, enable_split_toppings) {
+
+      this.ClearCredit = function() { 
+        this.credit = { 
+          code: "",
+          validation_successful: false, 
+          validation_processing: false,
+          validation_fail: false,
+          amount: 0.00,
+          amount_used: 0.00,
+          type: "MONEY",
+          encoded: { }
+        };
+      }
+
       this.RecomputeOrderSize = function () {
         var size = 0;
         for (var i in this.cart.pizza) {
@@ -395,36 +411,50 @@ var WCPOrderHelper = function () {
         }
       };
 
-      this.TotalsUpdate = function () {
-        // must run with up to date subtotal and order size;
-        this.computed_tax = parseFloat(Number((this.delivery_fee + this.computed_subtotal) * cfg.TAX_RATE).toFixed(2));
-        this.autograt = this.num_pizza >= 5 || this.service_type === cfg.DELIVERY ? .2 : 0;
-        var compute_tip_from = (this.computed_tax + this.delivery_fee + this.computed_subtotal);
-        var mintip = compute_tip_from * this.autograt;
-        mintip = parseFloat(mintip.toFixed(2));
-        if (this.tip_clean) {
-          this.custom_tip_value = parseFloat(Number(compute_tip_from * .2).toFixed(2));
-          this.tip_value = this.tip_value < mintip ? mintip : 0;
-        }
-        else {
-          if (this.tip_value < mintip) {
-            //if autograt, set selected to autograt level if dirty value is below autograt level
-            this.selected_tip = 1;
-            this.show_custom_tip_input = false;
-            this.tip_value = mintip;
-            this.custom_tip_value = mintip;
-          }
-          else if (this.selected_tip === this.tip_options.length - 1 && this.autograt === 0) {
-            // in the case someone has selected a tip level above a previously required autograt but doesn't have autograt
-            // set the tip to a custom value equalling their previously selected value
-            this.custom_tip_value = this.tip_value;
-            this.selectCustomTip();
-          }
-        }
-        this.custom_tip_value = this.custom_tip_value < mintip ? mintip : this.custom_tip_value;
-        this.total = this.computed_subtotal + this.computed_tax + this.delivery_fee + this.tip_value;
-        this.total = parseFloat(this.total.toFixed(2));
+    this.TotalsUpdate = function () {
+      // must run with up to date subtotal and order size;
+      const pre_tax_monies = this.computed_subtotal + this.delivery_fee;
+      var pre_tax_store_credit = 0;
+      this.credit.amount_used = 0;
+      if (this.credit.validation_successful && this.credit.type === "DISCOUNT") {
+        pre_tax_store_credit = Math.min(this.credit.amount, pre_tax_monies);
+        this.credit.amount_used = pre_tax_store_credit;
+      } 
+      this.computed_tax = parseFloat(Number((pre_tax_monies - pre_tax_store_credit) * cfg.TAX_RATE).toFixed(2));
+      this.autograt = this.num_pizza >= 5 || this.service_type === cfg.DELIVERY ? .2 : 0;
+      var compute_tip_from = pre_tax_monies + this.computed_tax;
+      var mintip = compute_tip_from * this.autograt;
+      mintip = parseFloat(mintip.toFixed(2));
+      if (this.tip_clean) {
+        this.custom_tip_value = parseFloat(Number(compute_tip_from * .2).toFixed(2));
+        this.tip_value = this.tip_value < mintip ? mintip : 0;
       }
+      else {
+        if (this.tip_value < mintip) {
+          //if autograt, set selected to autograt level if dirty value is below autograt level
+          this.selected_tip = 1;
+          this.show_custom_tip_input = false;
+          this.tip_value = mintip;
+          this.custom_tip_value = mintip;
+        }
+        else if (this.selected_tip === this.tip_options.length - 1 && this.autograt === 0) {
+          // in the case someone has selected a tip level above a previously required autograt but doesn't have autograt
+          // set the tip to a custom value equalling their previously selected value
+          this.custom_tip_value = this.tip_value;
+          this.selectCustomTip();
+        }
+      }
+      this.custom_tip_value = this.custom_tip_value < mintip ? mintip : this.custom_tip_value;
+      this.total = pre_tax_monies + this.computed_tax + this.tip_value;
+      this.total = parseFloat(this.total.toFixed(2));
+      let post_tax_credit_used = 0;
+      // TODO: handle case where discount credit is used to apply to tip, adding the value to amount_used almost does it
+      if (this.credit.validation_successful && this.credit.type == "MONEY") {
+        post_tax_credit_used = Math.min(this.credit.amount, this.total);
+        this.credit.amount_used = this.credit.amount_used + post_tax_credit_used;
+      }
+      this.balance = this.total - post_tax_credit_used;
+    }
 
       this.StatePostCartUpdate = function () {
         this.RecomputeOrderSize();
@@ -441,28 +471,48 @@ var WCPOrderHelper = function () {
         return dto;
       }  
 
-      this.SubmitToWarioInternal = function (http_provider, state) {
-
+      this.SubmitToWarioInternal = function (http_provider, state, nonce) {
         var onSuccess = function (response) {
-          if (response.status === 200) {
-            state.stage = 8;
+          console.log(response);
+          state.payment_info = response.data;
+          if (response.status == 200) {
+            state.isPaymentSuccess = response.data.result && response.data.result.payment && response.data.result.payment.status == "COMPLETED";
+            state.stage = 7;
           }
           else {
-            state.submit_failed = response;
-            state.stage = 9;
-            console.log("FAILWHALE");
+            // display server side card processing errors 
+            state.card_errors = []
+            var errors = JSON.parse(response.data.result);
+            for (var i = 0; i < errors.length; i++) {
+              state.card_errors.push({ message: errors[i].detail })
+            }
+            state.submit_failed = true;
           }
+          state.isProcessing = false;
         };
         var onFail = function (response) {
-          state.submit_failed = response;
-          state.stage = 9;
+          state.submit_failed = true;
+          state.payment_info = response.data;
+          state.isPaymentSuccess = false;
+          state.isProcessing = false;
+          if (response.data && response.data.result) {
+            state.card_errors = [];
+            var errors = JSON.parse(response.data.result).errors;
+            for (var i = 0; i < errors.length; i++) {
+              state.card_errors.push({ message: errors[i].detail })
+            }
+          } else {
+            state.card_errors = [{ message: "Processing error! Send us a text so we can help look into the issue." }];
+          }
           console.log("FAILWHALE");
         };
-        state.stage = 7;
+        
+        state.isProcessing = true;
         http_provider({
           method: "POST",
-          url: `${WARIO_ENDPOINT}api/v1/order/`,
+          url: `${WARIO_ENDPOINT}api/v1/order/new`,
           data: {
+            nonce: nonce,
             service_option: state.service_type,
             service_date: state.selected_date.format(DATE_STRING_INTERNAL_FORMAT),
             service_time: state.service_time,
@@ -486,16 +536,56 @@ var WCPOrderHelper = function () {
               subtotal: state.computed_subtotal,
               tax: state.computed_tax,
               tip: state.tip_value,
-              total: state.total
+              total: state.total,
+              balance: state.balance
             },
+            store_credit: state.credit,
             referral: state.referral,
             load_time: state.debug_info.load_time,
             time_selection_time: state.debug_info["time-selection-time"] ? state.debug_info["time-selection-time"].format("H:mm:ss") : "",
             submittime: moment().format("MM-DD-YYYY HH:mm:ss"),
-            useragent: navigator.userAgent,
-            ispaid: state.isPaymentSuccess,
-            payment_info: state.payment_info
+            useragent: navigator.userAgent + " FEV2",
           }
+        }).then(onSuccess).catch(onFail);
+      }
+  
+      this.ValidateAndLockStoreCredit = function (http_provider, state) {
+        var cached_code = state.credit.code;
+        if (state.credit.validation_processing) {
+          return;
+        }
+        state.credit.validation_processing = true;
+  
+        var onSuccess = function (response) {
+          if (response.status === 200 && response.data.validated === true) {
+            state.credit = { 
+              code: cached_code,
+              validation_successful: true, 
+              validation_processing: false,
+              validation_fail: false,
+              amount: response.data.amount,
+              amount_used: 0,
+              type: response.data.credit_type,
+              encoded: { 
+                enc: response.data.enc,
+                iv: response.data.iv,
+                auth: response.data.auth
+              }
+            };
+            state.TotalsUpdate();
+          }
+          else {
+            state.credit.validation_fail = true;
+          }
+        };
+        var onFail = function (response) {
+          state.credit.validation_processing = false;
+          state.credit.validation_fail = true;
+        };
+        http_provider({
+          method: "GET",
+          url: `${WARIO_ENDPOINT}api/v1/payments/storecredit/validate`,
+          params: { code: state.credit.code }
         }).then(onSuccess).catch(onFail);
       }
 
@@ -552,6 +642,7 @@ var WCPOrderHelper = function () {
       this.isPaymentSuccess = false;
       this.isProcessing = false;
       this.disableorder = false;
+      this.credit = {};
 
       this.service_type_functors = [
         // PICKUP
@@ -803,8 +894,21 @@ var WCPOrderHelper = function () {
         };
 
         this.SubmitToWario = function () {
-          return this.s.SubmitToWarioInternal($http, this.s);
-        }
+          return this.s.SubmitToWarioInternal($http, this.s, null);
+        };
+  
+        this.ToggleUseStoreCredit = function () {
+          this.s.ClearCredit();
+          this.s.TotalsUpdate();
+        };
+  
+        this.ValidateStoreCredit = function () {
+          this.s.credit.validation_processing = false;
+          this.s.credit.validation_fail = false;
+          if (this.s.credit.code && CREDIT_REGEX.test(this.s.credit.code)) {
+            return this.s.ValidateAndLockStoreCredit($http, this.s);
+          }
+        };
 
         // this binding means we need to have this block here.
         var UpdateBlockedOffFxn = function (message) {
@@ -996,6 +1100,9 @@ var WCPOrderHelper = function () {
               scope.orderinfo.s.special_instructions_responses.push(wcpconfig.REQUEST_SOONER);
             }
           };
+          scope.$watch("orderinfo.s.credit.code", function () {
+            scope.orderinfo.ValidateStoreCredit();
+          }, true);  
           scope.$watch("orderinfo.s.special_instructions", function () {
             ParseSpecialInstructionsAndPopulateResponses();
           }, true);
@@ -1096,6 +1203,17 @@ var WCPOrderHelper = function () {
       };
     });
 
+    app.directive("jqmaskedstorecredit", function () {
+      return {
+        restrict: "A",
+        require: "ngModel",
+        link: function (scope, element, attrs, ctrl) {
+          $j.mask.definitions['C'] = "[A-Z0-9]";
+          $j(element).mask("***-**-***-CCCCCCCC");
+        }
+      };
+    });
+  
     app.controller('PaymentController', ['$scope', '$rootScope', '$http', 'OrderHelper', function ($scope, $rootScope, $http, OrderHelper) {
       $scope.isBuilt = false;
 
@@ -1122,12 +1240,12 @@ var WCPOrderHelper = function () {
         callbacks: {
           cardNonceResponseReceived: function (errors, nonce, cardData) {
             if (errors) {
-              $scope.card_errors = errors
+              $rootScope.state.card_errors = errors
               $rootScope.state.isProcessing = false;
               $scope.$apply();
               $rootScope.$apply();
             } else {
-              $scope.card_errors = []
+              $rootScope.state.card_errors = []
               $scope.chargeCardWithNonce(nonce);
             }
 
@@ -1143,35 +1261,7 @@ var WCPOrderHelper = function () {
           nonce: nonce,
           amount_money: $rootScope.state.total
         };
-        $http.post(`${WARIO_ENDPOINT}api/v1/payments/payment`, data).success(function (data, status) {
-          if (status == 200) {
-            $rootScope.state.isPaymentSuccess = true;
-            $rootScope.state.payment_info = data;
-            $rootScope.state.SubmitToWarioInternal($http, $rootScope.state);
-          }
-          else {
-            // display server side card processing errors 
-            $rootScope.state.isPaymentSuccess = false;
-            $scope.card_errors = []
-            var errors = JSON.parse(data.result);
-            for (var i = 0; i < errors.length; i++) {
-              $scope.card_errors.push({ message: errors[i].detail })
-            }
-          }
-          $rootScope.state.isProcessing = false;
-        }).error(function (data) {
-          $rootScope.state.isPaymentSuccess = false;
-          $rootScope.state.isProcessing = false;
-          if (data && data.result) {
-            $scope.card_errors = [];
-            var errors = JSON.parse(data.result).errors;
-            for (var i = 0; i < errors.length; i++) {
-              $scope.card_errors.push({ message: errors[i].detail })
-            }
-          } else {
-            $scope.card_errors = [{ message: "Processing error, please try again! If you continue to have issues, text us." }];
-          }
-        });
+        return $rootScope.state.SubmitToWarioInternal($http, $rootScope.state, nonce);
       }
 
       $scope.buildForm = function () {
