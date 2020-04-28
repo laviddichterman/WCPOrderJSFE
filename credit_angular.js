@@ -8,6 +8,10 @@ var WARIO_ENDPOINT = "https://wario.windycitypie.com/";
 (function () {
   var app = angular.module("WCPOrder", []);
 
+  var SanitizeIfExists = function (str) {
+    return str && str.length ? str.replace("'", "`").replace("/", "|").replace("&", "and").replace("<", "").replace(">", "").replace(/[\+\t\r\n\v\f]/g, '') : str;
+  }
+
   app.controller('PaymentController', ['$scope', '$http', function ($scope, $http) {
     this.EMAIL_REGEX = EMAIL_REGEX;
     $scope.credit_amount = 50;
@@ -122,6 +126,11 @@ var WARIO_ENDPOINT = "https://wario.windycitypie.com/";
     };
 
     this.UpdateInfo = function () {
+      $scope.sender_name = SanitizeIfExists($scope.sender_name);
+      $scope.recipient_name_first = SanitizeIfExists($scope.recipient_name_first);
+      $scope.recipient_name_last = SanitizeIfExists($scope.recipient_name_last);
+      $scope.recipient_message = SanitizeIfExists($scope.recipient_message);
+
       if ($scope.credit_amount >= 2.00 && 
         $scope.sender_name && $scope.sender_name.length > 2 && 
         $scope.recipient_name_first && $scope.recipient_name_first.length > 2 && 
@@ -129,6 +138,7 @@ var WARIO_ENDPOINT = "https://wario.windycitypie.com/";
         $scope.sender_email_address && $scope.sender_email_address.length > 5) {
         this.triggerBuild = true;
       }
+      
       //$scope.send_email_to_recipient = false;
       //$scope.recipient_email_address = "";
       //$scope.recipient_message = "";

@@ -478,6 +478,12 @@ span.cf7bridge {
   }
 }
 
+@media (min-width: 0px) and (max-width: 400px) {
+  .btn {
+    padding: 12px 10px !important;
+  }
+}
+
 .md-accordion .expandCollapse { 
   width:30px;
   height:30px;

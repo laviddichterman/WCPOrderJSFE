@@ -9,6 +9,9 @@ var DELIVERY_INTERVAL_TIME = 30;
 
 var WARIO_ENDPOINT = "https://wario.windycitypie.com/";
 
+var SanitizeIfExists = function (str) {
+  return str && str.length ? str.replace("'", "`").replace("/", "|").replace("&", "and").replace("<", "").replace(">", "").replace(/[\+\t\r\n\v\f]/g, '') : str;
+}
 //var WARIO_ENDPOINT = "http://localhost:4001/";
 
 function ScrollTopJQ() {
@@ -450,7 +453,7 @@ function UpdateLeadTime() {
         post_tax_credit_used = Math.min(this.credit.amount, this.total);
         this.credit.amount_used = this.credit.amount_used + post_tax_credit_used;
       }
-      this.balance = this.total - post_tax_credit_used;
+      this.balance = this.total - post_tax_credit_used - pre_tax_store_credit;
     }
 
     this.StatePostCartUpdate = function () {
@@ -513,12 +516,12 @@ function UpdateLeadTime() {
           service_option: state.service_type,
           service_date: state.selected_date.format(DATE_STRING_INTERNAL_FORMAT),
           service_time: state.service_time,
-          customer_name: `${state.customer_name_first} ${state.customer_name_last}`,
+          customer_name: SanitizeIfExists(`${state.customer_name_first} ${state.customer_name_last}`),
           phonenum: state.phone_number,
           delivery_info: {
             address1: state.delivery_address,
             address2: state.delivery_address_2,
-            instructions: state.delivery_instructions,
+            instructions: SanitizeIfExists(state.delivery_instructions),
             validated_delivery_address: state.validated_delivery_address,
             validation_result: state.address_validation_result
           },  
@@ -526,7 +529,7 @@ function UpdateLeadTime() {
           sliced: state.slice_pizzas,
           products: state.CartToDTO(),
           short_cart_list: state.short_cart_list,
-          special_instructions: state.special_instructions,
+          special_instructions: SanitizeIfExists(state.special_instructions),
           totals: {
             delivery_fee: state.delivery_fee,
             autograt: state.autograt,
@@ -537,11 +540,11 @@ function UpdateLeadTime() {
             balance: state.balance
           },
           store_credit: state.credit,
-          referral: state.referral,
+          referral: SanitizeIfExists(state.referral),
           load_time: state.debug_info.load_time,
           time_selection_time: state.debug_info["time-selection-time"] ? state.debug_info["time-selection-time"].format("H:mm:ss") : "",
           submittime: moment().format("MM-DD-YYYY HH:mm:ss"),
-          useragent: navigator.userAgent + " FEV2",
+          useragent: navigator.userAgent + " FEV3",
         }
       }).then(onSuccess).catch(onFail);
     }
@@ -791,9 +794,15 @@ function UpdateLeadTime() {
         this.ValidateDate();
       };
 
+      this.ChangedEscapableInfo = function() {
+        this.s.special_instructions = SanitizeIfExists(this.s.special_instructions);
+        this.s.delivery_instructions = SanitizeIfExists(this.s.delivery_instructions);
+        this.s.referral = SanitizeIfExists(this.s.referral);
+      };
+
       this.ChangedContactInfo = function () {
-        this.s.customer_name_first = this.s.customer_name_first.replace(/[\+\t\r\n\v\f]/g, '');
-        this.s.customer_name_last = this.s.customer_name_last.replace(/[\+\t\r\n\v\f]/g, '');
+        this.s.customer_name_first = SanitizeIfExists(this.s.customer_name_first);
+        this.s.customer_name_last = SanitizeIfExists(this.s.customer_name_last);
         // resets the submit failed flag as the contact info has changed
         this.s.submit_failed = false;
       };
@@ -903,7 +912,7 @@ function UpdateLeadTime() {
       this.ValidateStoreCredit = function () {
         this.s.credit.validation_processing = false;
         this.s.credit.validation_fail = false;
-        if (this.s.credit.code && CREDIT_REGEX.test(this.s.credit.code)) {
+        if (this.s.credit.code && this.s.credit.code.length === 19 && CREDIT_REGEX.test(this.s.credit.code)) {
           return this.s.ValidateAndLockStoreCredit($http, this.s);
         }
       };
@@ -933,6 +942,7 @@ function UpdateLeadTime() {
 
     this.toggleAccordion = function (idx) {
       if (this.accordionstate[idx]) {
+        this.accordionstate[idx] = false;
         return;
       }
       for (var i in this.accordionstate) {

@@ -732,10 +732,15 @@ beverage_menu = {
   //   14,
   //   "Hoppy Lager brewed with a combination of German Pilsner Malt and Malted Wheat. Hopped entirely with whole-leaf Citra and Strata during the boil. - 5.4% ABV - 32oz"
   // ),
-  HMSorcery: new WCPSalad("Holy Mountain - Ambient Sorcery Saison Crowler",
+ HMSorcery: new WCPSalad("Holy Mountain - Ambient Sorcery Saison Crowler",
     "HMSorcery",
     15,
     "Brewed with German Pilsner, Maris Otter, and locally grown Lyon Pilsner, hopped w/ Styrain Golding and Loral hops and fermented w/ a house blend of Saison yeast. Then conditioned on top of grapefruit peel and Grains of Paradise for a week. Beautifully aromatic, spicy and dry. - 4.7% ABV - 32oz"
+  ),
+  OSAWaves: new WCPSalad("Old Stove - Amber Waves Crowler",
+    "OSAWaves",
+    14,
+    "This medium-bodied Amber Ale hints of dark fruity raisin, currants, and ripe plum. Slightly sweet and nutty from a blend of toasted malts including a touch of Chocolate Malt and flaked Barley, and balanced off with a classic mix of Northwest hops (Cascade, Centennial, Chinook, and Bravo). - 6.3% ABV - 32 IBU - 32oz"
   ),
   OSBeglian: new WCPSalad("Old Stove - Belgian Blonde Crowler",
     "OSBeglian",
@@ -757,16 +762,21 @@ beverage_menu = {
     15,
     "A collaboration with Old Stove Brewing, the goal was to create an authentically American light lager. Success! Aged on beachwood sourced from local Seattle beaches for a bright and crushable beer that is perfect to enjoy on your balcony or binge watching tv on the couch! - 4.9% ABV - 13 IBU - SRM 2 - 32oz"
   ),
-  StHellYeah: new WCPSalad("Stoup - Hell Yeah IPA Crowler",
-    "StHellYeah",
+  StCitraIPA: new WCPSalad("Stoup - Citra IPA Crowler",
+    "StCitraIPA",
     15,
-    "This delicious IPA will bring you to your knees with delight. It's brewed with Galaxy, Citra and Cascade hops. This beer is crazy packed with citrus, passionfruit and pine!...or something like that. - 6.4 ABV -  65 IBU - SRM 3 - 32oz"
+    "Sunshine In a Glass ... light and bright in both color and body. Your first sniff will elicit images of tropical fruit and citrus thanks to a healthy dose of Citra® hops. Enjoy a pint of this and you might just find yourself gazing skyward, pondering how in the heck sunshine made its way into your glass. - 5.9% ABV - 50 IBU - SRM 3 - 32oz"
   ),
-  StMIADIPA: new WCPSalad("Stoup - Make it a Double (Hazy) DIPA Crowler",
-    "StMIADIPA",
-    15,
-    "This double IPA gives the crazy delicious combo of Southern Hemisphere hops their opportunity to show off. New Zealand Wai-iti and Wiamea hops throw off heavy citrus and peach while Australian Enigma packs a tropical punch. Keeping it local, the addition of Mosaic hops add a little mango and blueberry vibe. - 7.9% ABV - 37 IBU - SRM 5 - 32oz"
-  ),
+//  StHellYeah: new WCPSalad("Stoup - Hell Yeah IPA Crowler",
+//    "StHellYeah",
+//    15,
+//    "This delicious IPA will bring you to your knees with delight. It's brewed with Galaxy, Citra and Cascade hops. This beer is crazy packed with citrus, passionfruit and pine!...or something like that. - 6.4 ABV -  65 IBU - SRM 3 - 32oz"
+//  ),
+  // StMIADIPA: new WCPSalad("Stoup - Make it a Double (Hazy) DIPA Crowler",
+  //   "StMIADIPA",
+  //   15,
+  //   "This double IPA gives the crazy delicious combo of Southern Hemisphere hops their opportunity to show off. New Zealand Wai-iti and Wiamea hops throw off heavy citrus and peach while Australian Enigma packs a tropical punch. Keeping it local, the addition of Mosaic hops add a little mango and blueberry vibe. - 7.9% ABV - 37 IBU - SRM 5 - 32oz"
+  // ),
   oly6pk: new WCPSalad("Olympia Tall Boy 6 Pack",
     "Oly6pk",
     11,
@@ -810,16 +820,16 @@ AllTheWorld: new WCPSalad("Temperance Beer Co - All The World Is Here",
 };
 
 growler_fill_menu = {
-  abt12: new WCPSalad("St. Bernardus - ABT12",
+  SourABT12: new WCPSalad("St. Bernardus - ABT 12 Barrel Aged Sour",
     "abt12",
     38,
-    "Belgian Quadruple, the flagship. One of the best beers in the world. - ABV 10.0% - EBU 20 - 64oz"
+    "Belgian Quadruple, the flagship. One of the best beers in the world, now given the Belgian sour treatment in oak barrels for 3 years. - ABV 10.0% - EBU 20 - 64oz"
   ),
-  seapine: new WCPSalad("Seapine - IPA",
-    "seapine",
-    17,
-    "Our brewery neighbors from the SoDo days. Centennial hops, heavy citrus. - 6.7% ABV - 65 IBU - 64oz"
-  ),
+//  seapine: new WCPSalad("Seapine - IPA",
+//    "seapine",
+//    17,
+//    "Our brewery neighbors from the SoDo days. Centennial hops, heavy citrus. - 6.7% ABV - 65 IBU - 64oz"
+//  ),
   cider: new WCPSalad("Portland Cider Company - Kinda Dry",
     "cider",
     24,
@@ -830,11 +840,11 @@ growler_fill_menu = {
     16,
     "Light, crisp, refreshing, Seattle institution - 4.3% ABV - 16 IBU - 64oz"
   ),
-  pils: new WCPSalad("Chuckanut - Pilsner",
-    "pils",
-    19,
-    "Golden, dry, bitter, floral, snappy - 5.0% ABV - 36 IBU - 64oz"
-  ),
+//  pils: new WCPSalad("Chuckanut - Pilsner",
+//    "pils",
+//    19,
+//    "Golden, dry, bitter, floral, snappy - 5.0% ABV - 36 IBU - 64oz"
+//  ),
   bcbs: new WCPSalad("Goose Island - Bourbon County Stout 2019",
     "bcbs",
     48,
@@ -908,6 +918,11 @@ wine_bottles_menu = {
     24,
     "Full-bodied, fresh and well balanced. Traces of tropical fruit, citrus with an earthy touch."
   ),
+  Palai: new WCPSalad("White - Pojer e Sandri - Palai - Muller-Thurgau - 2017",
+  "Palai",
+  36,
+  "Straw yellow wine with greenish reflections, brilliant. With an intense aroma, aromatic and ample with hints of limoncella, peach."
+),
   CallingChard: new WCPSalad("White - The Calling - Chardonnay - 2018",
     "CallingChard",
     26,
@@ -1006,12 +1021,11 @@ spirits_menu = {
     30,
     "Bourbon that tastes just as lovely as its origin story."
   ),
-  Dickle: new WCPSalad("Dickle - Rye - 1L",
-    "Dickle",
-    37,
-    "This Indiana rye is boasting 95% rye mash bill but is mellowed out by their charcoal filtration process; leaving you with a nice, lightly spiced, but smooth drinking rye."
-  ),
-
+//  Dickle: new WCPSalad("Dickle - Rye - 1L",
+//    "Dickle",
+//    37,
+//   "This Indiana rye is boasting 95% rye mash bill but is mellowed out by their charcoal filtration process; leaving you with a nice, lightly spiced, but smooth drinking rye."
+//  ),
   HWDblRye: new WCPSalad("High West - Double Rye! - 750mL",
     "HWDblRye",
     52,
@@ -1128,9 +1142,9 @@ spirits_menu = {
 };
 
 na_menu = {
-  MexiCoke: new WCPSalad("Mexican Coke - 12oz",
-    "MexiCoke",
-    3.25,
+  MexiCoke: new WCPSalad("Mexican Coke - 500mL",
+    "MexiCokeML",
+    3.75,
     "The cane sugar classic!"
   ),
   CBGinger: new WCPSalad("Cock'n Bull Ginger Beer - 12oz",
@@ -1138,11 +1152,22 @@ na_menu = {
     3.25,
     "These guys invented the Moscow Mule with this ginger beer."
   ),
-  AranFico: new WCPSalad("Sanpellegrino Arancia & Fico d'India - 330mL",
-    "AranFico",
+//  AranFico: new WCPSalad("Sanpellegrino Arancia & Fico d'India - 330mL",
+//    "AranFico",
+//    2.75,
+//    "These words mean orange and prickly pear in Sermo Vulgaris."
+//  ),
+  Limonata: new WCPSalad("Sanpellegrino Limonata - 330mL",
+    "Limonata",
     2.75,
-    "These words mean orange and prickly pear in Sermo Vulgaris."
+    "Be transported to the lemon groves of Italy with Sanpellegrino® Limonata... or something like that."
   ),
+  Aran: new WCPSalad("Sanpellegrino Aranciata - 330mL",
+    "Aran",
+    2.75,
+    "Sanpellegrino® Aranciata is Italy’s famous aranciata, with a history dating back to 1932... or something like that."
+  ),
+
 };
 
 extras_menu = [

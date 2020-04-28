@@ -184,7 +184,7 @@
         <span class="referral-text">Referral information:</span>
       </label>
       <span class="referral-info">
-        <input type="text" name="referral_info" id="referral_info" value="" size="40" ng-model="orderCtrl.s.referral">
+        <input type="text" name="referral_info" id="referral_info" value="" size="40" ng-model="orderCtrl.s.referral" ng-change="orderCtrl.ChangedEscapableInfo()">
       </span>
     </form>
     <div class="order-nav">
@@ -248,7 +248,7 @@
         <label for="delivery-instructions-text">
           <span class="delivery-instructions-text">Delivery Instructions (optional):</span>
         </label>
-        <input type="text" id="delivery-instructions-text" name="delivery_instructions" size="40" ng-model="orderCtrl.s.delivery_instructions">
+        <input type="text" id="delivery-instructions-text" name="delivery_instructions" size="40" ng-model="orderCtrl.s.delivery_instructions" ng-change="orderCtrl.ChangedEscapableInfo()">
       </span>
     </span>
     <button type="submit" class="btn" ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && !(stage4.address.$error.address || stage4.zipcode.$error.zipcode) && !orderCtrl.s.is_address_validated" ng-click="orderCtrl.ValidateDeliveryAddress()">Validate Delivery Address</button>
@@ -356,16 +356,16 @@
                   <span ng-show="orderCtrl.s.delivery_fee !== 0" class="menu-list__item-price">{{orderCtrl.s.delivery_fee | number:2}}</span>
                 </td>
               </tr>
-              <tr class="cart-item" ng-hide="orderCtrl.s.tip_value === 0">
+              <tr ng-if="orderCtrl.s.credit.validation_successful && orderCtrl.s.credit.type == 'DISCOUNT'" class="cart-item">
                 <td class="cart-item-description">
                   <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
                     <div class="cart-item-title-subtitle column menu-list__item">
-                      <h4 class="menu-list__item-title"><span class="item_title">Gratuity*</span></h4>
+                      <h4 class="menu-list__item-title"><span class="item_title">Discount Code Applied ({{orderCtrl.s.credit.code}})</span></h4>
                     </div>
                   </div>
                 </td>
                 <td class="cart-item-quantity-price no-wrap"></td>
-                <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{orderCtrl.s.tip_value | number:2}}</span></td>
+                <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">-{{orderCtrl.s.credit.amount_used | number: 2}}</span></td>
               </tr>
               <tr class="cart-item">
                 <td class="cart-item-description">
@@ -378,11 +378,22 @@
                 <td class="cart-item-quantity-price no-wrap"></td>
                 <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{orderCtrl.s.computed_tax | number:2}}</span></td>
               </tr>
+              <tr class="cart-item" ng-hide="orderCtrl.s.tip_value === 0">
+                <td class="cart-item-description">
+                  <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
+                    <div class="cart-item-title-subtitle column menu-list__item">
+                      <h4 class="menu-list__item-title"><span class="item_title">Gratuity*</span></h4>
+                    </div>
+                  </div>
+                </td>
+                <td class="cart-item-quantity-price no-wrap"></td>
+                <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{orderCtrl.s.tip_value | number:2}}</span></td>
+              </tr>
               <tr ng-if="orderCtrl.s.credit.validation_successful && orderCtrl.s.credit.type == 'MONEY'" class="cart-item">
                 <td class="cart-item-description">
                   <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
                     <div class="cart-item-title-subtitle column menu-list__item">
-                      <h4 class="menu-list__item-title"><span class="item_title">Store Credit Applied ({{orderCtrl.s.credit.code}})</span></h4>
+                      <h4 class="menu-list__item-title"><span class="item_title">Digital Gift Applied ({{orderCtrl.s.credit.code}})</span></h4>
                     </div>
                   </div>
                 </td>
@@ -403,11 +414,11 @@
             </tbody>
           </table>
         </div>
-    </div>
+      </div>
     <div ng-show="orderCtrl.s.service_type !== orderCtrl.CONFIG.DELIVERY && !orderCtrl.s.credit.validation_successful">
       <label><input type="checkbox" ng-model="orderCtrl.s.acknowledge_instructions_dialogue" ng-change="orderCtrl.ClearSpecialInstructions()">
       I need to specify some special instructions (which may delay my order or change its cost) or wish to pay later.</label>
-      <textarea ng-show="orderCtrl.s.acknowledge_instructions_dialogue" ng-model="orderCtrl.s.special_instructions"></textarea>
+      <textarea ng-show="orderCtrl.s.acknowledge_instructions_dialogue" ng-model="orderCtrl.s.special_instructions" ng-change="orderCtrl.ChangedEscapableInfo()"></textarea>
     </div>
     <div ng-repeat="res in orderCtrl.s.special_instructions_responses" class="wpcf7-response-output wpcf7-validation-errors">{{res}}</div>
     <div class="order-nav">
@@ -504,16 +515,16 @@
                   <span ng-show="orderCtrl.s.delivery_fee !== 0" class="menu-list__item-price">{{orderCtrl.s.delivery_fee | number:2}}</span>
                 </td>
               </tr>
-              <tr class="cart-item" ng-hide="orderCtrl.s.tip_value === 0">
+              <tr ng-if="orderCtrl.s.credit.validation_successful && orderCtrl.s.credit.type == 'DISCOUNT'" class="cart-item">
                 <td class="cart-item-description">
                   <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
                     <div class="cart-item-title-subtitle column menu-list__item">
-                      <h4 class="menu-list__item-title"><span class="item_title">Gratuity*</span></h4>
+                      <h4 class="menu-list__item-title"><span class="item_title">Discount Code Applied ({{orderCtrl.s.credit.code}})</span></h4>
                     </div>
                   </div>
                 </td>
                 <td class="cart-item-quantity-price no-wrap"></td>
-                <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{orderCtrl.s.tip_value | number:2}}</span></td>
+                <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">-{{orderCtrl.s.credit.amount_used | number: 2}}</span></td>
               </tr>
               <tr class="cart-item">
                 <td class="cart-item-description">
@@ -526,11 +537,22 @@
                 <td class="cart-item-quantity-price no-wrap"></td>
                 <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{orderCtrl.s.computed_tax | number:2}}</span></td>
               </tr>
+              <tr class="cart-item" ng-hide="orderCtrl.s.tip_value === 0">
+                <td class="cart-item-description">
+                  <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
+                    <div class="cart-item-title-subtitle column menu-list__item">
+                      <h4 class="menu-list__item-title"><span class="item_title">Gratuity*</span></h4>
+                    </div>
+                  </div>
+                </td>
+                <td class="cart-item-quantity-price no-wrap"></td>
+                <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{orderCtrl.s.tip_value | number:2}}</span></td>
+              </tr>
               <tr ng-if="orderCtrl.s.credit.validation_successful && orderCtrl.s.credit.type == 'MONEY'" class="cart-item">
                 <td class="cart-item-description">
                   <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
                     <div class="cart-item-title-subtitle column menu-list__item">
-                      <h4 class="menu-list__item-title"><span class="item_title">Store Credit Applied ({{orderCtrl.s.credit.code}})</span></h4>
+                      <h4 class="menu-list__item-title"><span class="item_title">Digital Gift Applied ({{orderCtrl.s.credit.code}})</span></h4>
                     </div>
                   </div>
                 </td>
@@ -609,7 +631,7 @@
   </div>
 </div>
 <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.12/angular-material.min.css">
-<script type="text/javascript" src="https://js.squareupsandbox.com/v2/paymentform"></script>
+<script type="text/javascript" src="https://js.squareup.com/v2/paymentform"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.11/angular.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.11/angular-animate.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mailcheck/1.1.2/mailcheck.min.js"></script>
@@ -618,4 +640,4 @@
 <script src="https://www.windycitypie.com/wp-includes/js/socket.io.js"></script>
 <script src="https://www.windycitypie.com/wp-includes/js/socket.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
-<script src="https://www.windycitypie.com/wp-includes/js/WCPMenu35.js"></script>
+<script src="https://www.windycitypie.com/wp-includes/js/WCPMenu37.js"></script>
