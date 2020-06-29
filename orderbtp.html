@@ -151,6 +151,7 @@
   </div>
   <div ng-show="orderCtrl.s.stage === 3">
     <h3 class="flush--top">Tell us a little about you.</h3>
+    All information is used solely to facilitate the getting of your pizza to you. We don't sell or share customer information, ever.
     <div class="wpcf7-response-output wpcf7-mail-sent-ng" ng-if="orderCtrl.s.submit_failed">There was an error submitting your order. This is generally caused by a bad email address. Please check your information and try again.</div>
     <form novalidate name="stage3">
       <span class="flexbox">
@@ -204,6 +205,18 @@
         </div>
       </div>
     </div>
+    <span ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DINEIN">
+      <br /><label><input type="checkbox" ng-model="orderCtrl.s.acknowledge_dine_in_terms">
+      REQUIRED: For the health and safety of our staff and fellow guests, you and all members of your party understand and agree to:
+    <ul><li>Have been following good social distancing practices.</li>
+      <li>Are actively monitoring for any possible COVID-19 symptoms and have not had any.</li>
+      <li>Are NOT knowlingly sick or contagious.</li>
+      <li>Will wear a mask whilst on premise, excepting whilst eating/drinking.</li>
+      <li>Will maintain a safe distance from our crew.</li>
+      <li>Parties are limited to 5 persons.</li>
+      <li>Table reservations last 60 minutes.</li>
+      </ul></label>
+    </span>
     <label for="service-date">
       <span class="service-date-text">Date</span>
     </label>
@@ -257,7 +270,7 @@
         Found an address in our delivery area: <br />
         <span class="title cart">{{orderCtrl.s.validated_delivery_address}} <button name="remove" ng-click="orderCtrl.ClearAddress()" class="button-remove">X</button></span>
       </div>
-      <div class="wpcf7-response-output wpcf7-mail-sent-ng" ng-show="!orderCtrl.s.is_address_validated">The address {{orderCtrl.s.validated_delivery_address}} isn't in our <a target="_blank" href="http://bit.ly/2QsrfV8">delivery area</a></div>
+      <div class="wpcf7-response-output wpcf7-mail-sent-ng" ng-show="!orderCtrl.s.is_address_validated">The address {{orderCtrl.s.validated_delivery_address}} isn't in our <a target="_blank" href="http://bit.ly/2QsrfV8" rel="noopener noreferrer">delivery area</a></div>
     </span>
     <div class="wpcf7-response-output wpcf7-mail-sent-ng" ng-show="orderCtrl.s.address_invalid">Unable to determine the specified address. Send us a text or email if you continue having issues.</div>
     <span ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.PICKUP && orderCtrl.CONFIG.ALLOW_SLICING">
@@ -268,7 +281,7 @@
     </form>
     <div class="order-nav">
       <button type="submit" class="btn scrolltotop" ng-show="orderCtrl.HasPreviousStage()" ng-click="orderCtrl.PreviousStage()">Previous</button>
-      <button type="submit" class="btn scrolltotop" ng-disabled="!orderCtrl.s.date_valid || (orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && (!orderCtrl.s.is_address_validated))" ng-show="orderCtrl.HasNextStage()" ng-click="orderCtrl.NextStage(); orderCtrl.ClearTimeoutFlag();">{{(!orderCtrl.s.date_valid || (orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && (!orderCtrl.s.is_address_validated))) ? "Pick a date & time" : "Next"}}</button>
+      <button type="submit" class="btn scrolltotop" ng-disabled="!orderCtrl.s.date_valid || (orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && (!orderCtrl.s.is_address_validated)) || (orderCtrl.s.service_type == orderCtrl.CONFIG.DINEIN && !orderCtrl.s.acknowledge_dine_in_terms)" ng-show="orderCtrl.HasNextStage()" ng-click="orderCtrl.NextStage(); orderCtrl.ClearTimeoutFlag();">{{(!orderCtrl.s.date_valid || (orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && (!orderCtrl.s.is_address_validated))) ? "Pick a date & time" : "Next"}}</button>
     </div>
   </div>
   <div ng-show="orderCtrl.s.stage === 5 && !orderCtrl.s.isProcessing">
@@ -622,11 +635,11 @@
 </div>
 <div ng-show="orderCtrl.s.isProcessing" class="wpcf7 wpcf7-response-output wpcf7-mail-sent-ok">Submitting order! This can take a few seconds.<span class="ajax-loader is-active"></span></div>
   <div ng-show="orderCtrl.s.stage >= 7">      
-    <div ng-show="orderCtrl.s.stage === 7" class="submitsuccess wpcf7-response-output wpcf7-mail-sent-ok" >Order submitted successfully! Please check your email.</div>
+    <div ng-show="orderCtrl.s.stage === 7" class="submitsuccess wpcf7-response-output wpcf7-mail-sent-ok" >Order submitted successfully! Please check your email. <div ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DINEIN">On site beverages will be available through our friends at Clock-Out Lounge.</div> </div>
     <div ng-show="orderCtrl.s.stage === 8" class="wpcf7-response-output wpcf7-validation-errors" >We had some issues processing your order. Please send us a text message or email so we can look into it.</div>
     <div ng-if="orderCtrl.s.isPaymentSuccess">
       Payment of ${{orderCtrl.s.payment_info.result.payment.total_money.amount / 100 | number:2}} received from card ending in: {{orderCtrl.s.payment_info.result.payment.card_details.card.last_4}}!
-      Here's your <a ng-href="{{orderCtrl.s.payment_info.result.payment.receipt_url}}" target="_blank">receipt</a>.
+      Here's your <a ng-href="{{orderCtrl.s.payment_info.result.payment.receipt_url}}" target="_blank" rel="noopener noreferrer">receipt</a>.
     </div>
     <div ng-if="orderCtrl.s.credit.amount_used > 0 && orderCtrl.s.stage === 7">
       Digital Gift Card number {{orderCtrl.s.credit.code}} debited ${{orderCtrl.s.credit.amount_used | number:2}}.
@@ -645,4 +658,4 @@
 <script src="https://www.breezytownpizza.com/wp-includes/js/socket.io.js"></script>
 <script src="https://www.breezytownpizza.com/wp-includes/js/socket.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
-<script src="https://www.breezytownpizza.com/wp-includes/js/BTPMenu01.js"></script>
+<script src="https://www.breezytownpizza.com/wp-includes/js/BTPMenu17.js"></script>

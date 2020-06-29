@@ -3,22 +3,24 @@ var toppings_dict = {};
 var no_restriction = function (pizza) {
   return true;
 };
+var enable_on_white = function (pizza) {
+  return pizza && pizza.sauce.shortname == "white";
+};
+var disable_on_gf = function (pizza) {
+  return pizza && pizza.crust.dough.shortname == "regular";
+};
+var disable_on_brussels_sprout = function (pizza) {
+  return pizza && pizza.toppings_tracker[toppings_dict.brussels.index] > 0 ? false : true;
+};
 var disable_on_meatball = function (pizza) {
-  return pizza && (pizza.toppings_tracker[toppings_dict.meatball.index] > 0 ? false : true);
+  return pizza && pizza.toppings_tracker[toppings_dict.meatball.index] > 0 ? false : true;
 };
 var disable_on_chicken_sausage = function (pizza) {
-  return pizza && (pizza.toppings_tracker[toppings_dict.chix.index] > 0 ? false : true);
+  return pizza && pizza.toppings_tracker[toppings_dict.chix.index] > 0 ? false : true;
 };
-var disable_on_ital_sausage = function (pizza) {
-  return pizza && (pizza.toppings_tracker[toppings_dict.ital.index] > 0 ? false : true);
+var disable_on_pork_sausage = function (pizza) {
+  return pizza && pizza.toppings_tracker[toppings_dict.sausage.index] > 0 ? false : true;
 };
-var disable_on_dairy = function (pizza) {
-  return disable_on_meatball(pizza) && pizza.sauce.shortname != "white" && (pizza.toppings_tracker[toppings_dict.bleu.index] > 0 ? false : true);
-};
-var disable_on_vegan = function (pizza) {
-  return pizza && pizza.cheese_option.shortname != "vegan_chz";
-};
-
 
 var WCPOption = function (name, shortname, price) {
   this.name = name;
@@ -32,7 +34,7 @@ var TOPPING_LEFT = 1;
 var TOPPING_RIGHT = 2;
 var TOPPING_WHOLE = 3;
 var FLAVOR_MAX = 5;
-var BAKE_MAX = 4;
+var BAKE_MAX = 5;
 
 var WCPSauce = function (name, shortname, price, enable_filter) {
   WCPOption.call(this, name, shortname, price);
@@ -86,19 +88,18 @@ var WCPTopping = function (name, shortname, price, index, enable_filter, flavor_
 };
 
 var sauces = {
-  red: new WCPSauce("Red Sauce", "red", 0, no_restriction),
-  white: new WCPSauce("White Sauce", "white", 2, disable_on_vegan)
+  red: new WCPSauce("Red Sauce", "red", 0, disable_on_brussels_sprout),
+  white: new WCPSauce("White Sauce", "white", 2, no_restriction)
 };
 
 var cheese_options = {
-  regular: new WCPCheese("Wisconsin Brick & Mozzarella", "regular", 0, no_restriction),
-  ex_chz: new WCPCheese("Extra Wisconsin Brick & Mozzarella", "ex_chz", 2, no_restriction),
-  vegan_chz: new WCPCheese("Vegan Cheese", "vegan_chz", 4, disable_on_dairy)
+  regular: new WCPCheese("Mozzarella", "regular", 0, no_restriction),
+  ex_chz: new WCPCheese("Extra Mozzarella", "ex_chz", 2, no_restriction)
 };
 
 var crust_flavors = {
   regular: new WCPOption("Regular", "regular", 0),
-  //  garlic: new WCPOption("Roasted Garlic Crust", "garlic", 2)
+  garlic: new WCPOption("Roasted Garlic Crust", "garlic", 2)
 };
 
 var crust_doughs = {
@@ -115,26 +116,30 @@ var crusts = {
 
 var idx = 0;
 var toppings_array = [
-  new WCPTopping("Baked-In Pepperoni", "pepp_bottom", 2.5, idx++, no_restriction, 1, 1),
+  new WCPTopping("Roasted Garlic", "garlic", 2, idx++, no_restriction, 1, 0),
+  new WCPTopping("Pepperoni", "pepperoni", 2, idx++, no_restriction, 1, 1),
   new WCPTopping("Spinach", "spin", 2, idx++, no_restriction, 1, 1),
   new WCPTopping("Jalapeño", "jala", 2, idx++, no_restriction, 1, 1),
-  new WCPTopping("Red Bell Pepper", "rbp", 2, idx++, no_restriction, 1, 1),
-  new WCPTopping("Red Onion", "red_onion", 2, idx++, no_restriction, 1, 1),
-  new WCPTopping("Crispy Pepperoni", "pepp_top", 2.5, idx++, no_restriction, 1, 1),
-  new WCPTopping("Crimini Mushroom", "crim", 2.5, idx++, no_restriction, 1, 1),
-  new WCPTopping("Castelvetrano Olive", "cast", 2.5, idx++, no_restriction, 1, 1),
-  new WCPTopping("Sweet Hot Pepper", "shp", 2.5, idx++, no_restriction, 1, 1),
+  new WCPTopping("Mushroom", "mush", 2, idx++, no_restriction, 1, 1),
+  new WCPTopping("Castelvetrano Olive", "castel", 2, idx++, no_restriction, 1, 1),
+  new WCPTopping("Kalamata Olive", "kala", 2, idx++, no_restriction, 1, 1),
+  new WCPTopping("Raw Red Onion", "raw_onion", 2, idx++, no_restriction, 1, 1),
+  new WCPTopping("Caramelized Onion", "carm_onion", 2, idx++, no_restriction, 1, 1),
+  new WCPTopping("Sweet Hot Pepper", "shp", 2, idx++, no_restriction, 1, 1),
+  new WCPTopping("Green Bell Pepper", "greenbp", 2, idx++, no_restriction, 1, 1),
+  new WCPTopping("Roasted Red Bell Pepper", "rbp", 2, idx++, no_restriction, 1, 1),
   new WCPTopping("Artichoke Heart", "art", 2, idx++, no_restriction, 1, 1),
   new WCPTopping("Pineapple", "pine", 2, idx++, no_restriction, 1, 1),
-  new WCPTopping("Rosemary Chicken Sausage", "chix", 2.5, idx++, disable_on_ital_sausage, 1, 1),
-  new WCPTopping("Vegan Chick-un Sausage", "TVPmeat", 2.5, idx++, no_restriction, 1, 1),
-  new WCPTopping("Italian Sausage", "ital", 2.5, idx++, disable_on_chicken_sausage, 1, 1),
-  new WCPTopping("Meatball", "meatball", 4, idx++, disable_on_vegan, 1, 2),
-  new WCPTopping("Bacon", "bacon", 2.5, idx++, no_restriction, 1, 1),
-  new WCPTopping("Chèvre", "chev", 2.5, idx++, no_restriction, 1, 0),
-  new WCPTopping("Bleu", "bleu", 2, idx++, disable_on_vegan, 1, 0),
-  new WCPTopping("Hot Giardiniera", "giard", 2.5, idx++, no_restriction, 1, 0),
-  new WCPTopping("Fresh Basil", "basil", 2, idx++, no_restriction, 1, 0),
+  new WCPTopping("Rosemary Chicken Sausage", "chix", 2, idx++, disable_on_pork_sausage, 1, 1),
+  new WCPTopping("House Sausage", "sausage", 2, idx++, disable_on_chicken_sausage, 1, 1),
+  new WCPTopping("Meatball", "meatball", 4, idx++, disable_on_gf, 1, 2),
+  //  new WCPTopping("Braised Beef", "beef", 4, idx++, no_restriction, 1, 2),
+  new WCPTopping("Brussels Sprout", "brussels", 2, idx++, enable_on_white, 1, 1),
+  new WCPTopping("Candied Bacon", "bacon", 2, idx++, no_restriction, 1, 1),
+  new WCPTopping("Bleu", "bleu", 2, idx++, no_restriction, 1, 1),
+  new WCPTopping("Hot Giardiniera", "giard", 2, idx++, no_restriction, 1, 1),
+  new WCPTopping("Sport Pepper", "sport", 2, idx++, no_restriction, 1, 1),
+
 ];
 function initializeToppingsDict() {
   for (var i in toppings_array) {
@@ -144,7 +149,7 @@ function initializeToppingsDict() {
 initializeToppingsDict();
 
 var pizza_menu = {};
-var salad_menu = {};
+var extras_menu = {};
 
 var WCPProduct = function (name, shortcode, price) {
   this.name = name;
@@ -299,9 +304,6 @@ var WCPPizza = function (name, shortcode, crust, cheese, sauce, toppings) {
     // 2 exact match
     var sauce_match = this.sauce == other.sauce ? 2 : 1;
     var crust_match = (this.crust.flavor == other.crust.flavor) ? 2 : (other.crust.flavor.shortname == "regular") ? 1 : 0;
-    //TODO: needs a fix for vegan cheese comparison. probably need to change:
-    // from: (other.cheese_option.shortname == "regular" ? 1 : 0)
-    // to: (this.cheese_option.shortname == "ex_chz" && other.cheese_option.shortname == "regular" ? 1 : 0)
     var cheese_match = this.cheese_option == other.cheese_option ? 2 : (other.cheese_option.shortname == "regular" ? 1 : 0);
     var dough_match = (this.crust.dough == other.crust.dough) ? 2 : (other.crust.dough.shortname == "regular") ? 1 : 0;
     var toppings_match = [[], []];
@@ -584,157 +586,41 @@ function WCPPizzaFromDTO(dto) {
 }
 
 pizza_menu = {
-  pepp: new WCPPizza("Pepperoni Paint Job",
-    "P",
+  omnivore: new WCPPizza("Omnivore",
+    "O",
     crusts.regular,
     cheese_options.regular,
     sauces.red,
-    [[TOPPING_WHOLE, toppings_dict.pepp_top],
-    [TOPPING_WHOLE, toppings_dict.pepp_bottom]],
+    [[TOPPING_WHOLE, toppings_dict.pepperoni],
+    [TOPPING_WHOLE, toppings_dict.sausage],
+    [TOPPING_WHOLE, toppings_dict.carm_onion],
+    [TOPPING_WHOLE, toppings_dict.spin],
+    [TOPPING_WHOLE, toppings_dict.garlic]]
   ),
-  bluto: new WCPPizza("Bluto",
-    "B",
-    crusts.regular,
-    cheese_options.regular,
-    sauces.red,
-    [[TOPPING_WHOLE, toppings_dict.bleu],
-    [TOPPING_WHOLE, toppings_dict.cast],
-    [TOPPING_WHOLE, toppings_dict.crim],
-    [TOPPING_WHOLE, toppings_dict.spin]]
-  ),
-  raiders: new WCPPizza("Raiders of The Lost Art",
-    "R",
-    crusts.regular,
-    cheese_options.vegan_chz,
-    sauces.red,
-    [[TOPPING_WHOLE, toppings_dict.TVPmeat],
-    [TOPPING_WHOLE, toppings_dict.art],
-    [TOPPING_WHOLE, toppings_dict.rbp],
-    [TOPPING_WHOLE, toppings_dict.spin]]
-  ),
-  pete: new WCPPizza("Pete n Pete",
-    "E",
-    crusts.regular,
-    cheese_options.regular,
-    sauces.red,
-    [[TOPPING_WHOLE, toppings_dict.giard],
-    [TOPPING_WHOLE, toppings_dict.bacon],
-    [TOPPING_WHOLE, toppings_dict.pine],
-    [TOPPING_WHOLE, toppings_dict.ital]]
-  ),
-  jj: new WCPPizza("JJ",
-    "J",
-    crusts.regular,
-    cheese_options.regular,
-    sauces.red,
-    [[TOPPING_WHOLE, toppings_dict.chev],
-    [TOPPING_WHOLE, toppings_dict.shp],
-    [TOPPING_WHOLE, toppings_dict.red_onion],
-    [TOPPING_WHOLE, toppings_dict.spin]]
-  ),
-  spicy_mb: new WCPPizza("Spicy Meatball",
-    "S",
-    crusts.regular,
-    cheese_options.regular,
-    sauces.red,
-    [[TOPPING_WHOLE, toppings_dict.giard],
-    [TOPPING_WHOLE, toppings_dict.meatball],
-    [TOPPING_WHOLE, toppings_dict.shp]]
-  ),
-  famiglia: new WCPPizza("La famiglia",
-    "L",
-    crusts.regular,
-    cheese_options.regular,
-    sauces.red,
-    [[TOPPING_WHOLE, toppings_dict.ital],
-    [TOPPING_WHOLE, toppings_dict.crim],
-    [TOPPING_WHOLE, toppings_dict.basil]]
-  ),
-  toddler: new WCPPizza("Toddler",
-    "T",
-    crusts.regular,
-    cheese_options.regular,
-    sauces.red,
-    [[TOPPING_WHOLE, toppings_dict.basil]]
-  ),
-  byo: new WCPPizza("Build-Your-Own",
-    "z",
-    crusts.regular,
-    cheese_options.regular,
-    sauces.red,
-    []
-  ),
+
 };
 
 salad_menu = {
-  beets: new WCPSalad("Beets By Schrute Salad",
-    "Be",
-    7,
-    "Arugula + Roasted Beet + Roasted Pistachio + Bleu + Tarragon Vinaigrette"
-  ),
-  spinach: new WCPSalad("Spinach Salad",
-    "Sp",
-    7,
-    "Baby Spinach + Chèvre + Candied Pecan + Roasted Red Bell Pepper Vinaigrette + Pickled Red Onion"
-  ),
-  caesar: new WCPSalad("All Kale Caesar! Salad",
-    "Cz",
-    7,
-    "Kale + Parmigiano Reggiano + Caesar Dressing + Garlic Crouton + Lemon Wedge"
-  ),
-  meatball: new WCPSalad("Polpetta Party!",
-    "Mb",
-    9,
-    "Extra-Large House-Made Meatball (3) + Marinara + Pecorino Romano + Fresh Basil"
-  ),
-//  SLInsta: new WCPSalad("Instagram Special Slice!",
-//    "SLInsta",
-//    5,
-//    "Slice of: Whatever we have posted on Instagram (For consistent results, order same day and check our instagram for details!)"
-//  ),
-  SLTod: new WCPSalad("Toddler Slice",
-    "SLTod",
-    4.25,
-    "Slice of: Wisconsin Brick & Mozzarella Blend + Red Sauce + Fresh Basil"
-  ),
-  SLPepp: new WCPSalad("Pepperoni Paint Job Slice",
-    "SLPepp",
-    4.5,
-    "Slice of: Wisconsin Brick & Mozzarella Blend + Baked-In Pepperoni + Red Sauce + Crispy Pepperoni"
-  ),
-  SLRaid: new WCPSalad("Raiders of The Lost Art Slice",
-    "SLRaid",
-    5,
-    "Slice of: Vegan Cheese Blend + Red Sauce + Spinach + Red Bell Pepper + Artichoke Heart + Vegan Chick-un Sausage"
-  ),
+
 };
 
+
 beverage_menu = {
-  MexiCoke: new WCPSalad("Mexican Coke - 12oz",
-    "MexiCoke",
-    3.25,
-    "Cane sugar classic"
-  ),
-  Limonata: new WCPSalad("Sanpellegrino Limonata - 330mL",
-    "Limonata",
-    2.75,
-    "Be transported to the lemon groves of Italy with Sanpellegrino® Limonata... or something like that."
-  ),
-  Aran: new WCPSalad("Sanpellegrino Aranciata - 330mL",
-    "Aran",
-    2.75,
-    "Sanpellegrino® Aranciata is Italy’s famous aranciata, with a history dating back to 1932... or something like that."
-  ),
-  AranRossa: new WCPSalad("Sanpellegrino Aranciata Rossa - 330mL",
-    "AranRossa",
-    2.75,
-    "Sanpellegrino® Aranciata Rossa is made from oranges and blood oranges from Italy that get their unique color and taste from the conditions of the land in which they are grown... or something like that."
-  ),
-//  AranFico: new WCPSalad("Sanpellegrino Arancia & Fico d'India - 330mL",
-//    "AranFico",
-//    2.75,
-//    "Prickly pear – the spiky fruit that hangs like jewels on the cactus trees in the sunny Mediterranean coast, is the ingredient in Sanpellegrino® Arancia & Fico d'India... or something like that."
-//  ),
+  
+};
+
+growler_fill_menu = {
+};
+
+wine_bottles_menu = {
+};
+
+spirits_menu = {
+
+};
+
+na_menu = {
+
 };
 
 extras_menu = [
@@ -743,7 +629,28 @@ extras_menu = [
     menu: salad_menu
   },
   {
-    menu_name: "Beverages (Pick-up and Delivery only)",
+    menu_name: "Growler Fills",
+    subtitle: "We can fill your growler (after we sanitize it) or you can buy one of ours! Add empty growlers to your order if buying one of ours.",
+    menu: growler_fill_menu
+  },
+  {
+    menu_name: "Packaged Beer",
     menu: beverage_menu
+  },
+  {
+    menu_name: "Bottled Wine (750mL)",
+    in_red: "Sale pricing!",
+    menu: wine_bottles_menu
+  },
+  {
+    menu_name: "Bottled Spirits",
+    in_red: "Crazy liquor tax included.",
+    subtitle: "Looking for a different bottle? Let us know in your order special instructions and we'll see what we can do for you! Free ugly limes with bottle purchase.",
+    menu: spirits_menu
+  },
+  {
+    menu_name: "Pop",
+    subtitle: "Making Moscow Mules? Grab a vodka and we'll throw in some free limes.",
+    menu: na_menu
   },
 ];

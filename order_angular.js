@@ -421,7 +421,7 @@ function UpdateLeadTime() {
         this.credit.amount_used = pre_tax_store_credit;
       } 
       this.computed_tax = parseFloat(Number((pre_tax_monies - pre_tax_store_credit) * cfg.TAX_RATE).toFixed(2));
-      this.autograt = this.num_pizza >= 5 || this.service_type === cfg.DELIVERY ? .2 : 0;
+      this.autograt = this.num_pizza >= 5 || this.service_type === cfg.DELIVERY || this.service_type === cfg.DINEIN  ? .2 : 0;
       var compute_tip_from = pre_tax_monies + this.computed_tax;
       var mintip = compute_tip_from * this.autograt;
       mintip = parseFloat(mintip.toFixed(2));
@@ -621,6 +621,7 @@ function UpdateLeadTime() {
     this.shortcartstring = "";
     this.shortcartlist = [];
     this.referral = "";
+    this.acknowledge_dine_in_terms = false;
     this.acknowledge_instructions_dialogue = false;
     this.special_instructions = "";
     this.special_instructions_responses = [];
@@ -1112,7 +1113,7 @@ function UpdateLeadTime() {
             scope.orderinfo.s.disableorder = true;
             scope.orderinfo.s.special_instructions_responses.push(wcpconfig.REQUEST_SLICING);
           }
-          if (wcpconfig.REQUEST_SOONER && (special_instructions_lower.indexOf("soon") >= 0 || special_instructions_lower.indexOf("earl") >= 0 || special_instructions_lower.indexOf("time") >= 0)) {
+          if (wcpconfig.REQUEST_SOONER && (special_instructions_lower.indexOf("soon") >= 0 || special_instructions_lower.indexOf("earl") >= 0 || special_instructions_lower.indexOf("time") >= 0) || special_instructions_lower.indexOf("asap") >= 0) {
             scope.orderinfo.s.disableorder = true;
             scope.orderinfo.s.special_instructions_responses.push(wcpconfig.REQUEST_SOONER);
           }
