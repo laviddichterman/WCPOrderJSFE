@@ -67,23 +67,23 @@ var BTPStoreConfig = function () {
   ];
 
   this.DINEIN_HOURS = [
-    [12 * 60, 21 * 60], //sunday
-    [16 * 60, 21 * 60], //monday
-    [16 * 60, 21 * 60], //tuesday
-    [16 * 60, 21 * 60], //wednesday
-    [16 * 60, 21 * 60], //thursday
+    [16 * 60, 20 * 60], //sunday
+    [1 * 60, 0 * 60], //monday
+    [1 * 60, 0 * 60], //tuesday
+    [16 * 60, 20 * 60], //wednesday
+    [16 * 60, 20 * 60], //thursday
     [16 * 60, 20 * 60], //friday
-    [12 * 60, 20 * 60] //saturday
+    [16 * 60, 20 * 60] //saturday
   ];
 
   this.DELIVERY_HOURS = [
-    [16 * 60, 21 * 60], //sunday
+    [16 * 60, 20.5 * 60], //sunday
     [1 * 60, 0 * 60], //monday
     [1 * 60, 0 * 60], //tuesday
-    [16 * 60, 21 * 60], //wednesday
-    [16 * 60, 21 * 60], //thursday
-    [16 * 60, 21 * 60], //friday
-    [16 * 60, 21 * 60] //saturday
+    [1 * 60, 0 * 60], //wednesday
+    [16 * 60, 20.5 * 60], //thursday
+    [16 * 60, 20.5 * 60], //friday
+    [16 * 60, 20.5 * 60] //saturday
   ];
 
   this.HOURS_BY_SERVICE_TYPE = [
@@ -425,7 +425,7 @@ var WCPOrderHelper = function () {
         this.credit.amount_used = pre_tax_store_credit;
       } 
       this.computed_tax = parseFloat(Number((pre_tax_monies - pre_tax_store_credit) * cfg.TAX_RATE).toFixed(2));
-      this.autograt = this.num_pizza >= 5 || this.service_type === cfg.DELIVERY ? .2 : 0;
+      this.autograt = this.num_pizza >= 5 || this.service_type === cfg.DELIVERY || this.service_type === cfg.DINEIN  ? .2 : 0;
       var compute_tip_from = pre_tax_monies + this.computed_tax;
       var mintip = compute_tip_from * this.autograt;
       mintip = parseFloat(mintip.toFixed(2));
@@ -624,6 +624,7 @@ var WCPOrderHelper = function () {
       this.shortcartstring = "";
       this.shortcartlist = [];
       this.referral = "";
+      this.acknowledge_dine_in_terms = false;
       this.acknowledge_instructions_dialogue = false;
       this.special_instructions = "";
       this.special_instructions_responses = [];
@@ -655,7 +656,7 @@ var WCPOrderHelper = function () {
         },
         // DINEIN
         function (state) {
-          return false;
+          return true;
         },
         // DELIVERY
         function (state) {
@@ -1106,7 +1107,7 @@ var WCPOrderHelper = function () {
             if (special_instructions_lower.indexOf("split") >= 0 || special_instructions_lower.indexOf("half") >= 0 || special_instructions_lower.indexOf("1/2") >= 0) {
               scope.orderinfo.s.special_instructions_responses.push(wcpconfig.REQUEST_HALF);
             }
-            if (wcpconfig.REQUEST_SOONER && (special_instructions_lower.indexOf("soon") >= 0 || special_instructions_lower.indexOf("earl") >= 0 || special_instructions_lower.indexOf("time") >= 0)) {
+            if (wcpconfig.REQUEST_SOONER && (special_instructions_lower.indexOf("soon") >= 0 || special_instructions_lower.indexOf("earl") >= 0 || special_instructions_lower.indexOf("time") >= 0) || special_instructions_lower.indexOf("asap") >= 0) {
               scope.orderinfo.s.disableorder = true;
               scope.orderinfo.s.special_instructions_responses.push(wcpconfig.REQUEST_SOONER);
             }
