@@ -97,12 +97,11 @@ var WCPStoreConfig = function () {
   this.TIME_STEP = 15;
 
   // menu related
-  this.EXTRAS_MENU = extras_menu;
-  this.PIZZA_MENU = pizza_menu;
-  this.TOPPINGS = toppings_array;
-  this.SAUCES = sauces;
-  this.CHEESE_OPTIONS = cheese_options;
-  this.CRUSTS = crusts;
+  this.EXTRAS_MENU = {};
+  this.PIZZA_MENU = [];
+  this.TOPPINGS = [];
+  this.SAUCES = [];
+  this.CHEESE_OPTIONS = [];
   // END menu related
 
   // user messaging
@@ -119,6 +118,15 @@ var WCPStoreConfig = function () {
 
   this.UpdateLeadTimeVal = function (lt) {
     this.LEAD_TIME = lt;
+  }
+
+  this.UpdateCatalog = function (cat) {
+    var catalog_map = GenerateCatalogMapFromCatalog(cat);
+    this.EXTRAS_MENU = catalog_map.extras;
+    this.PIZZA_MENU = catalog_map.pizzas;
+    this.TOPPINGS = catalog_map.toppings;
+    this.SAUCES = catalog_map.sauces;
+    this.CHEESE_OPTIONS = catalog_map.cheeses;
   }
   //END WCP store config
 };
@@ -345,13 +353,6 @@ function UpdateLeadTime() {
       this.num_pizza = size;
     };
 
-    this.ComputeCartBasedLeadTime = function () {
-      this.cart_based_lead_time = 0;
-      for (var i in this.cart.pizza) {
-        this.cart_based_lead_time = Math.max(this.cart_based_lead_time, this.cart.pizza[i][1].crust.leadtime);
-      }
-    };
-
     this.ComputeSubtotal = function () {
       var val = 0;
       for (var i in this.cart.pizza) {
@@ -459,7 +460,6 @@ function UpdateLeadTime() {
     this.StatePostCartUpdate = function () {
       this.RecomputeOrderSize();
       this.ComputeSubtotal();
-      this.ComputeCartBasedLeadTime();
       this.TotalsUpdate();
     }
 
@@ -685,7 +685,6 @@ function UpdateLeadTime() {
       this.toppings = toppings_array;
       this.sauces = sauces;
       this.cheese_options = cheese_options;
-      this.crusts = crusts;
       this.split_toppings = $location.search().split === true;
       var enable_delivery = true;
       this.ScrollTop = ScrollTopJQ;
@@ -933,6 +932,14 @@ function UpdateLeadTime() {
       };
       const BoundUpdateLeadTimeFxn = UpdateLeadTimeFxn.bind(this);
       $socket.on("WCP_LEAD_TIMES", BoundUpdateLeadTimeFxn);
+      var UpdateCatalogFxn = function (message) {
+        this.CONFIG.UpdateCatalog(message);
+        this.RevalidateItems();
+        this.SlowSubmitterCheck();
+        UpdateLeadTime();
+      };
+      var UpdateCatalogFxn = UpdateCatalogFxn.bind(this);
+      $socket.on("WCP_CATALOG", UpdateCatalogFxn);
     }]);
 
   app.controller("AccordionController", function () {
@@ -953,8 +960,7 @@ function UpdateLeadTime() {
   });
 
   app.controller("PizzaMenuController", function () {
-    this.pizza_menu = wcpconfig.PIZZA_MENU;
-    this.extras_menu = wcpconfig.EXTRAS_MENU;
+    this.CONFIG = wcpconfig;
     this.selection = null;
     this.quantity = 1;
     this.cheese_toggle = false;
@@ -962,22 +968,17 @@ function UpdateLeadTime() {
     this.sauces = sauces;
     this.cheese_options = cheese_options;
     this.cheese_selection_mode = Object.keys(cheese_options).length;
-    this.crusts = crusts;
     this.messages = [];
     this.suppress_guide = false;
 
     this.PopulateOrderGuide = function () {
       var addon_chz = this.selection.cheese_option != cheese_options.regular.shortname ? 1 : 0;
-      var addon_crust = this.selection.crust.flavor.shortname != "regular" ? 1 : 0;
       this.messages = [];
       if (this.selection) {
-        if (this.selection.crust.dough == crust_doughs.gf) {
-          this.messages.push("Gluten free pizzas require 24 hour's notice and are baked in a kitchen exposed to wheat flour. While we take very thorough precautions, cross-contamination is a possibility.");
-        }
-        if (this.selection.bake_count[0] + addon_chz + addon_crust < 2 || this.selection.bake_count[1] + addon_chz + addon_crust < 2) {
+        if (this.selection.bake_count[0] + addon_chz < 2 || this.selection.bake_count[1] + addon_chz < 2) {
           this.messages.push("Our pizza is designed as a vehicle for add-ons. We recommend at least two toppings to weigh the crust down during baking. If this is your first time dining with us, we'd suggest ordering a menu pizza without modifications.");
         }
-        if (this.selection.flavor_count[0] + addon_crust > 5 || this.selection.flavor_count[1] + addon_crust > 5) {
+        if (this.selection.flavor_count[0] > 5 || this.selection.flavor_count[1] > 5) {
           this.messages.push("We love our toppings too, but adding this many flavors can end up detracting from the overall enjoyment. We'd suggest scaling this pizza back a bit. If this is your first time dining with us, we'd suggest ordering a menu pizza without modifications.");
         }
         if (this.selection.sauce == sauces.white && this.selection.toppings_tracker[toppings_dict.bleu.index] != TOPPING_NONE) {

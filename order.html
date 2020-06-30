@@ -5,7 +5,7 @@
       <h3 class="flush--top" ng-if="orderCtrl.s.cart.pizza.length === 0"><strong>Click a pizza below to get started</strong></h3>
       <h3 class="flush--top" ng-if="orderCtrl.s.cart.pizza.length > 0"><strong>Click a pizza below or next to continue</strong></h3>
       <ul class="flexitems menu-list__items">
-        <li class="flexitem menu-list__item" ng-repeat="pizza in pmenuCtrl.pizza_menu">
+        <li class="flexitem menu-list__item" ng-repeat="pizza in pmenuCtrl.CONFIG.PIZZA_MENU">
           <div class="offer-link" ng-click="orderCtrl.ScrollTop(); pmenuCtrl.setPizza(pizza)">
             <wcppizzacartitem pizza="pizza" description="true" dots="true" price="true"></wcppizzacartitem>
           </div>
@@ -21,7 +21,7 @@
       <div ng-if="pmenuCtrl.selection">
         <div>Sauce:</div>
         <div class="flexitems">
-          <div class="flexitem" ng-repeat="sauce in pmenuCtrl.sauces">
+          <div class="flexitem" ng-repeat="sauce in pmenuCtrl.CONFIG.SAUCES">
             <input id="{{sauce.shortname}}_whole" class="input-whole" ng-model="pmenuCtrl.selection.sauce" ng-value="sauce" ng-disabled="!sauce.ShowOption(pmenuCtrl.selection)" type="radio" ng-change="pmenuCtrl.updateSelection()">
             <span class="option-circle-container">
               <label for="{{sauce.shortname}}_whole" class="option-whole option-circle"></label>
@@ -32,13 +32,13 @@
         <div>Cheese:</div>
         <div class="flexitems">
           <div class="flexitem" ng-if="pmenuCtrl.cheese_selection_mode === 2">
-            <input type="checkbox" id="{{pmenuCtrl.cheese_options['ex_chz'].shortname}}_whole" class="input-whole" ng-model="pmenuCtrl.cheese_toggle" ng-true-value="true" ng-false-value="false" ng-change="pmenuCtrl.updateSelection()">
+            <input type="checkbox" id="{{pmenuCtrl.CONFIG.CHEESE_OPTIONS['ex_chz'].shortname}}_whole" class="input-whole" ng-model="pmenuCtrl.cheese_toggle" ng-true-value="true" ng-false-value="false" ng-change="pmenuCtrl.updateSelection()">
             <span class="option-circle-container">
-              <label for="{{pmenuCtrl.cheese_options['ex_chz'].shortname}}_whole" class="option-whole option-circle"></label>
+              <label for="{{pmenuCtrl.CONFIG.CHEESE_OPTIONS['ex_chz'].shortname}}_whole" class="option-whole option-circle"></label>
             </span>
-            <label class="topping_text" for="{{pmenuCtrl.cheese_options['ex_chz'].shortname}}_whole">{{pmenuCtrl.cheese_options['ex_chz'].name}}</label>
+            <label class="topping_text" for="{{pmenuCtrl.CONFIG.CHEESE_OPTIONS['ex_chz'].shortname}}_whole">{{pmenuCtrl.CONFIG.CHEESE_OPTIONS['ex_chz'].name}}</label>
           </div>
-          <div class="flexitem" ng-if="pmenuCtrl.cheese_selection_mode > 2" ng-repeat="cheese in pmenuCtrl.cheese_options" >
+          <div class="flexitem" ng-if="pmenuCtrl.cheese_selection_mode > 2" ng-repeat="cheese in pmenuCtrl.CONFIG.CHEESE_OPTIONS" >
             <input id="{{cheese.shortname}}_whole" class="input-whole" ng-model="pmenuCtrl.selection.cheese_option" ng-value="cheese" ng-disabled="!cheese.ShowOption(pmenuCtrl.selection)" type="radio" ng-change="pmenuCtrl.updateSelection()">
             <span class="option-circle-container">
               <label for="{{cheese.shortname}}_whole" class="option-whole option-circle"></label>
@@ -48,7 +48,7 @@
         </div>
         <div>Toppings:</div>
         <div class="flexitems">
-          <div class="flexitem" wcptoppingdir ng-repeat="topping in pmenuCtrl.toppings" selection="pmenuCtrl.selection" pmenuctrl="pmenuCtrl" topping="topping" config="orderCtrl.CONFIG" split="orderCtrl.split_toppings">
+          <div class="flexitem" wcptoppingdir ng-repeat="topping in pmenuCtrl.CONFIG.TOPPINGS" selection="pmenuCtrl.selection" pmenuctrl="pmenuCtrl" topping="topping" config="orderCtrl.CONFIG" split="orderCtrl.split_toppings">
           </div>
         </div>
       </div>
@@ -66,7 +66,7 @@
     </div>
     <md-content ng-show="orderCtrl.s.stage === 2" ng-controller="AccordionController as accordionCtrl">
       <h3 class="flush--top"><strong>Add small plates or beverages to your order.</strong></h3>
-      <div class="ordering-menu menu-list menu-list__dotted md-accordion" ng-repeat="submenu in pmenuCtrl.extras_menu">
+      <div class="ordering-menu menu-list menu-list__dotted md-accordion" ng-repeat="submenu in pmenuCtrl.CONFIG.EXTRAS_MENU">
         <md-toolbar ng-click="accordionCtrl.toggleAccordion($index); orderCtrl.ScrollTop()" role="button">
           <div class="md-toolbar-tools">
             <h2>
