@@ -1,5 +1,24 @@
 var toppings_dict = {};
 
+var ENABLE_FUNCTIONS = {
+  always: function(pizza) {
+    return true; },
+  enable_on_white: function(pizza) {
+    return pizza && pizza.sauce.shortname == "white"; },
+  disable_on_brussels_sprout: function (pizza) {
+    return pizza && pizza.toppings_tracker[toppings_dict.brussels.index] > 0 ? false : true;
+  },
+  disable_on_meatball: function (pizza) {
+    return pizza && pizza.toppings_tracker[toppings_dict.meatball.index] > 0 ? false : true;
+  },
+  disable_on_chicken_sausage: function (pizza) {
+    return pizza && pizza.toppings_tracker[toppings_dict.chix.index] > 0 ? false : true;
+  },
+  disable_on_pork_sausage: function (pizza) {
+    return pizza && pizza.toppings_tracker[toppings_dict.sausage.index] > 0 ? false : true;
+  },
+};
+
 var WCPOption = function (name, shortname, price) {
   this.name = name;
   this.shortname = shortname;
@@ -54,50 +73,17 @@ var WCPTopping = function (name, shortname, price, index, enable_filter, flavor_
   };
 };
 
-var sauces = {
-  red: new WCPSauce("Red Sauce", "red", 0, disable_on_brussels_sprout),
-  white: new WCPSauce("White Sauce", "white", 2, no_restriction)
-};
 
-var cheese_options = {
-  regular: new WCPCheese("Mozzarella", "regular", 0, no_restriction),
-  ex_chz: new WCPCheese("Extra Mozzarella", "ex_chz", 2, no_restriction)
-};
-
-var idx = 0;
-var toppings_array = [
-  new WCPTopping("Roasted Garlic", "garlic", 2, idx++, no_restriction, 1, 0),
-  new WCPTopping("Pepperoni", "pepperoni", 2, idx++, no_restriction, 1, 1),
-  new WCPTopping("Spinach", "spin", 2, idx++, no_restriction, 1, 1),
-  new WCPTopping("Jalapeño", "jala", 2, idx++, no_restriction, 1, 1),
-  new WCPTopping("Mushroom", "mush", 2, idx++, no_restriction, 1, 1),
-  new WCPTopping("Castelvetrano Olive", "castel", 2, idx++, no_restriction, 1, 1),
-  new WCPTopping("Kalamata Olive", "kala", 2, idx++, no_restriction, 1, 1),
-  new WCPTopping("Raw Red Onion", "raw_onion", 2, idx++, no_restriction, 1, 1),
-  new WCPTopping("Caramelized Onion", "carm_onion", 2, idx++, no_restriction, 1, 1),
-  new WCPTopping("Sweet Hot Pepper", "shp", 2, idx++, no_restriction, 1, 1),
-  new WCPTopping("Green Bell Pepper", "greenbp", 2, idx++, no_restriction, 1, 1),
-  new WCPTopping("Roasted Red Bell Pepper", "rbp", 2, idx++, no_restriction, 1, 1),
-  new WCPTopping("Artichoke Heart", "art", 2, idx++, no_restriction, 1, 1),
-  new WCPTopping("Pineapple", "pine", 2, idx++, no_restriction, 1, 1),
-  new WCPTopping("Rosemary Chicken Sausage", "chix", 2, idx++, disable_on_pork_sausage, 1, 1),
-  new WCPTopping("House Sausage", "sausage", 2, idx++, disable_on_chicken_sausage, 1, 1),
-  new WCPTopping("Meatball", "meatball", 4, idx++, disable_on_gf, 1, 2),
-  //  new WCPTopping("Braised Beef", "beef", 4, idx++, no_restriction, 1, 2),
-  new WCPTopping("Brussels Sprout", "brussels", 2, idx++, enable_on_white, 1, 1),
-  new WCPTopping("Candied Bacon", "bacon", 2, idx++, no_restriction, 1, 1),
-  new WCPTopping("Bleu", "bleu", 2, idx++, no_restriction, 1, 1),
-  new WCPTopping("Hot Giardiniera", "giard", 2, idx++, no_restriction, 1, 1),
-  new WCPTopping("Sport Pepper", "sport", 2, idx++, no_restriction, 1, 1),
-
-];
+// TODO we can depreciate this array... or maybe dict? one of them at least
 function initializeToppingsDict() {
   for (var i in toppings_array) {
     toppings_dict[toppings_array[i].shortname] = toppings_array[i];
   }
 }
-initializeToppingsDict();
 
+var sauces = {};
+var cheese_options = {};
+var toppings_array = [];
 var pizza_menu = {};
 var extras_menu = {};
 
@@ -331,7 +317,7 @@ var WCPPizza = function (name, shortcode, cheese, sauce, toppings) {
           // menu pizza with add-ons
 
           // first pull out any sauce, cheese differences
-          if (menu_compare === "byo") {
+          if (menu_compare === "z") {
             name_components.sauce = pizza.sauce;
             name_components.cheese = pizza.cheese_option;
           }
@@ -360,7 +346,7 @@ var WCPPizza = function (name, shortcode, cheese, sauce, toppings) {
       pizza.shortcode = pizza.is_split && shortcodes[0] !== shortcodes[1] ? shortcodes.join("|") : shortcodes[0];
 
       // set byo flag
-      pizza.is_byo = menu_match[0] === pizza_menu["byo"] || menu_match[1] === pizza_menu["byo"];
+      pizza.is_byo = menu_match[0] === pizza_menu["z"] || menu_match[1] === pizza_menu["z"];
 
       // split out toppings into left additions, right additions, and whole additions
       var additional_toppings = { left: [], right: [], whole: [] };
@@ -403,7 +389,7 @@ var WCPPizza = function (name, shortcode, cheese, sauce, toppings) {
         name_components_list = BuildComponentsList(name_components, function (x) { return x.name; });
         shortname_components_list = BuildComponentsList(shortname_components, function (x) { return x.shortname; });
         if (menu_match[0].name == menu_match[1].name) {
-          if (menu_match[0] !== pizza_menu["byo"]) {
+          if (menu_match[0] !== pizza_menu["z"]) {
             name_components_list.unshift(menu_match[0].name);
             shortname_components_list.unshift(menu_match[0].name);
           }
@@ -411,7 +397,7 @@ var WCPPizza = function (name, shortcode, cheese, sauce, toppings) {
           shortname_components_list.push("(" + short_split_toppings.join(" | ") + ")");
         }
         else {
-          var names = [(menu_match[0] !== pizza_menu["byo"]) ? [menu_match[0].name] : [], (menu_match[1] !== pizza_menu["byo"]) ? [menu_match[1].name] : []];
+          var names = [(menu_match[0] !== pizza_menu["z"]) ? [menu_match[0].name] : [], (menu_match[1] !== pizza_menu["z"]) ? [menu_match[1].name] : []];
           var shortnames = [names[0], names[1]];
           if (additional_toppings.left.length) {
             names[0] = names[0].concat(split_toppings[0]);
@@ -429,7 +415,7 @@ var WCPPizza = function (name, shortcode, cheese, sauce, toppings) {
           shortname_components_list.push("(" + shortnames[0].join(" + ") + " | " + shortnames[1].join(" + ") + ")");
         }
       }
-      else if (menu_match[0] === pizza_menu["byo"]) {
+      else if (menu_match[0] === pizza_menu["z"]) {
         // we've got a build your own pizza, make sure sauce and cheese name components are present
         name_components.sauce = name_components.sauce !== null ? name_components.sauce : menu_match[0].sauce;
         name_components.cheese = name_components.cheese !== null ? name_components.cheese : menu_match[0].cheese_option;
@@ -505,18 +491,103 @@ function WCPPizzaFromDTO(dto) {
 
 
 function GenerateCatalogMapFromCatalog(cat) {
-  var extras = [];
+  function GetModifierObjectsFromDicts(mod, indexed) {
+    var opts = [];
+    var has_disabled = false;
+    var mt = cat.modifiers[mod.modifier_type_id];
+    mod.options.forEach(function (opt) {
+      var idx;
+      for (idx = 0; idx < mt.options.length; ++idx) {
+        if (mt.options[idx]._id === opt.option_id) {
+          if (mt.options[idx].catalog_item.disabled) {
+            has_disabled = true;
+          }
+          break;
+        }
+      }
+      opts.push(indexed[mod.modifier_type_id][mt.options[idx].catalog_item.shortcode])
+    })
+    return [has_disabled, opts];
+  }
+  console.log(cat);
+
+  var mod_dicts = {};
+  var toppings_arr = [];
   var pizzas = {};
-  var toppings = [];
-  var sauces = [];
-  var cheeses = [];
-  toppings_array = toppings;
+  var extras = [];
+
+  // first pull toppings
+  var TOPPINGS_MTID = "5ef2653347a2f32de511166b";
+  var wario_toppings = cat.modifiers[TOPPINGS_MTID];
+  mod_dicts[TOPPINGS_MTID] = {};
+  wario_toppings.options.forEach(function(opt) {
+    if (!opt.catalog_item.disabled) {
+      var enable_function = ENABLE_FUNCTIONS[opt.enable_function_name]
+      var top = new WCPTopping(opt.catalog_item.display_name, opt.catalog_item.shortcode, opt.catalog_item.price.amount / 100, opt.ordinal, enable_function, opt.metadata.flavor_factor, opt.metadata.bake_factor);
+      toppings_arr.push(top);
+      mod_dicts[TOPPINGS_MTID][opt.catalog_item.shortcode] = top;
+    }
+  })
+  toppings_array = toppings_arr;
   initializeToppingsDict();
+  var CHEESE_MTID = "5edf0cad0952ead62fec20d4";
+  var wario_cheese = cat.modifiers[CHEESE_MTID];
+  mod_dicts[CHEESE_MTID] = {};
+  wario_cheese.options.forEach(function(opt) {
+    if (!opt.catalog_item.disabled) {
+      var enable_function = ENABLE_FUNCTIONS[opt.enable_function_name]
+      mod_dicts[CHEESE_MTID][opt.catalog_item.shortcode] = new WCPCheese(opt.catalog_item.display_name, opt.catalog_item.shortcode, opt.catalog_item.price.amount / 100, enable_function);
+    }
+  })
+  var SAUCE_MTID = "5eedb659ec8b0813f66b78b3";
+  var wario_sauce = cat.modifiers[SAUCE_MTID];
+  mod_dicts[SAUCE_MTID] = {};
+  wario_sauce.options.forEach(function(opt) {
+    if (!opt.catalog_item.disabled) {
+      var enable_function = ENABLE_FUNCTIONS[opt.enable_function_name]
+      mod_dicts[SAUCE_MTID][opt.catalog_item.shortcode] = new WCPSauce(opt.catalog_item.display_name, opt.catalog_item.shortcode, opt.catalog_item.price.amount / 100, enable_function);
+    }
+  })
+  var PIZZAS_CATID = "5ede2394ac3796224cbdb97a";
+  var wario_pizza_products = cat.categories[PIZZAS_CATID].products;
+  wario_pizza_products.forEach(function(pid) {
+    cat.products[pid].instances.forEach(function(product_instance) {
+      // var WCPPizza = function (name, shortcode, cheese, sauce, toppings) 
+      var is_disabled = product_instance.item.disabled;
+      var pi_chz = [];
+      var pi_sauce = [];
+      var pi_toppings = [];
+      product_instance.modifiers.forEach(function(mt) {
+        var ret = GetModifierObjectsFromDicts(mt, mod_dicts);
+        var obj = ret[1];
+        is_disabled = is_disabled || ret[0];
+        switch (mt.modifier_type_id) {
+          case CHEESE_MTID:
+            pi_chz = obj[0];
+            break;
+          case SAUCE_MTID:
+            pi_sauce = obj[0];
+            break;
+          case TOPPINGS_MTID:
+            pi_toppings = obj;
+            break;
+          default:
+            console.log("something went wrong!");
+        }
+      })
+      if (!is_disabled) {
+        pizzas[product_instance.item.shortcode] =new WCPPizza(product_instance.item.display_name, product_instance.item.shortcode, pi_chz, pi_sauce, pi_toppings.map(function(x) { return [TOPPING_WHOLE, x] }));
+      }
+    })
+  });
+  sauces = mod_dicts[SAUCE_MTID];
+  cheese_options = mod_dicts[CHEESE_MTID];
+  pizza_menu = pizzas;
   return { 
     extras: extras,
     pizzas: pizzas,
-    toppings: toppings,
-    sauces: sauces,
-    cheeses: cheeses
+    toppings: toppings_array,
+    sauces: mod_dicts[SAUCE_MTID],
+    cheeses: mod_dicts[CHEESE_MTID]
   };
 }

@@ -31,14 +31,14 @@
         </div>
         <div>Cheese:</div>
         <div class="flexitems">
-          <div class="flexitem" ng-if="pmenuCtrl.cheese_selection_mode === 2">
+          <div class="flexitem" ng-if="pmenuCtrl.CONFIG.CHEESE_SELECTION_MODE === 2">
             <input type="checkbox" id="{{pmenuCtrl.CONFIG.CHEESE_OPTIONS['ex_chz'].shortname}}_whole" class="input-whole" ng-model="pmenuCtrl.cheese_toggle" ng-true-value="true" ng-false-value="false" ng-change="pmenuCtrl.updateSelection()">
             <span class="option-circle-container">
               <label for="{{pmenuCtrl.CONFIG.CHEESE_OPTIONS['ex_chz'].shortname}}_whole" class="option-whole option-circle"></label>
             </span>
             <label class="topping_text" for="{{pmenuCtrl.CONFIG.CHEESE_OPTIONS['ex_chz'].shortname}}_whole">{{pmenuCtrl.CONFIG.CHEESE_OPTIONS['ex_chz'].name}}</label>
           </div>
-          <div class="flexitem" ng-if="pmenuCtrl.cheese_selection_mode > 2" ng-repeat="cheese in pmenuCtrl.CONFIG.CHEESE_OPTIONS" >
+          <div class="flexitem" ng-if="pmenuCtrl.CONFIG.CHEESE_SELECTION_MODE > 2" ng-repeat="cheese in pmenuCtrl.CONFIG.CHEESE_OPTIONS" >
             <input id="{{cheese.shortname}}_whole" class="input-whole" ng-model="pmenuCtrl.selection.cheese_option" ng-value="cheese" ng-disabled="!cheese.ShowOption(pmenuCtrl.selection)" type="radio" ng-change="pmenuCtrl.updateSelection()">
             <span class="option-circle-container">
               <label for="{{cheese.shortname}}_whole" class="option-whole option-circle"></label>
@@ -640,4 +640,3 @@
 <script src="https://www.windycitypie.com/wp-includes/js/socket.io.js"></script>
 <script src="https://www.windycitypie.com/wp-includes/js/socket.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
-<script src="https://www.windycitypie.com/wp-includes/js/WCPMenu37.js"></script>

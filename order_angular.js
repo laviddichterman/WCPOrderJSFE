@@ -7,12 +7,12 @@ var DATE_STRING_INTERNAL_FORMAT = "YYYYMMDD";
 
 var DELIVERY_INTERVAL_TIME = 30;
 
-var WARIO_ENDPOINT = "https://wario.windycitypie.com/";
+//var WARIO_ENDPOINT = "https://wario.windycitypie.com/";
 
 var SanitizeIfExists = function (str) {
   return str && str.length ? str.replace("'", "`").replace("/", "|").replace("&", "and").replace("<", "").replace(">", "").replace(/[\+\t\r\n\v\f]/g, '') : str;
 }
-//var WARIO_ENDPOINT = "http://localhost:4001/";
+var WARIO_ENDPOINT = "http://localhost:4001/";
 
 function ScrollTopJQ() {
   $j("html, body").animate({
@@ -98,10 +98,11 @@ var WCPStoreConfig = function () {
 
   // menu related
   this.EXTRAS_MENU = {};
-  this.PIZZA_MENU = [];
+  this.PIZZA_MENU = {};
   this.TOPPINGS = [];
-  this.SAUCES = [];
-  this.CHEESE_OPTIONS = [];
+  this.SAUCES = {};
+  this.CHEESE_OPTIONS = {};
+  this.CHEESE_SELECTION_MODE = 2;
   // END menu related
 
   // user messaging
@@ -127,6 +128,7 @@ var WCPStoreConfig = function () {
     this.TOPPINGS = catalog_map.toppings;
     this.SAUCES = catalog_map.sauces;
     this.CHEESE_OPTIONS = catalog_map.cheeses;
+    this.CHEESE_SELECTION_MODE = Object.keys(catalog_map.cheeses).length;
   }
   //END WCP store config
 };
@@ -682,9 +684,6 @@ function UpdateLeadTime() {
     function (OrderHelper, $filter, $http, $location, $scope, $rootScope, $socket) {
       this.ORDER_HELPER = OrderHelper;
       this.CONFIG = wcpconfig;
-      this.toppings = toppings_array;
-      this.sauces = sauces;
-      this.cheese_options = cheese_options;
       this.split_toppings = $location.search().split === true;
       var enable_delivery = true;
       this.ScrollTop = ScrollTopJQ;
@@ -840,6 +839,10 @@ function UpdateLeadTime() {
         this.s.cart.extras.push([1, selection]);
         this.PostCartUpdate();
       };
+      
+      this.RevalidateItems = function () {
+        //TODO
+      }
 
       this.removeExtraFromOrder = function (idx) {
         this.s.cart.extras.splice(idx, 1);
@@ -964,15 +967,11 @@ function UpdateLeadTime() {
     this.selection = null;
     this.quantity = 1;
     this.cheese_toggle = false;
-    this.toppings = toppings_array;
-    this.sauces = sauces;
-    this.cheese_options = cheese_options;
-    this.cheese_selection_mode = Object.keys(cheese_options).length;
     this.messages = [];
     this.suppress_guide = false;
 
     this.PopulateOrderGuide = function () {
-      var addon_chz = this.selection.cheese_option != cheese_options.regular.shortname ? 1 : 0;
+      var addon_chz = this.selection.cheese_option != this.CONFIG.CHEESE_OPTIONS.regular.shortname ? 1 : 0;
       this.messages = [];
       if (this.selection) {
         if (this.selection.bake_count[0] + addon_chz < 2 || this.selection.bake_count[1] + addon_chz < 2) {
@@ -981,15 +980,15 @@ function UpdateLeadTime() {
         if (this.selection.flavor_count[0] > 5 || this.selection.flavor_count[1] > 5) {
           this.messages.push("We love our toppings too, but adding this many flavors can end up detracting from the overall enjoyment. We'd suggest scaling this pizza back a bit. If this is your first time dining with us, we'd suggest ordering a menu pizza without modifications.");
         }
-        if (this.selection.sauce == sauces.white && this.selection.toppings_tracker[toppings_dict.bleu.index] != TOPPING_NONE) {
+        if (this.selection.sauce == this.CONFIG.SAUCES.white && this.selection.toppings_tracker[toppings_dict.bleu.index] != TOPPING_NONE) {
           this.messages.push("Our white sauce really lets the bleu cheese flavor come through. If you haven't had this pairing before, we'd suggest asking for light bleu cheese or switching back to red sauce.");
         }
       }
     };
 
     this.updateSelection = function () {
-      if (this.cheese_selection_mode === 2) {
-        this.selection.cheese_option = this.cheese_toggle ? this.cheese_options.ex_chz : this.cheese_options.regular;
+      if (this.CONFIG.CHEESE_SELECTION_MODE === 2) {
+        this.selection.cheese_option = this.cheese_toggle ? this.CONFIG.CHEESE_OPTIONS.ex_chz : this.CONFIG.CHEESE_OPTIONS.regular;
       }
       this.selection.UpdatePie();
       this.PopulateOrderGuide();
