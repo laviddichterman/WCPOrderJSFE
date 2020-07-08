@@ -220,19 +220,19 @@ var WCPPizza = function (name, shortcode, cheese, sauce, toppings) {
     return sections.join(" + ");
   };
 
-  this.Compare = function (other) {
+  Compare = function (first, other) {
     // 0 no match
     // 1 at least
     // 2 exact match
-    var sauce_match = this.sauce.shortname == other.sauce.shortname ? 2 : 1;
-    var cheese_match = this.cheese_option.shortname === other.cheese_option.shortname ? 2 : (other.cheese_option.shortname === "regular" ? 1 : 0);
+    var sauce_match = first.sauce.shortname == other.sauce.shortname ? 2 : 1;
+    var cheese_match = first.cheese_option.shortname === other.cheese_option.shortname ? 2 : (other.cheese_option.shortname === "regular" ? 1 : 0);
     var toppings_match = [[], []];
     var non_topping_match = Math.min(sauce_match, cheese_match);
-    var is_mirror = this.is_split && other.is_split && non_topping_match == 2;
+    var is_mirror = first.is_split && other.is_split && non_topping_match == 2;
     for (var i in other.toppings_tracker) {
       switch (other.toppings_tracker[i]) {
         case 0:
-          switch (this.toppings_tracker[i]) {
+          switch (first.toppings_tracker[i]) {
             case 0: toppings_match[0].push(2); toppings_match[1].push(2); break;
             case 1: toppings_match[0].push(1); toppings_match[1].push(2); is_mirror = false; break;
             case 2: toppings_match[0].push(2); toppings_match[1].push(1); is_mirror = false; break;
@@ -241,7 +241,7 @@ var WCPPizza = function (name, shortcode, cheese, sauce, toppings) {
           }
           break;
         case 1:
-          switch (this.toppings_tracker[i]) {
+          switch (first.toppings_tracker[i]) {
             case 0: toppings_match[0].push(0); toppings_match[1].push(2); is_mirror = false; break;
             case 1: toppings_match[0].push(2); toppings_match[1].push(2); is_mirror = false; break;
             case 2: toppings_match[0].push(0); toppings_match[1].push(0); break;
@@ -250,7 +250,7 @@ var WCPPizza = function (name, shortcode, cheese, sauce, toppings) {
           }
           break;
         case 2:
-          switch (this.toppings_tracker[i]) {
+          switch (first.toppings_tracker[i]) {
             case 0: toppings_match[0].push(2); toppings_match[1].push(0); is_mirror = false; break;
             case 1: toppings_match[0].push(0); toppings_match[1].push(0); break;
             case 2: toppings_match[0].push(2); toppings_match[1].push(2); is_mirror = false; break;
@@ -259,7 +259,7 @@ var WCPPizza = function (name, shortcode, cheese, sauce, toppings) {
           }
           break;
         case 3:
-          switch (this.toppings_tracker[i]) {
+          switch (first.toppings_tracker[i]) {
             case 0: toppings_match[0].push(0); toppings_match[1].push(0); is_mirror = false; break;
             case 1: toppings_match[0].push(2); toppings_match[1].push(0); is_mirror = false; break;
             case 2: toppings_match[0].push(0); toppings_match[1].push(2); is_mirror = false; break;
@@ -281,13 +281,13 @@ var WCPPizza = function (name, shortcode, cheese, sauce, toppings) {
     };
   };
 
-  this.EqualsFromComparisonInfo = function (comparison_info) {
+  IsEquals = function(a, b) {
+    var comparison_info = Compare(a, b);
     return comparison_info.mirror || (comparison_info.min_non_topping == 2 && comparison_info.min_topping_left == 2 && comparison_info.min_topping_right == 2);
-  };
+  }
 
   this.Equals = function (other) {
-    var comparison_info = this.Compare(other);
-    return this.EqualsFromComparisonInfo(comparison_info);
+    return IsEquals(this, other);
   };
 
   this.RecomputeName = function () {
@@ -344,7 +344,7 @@ var WCPPizza = function (name, shortcode, cheese, sauce, toppings) {
       pizza.shortcode = pizza.is_split && shortcodes[0] !== shortcodes[1] ? shortcodes.join("|") : shortcodes[0];
 
       // set byo flag
-      pizza.is_byo = menu_match[0] === pizza_menu["z"] || menu_match[1] === pizza_menu["z"];
+      pizza.is_byo = IsEquals(menu_match[0], pizza_menu["z"]) || IsEquals(menu_match[1], pizza_menu["z"]);
 
       // split out toppings into left additions, right additions, and whole additions
       var additional_toppings = { left: [], right: [], whole: [] };
@@ -395,7 +395,7 @@ var WCPPizza = function (name, shortcode, cheese, sauce, toppings) {
           shortname_components_list.push("(" + short_split_toppings.join(" | ") + ")");
         }
         else {
-          var names = [(menu_match[0] !== pizza_menu["z"]) ? [menu_match[0].name] : [], (menu_match[1] !== pizza_menu["z"]) ? [menu_match[1].name] : []];
+          var names = [IsEquals(menu_match[0] !== pizza_menu["z"]) ? [menu_match[0].name] : [], IsEquals(menu_match[1] !== pizza_menu["z"]) ? [menu_match[1].name] : []];
           var shortnames = [names[0], names[1]];
           if (additional_toppings.left.length) {
             names[0] = names[0].concat(split_toppings[0]);
@@ -413,7 +413,7 @@ var WCPPizza = function (name, shortcode, cheese, sauce, toppings) {
           shortname_components_list.push("(" + shortnames[0].join(" + ") + " | " + shortnames[1].join(" + ") + ")");
         }
       }
-      else if (menu_match[0] === pizza_menu["z"]) {
+      else if (IsEquals(menu_match[0], pizza_menu["z"])) {
         // we've got a build your own pizza, make sure sauce and cheese name components are present
         name_components.sauce = name_components.sauce !== null ? name_components.sauce : menu_match[0].sauce;
         name_components.cheese = name_components.cheese !== null ? name_components.cheese : menu_match[0].cheese_option;
@@ -433,7 +433,7 @@ var WCPPizza = function (name, shortcode, cheese, sauce, toppings) {
     // iterate through menu, until has_left and has_right are true
     // a name can be assigned once an exact or at least match is found for a given side
     for (var menu_pizza in pizza_menu) {
-      var comparison_info = this.Compare(pizza_menu[menu_pizza]);
+      var comparison_info = Compare(this, pizza_menu[menu_pizza]);
       var comparison_left = Math.min.apply(null, [comparison_info.min_non_topping, comparison_info.min_topping_left]);
       var comparison_right = Math.min.apply(null, [comparison_info.min_non_topping, comparison_info.min_topping_right]);
       ComputeForSide(this, 0, comparison_left, menu_pizza);
@@ -578,9 +578,9 @@ function GenerateCatalogMapFromCatalog(cat) {
       }
     })
   });
-  sauces = mod_dicts[SAUCE_MTID];
-  cheese_options = mod_dicts[CHEESE_MTID];
-  pizza_menu = pizzas;
+  Object.assign(sauces, mod_dicts[SAUCE_MTID]);
+  Object.assign(cheese_options, mod_dicts[CHEESE_MTID]);
+  Object.assign(pizza_menu, pizzas);
   return { 
     extras: extras,
     pizzas: pizzas,
