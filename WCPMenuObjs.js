@@ -224,13 +224,11 @@ var WCPPizza = function (name, shortcode, cheese, sauce, toppings) {
     // 0 no match
     // 1 at least
     // 2 exact match
-    var sauce_match = this.sauce == other.sauce ? 2 : 1;
-    var cheese_match = this.cheese_option == other.cheese_option ? 2 : (other.cheese_option.shortname == "regular" ? 1 : 0);
+    var sauce_match = this.sauce.shortname == other.sauce.shortname ? 2 : 1;
+    var cheese_match = this.cheese_option.shortname === other.cheese_option.shortname ? 2 : (other.cheese_option.shortname === "regular" ? 1 : 0);
     var toppings_match = [[], []];
     var non_topping_match = Math.min(sauce_match, cheese_match);
     var is_mirror = this.is_split && other.is_split && non_topping_match == 2;
-    var min_topping_match_left = 2;
-    var min_topping_match_right = 2;
     for (var i in other.toppings_tracker) {
       switch (other.toppings_tracker[i]) {
         case 0:
@@ -388,7 +386,7 @@ var WCPPizza = function (name, shortcode, cheese, sauce, toppings) {
       if (pizza.is_split) {
         name_components_list = BuildComponentsList(name_components, function (x) { return x.name; });
         shortname_components_list = BuildComponentsList(shortname_components, function (x) { return x.shortname; });
-        if (menu_match[0].name == menu_match[1].name) {
+        if (menu_match[0].name === menu_match[1].name) {
           if (menu_match[0] !== pizza_menu["z"]) {
             name_components_list.unshift(menu_match[0].name);
             shortname_components_list.unshift(menu_match[0].name);
