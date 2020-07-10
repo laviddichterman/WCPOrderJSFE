@@ -5,7 +5,7 @@
       <h3 class="flush--top" ng-if="orderCtrl.s.cart.pizza.length === 0"><strong>Click a pizza below to get started</strong></h3>
       <h3 class="flush--top" ng-if="orderCtrl.s.cart.pizza.length > 0"><strong>Click a pizza below or next to continue</strong></h3>
       <ul class="flexitems menu-list__items">
-        <li class="flexitem menu-list__item" ng-repeat="pizza in pmenuCtrl.CONFIG.PIZZA_MENU">
+        <li class="flexitem menu-list__item" ng-repeat="pizza in pmenuCtrl.CONFIG.MENU.pizzas">
           <div class="offer-link" ng-click="orderCtrl.ScrollTop(); pmenuCtrl.setPizza(pizza)">
             <wcppizzacartitem pizza="pizza" description="true" dots="true" price="true"></wcppizzacartitem>
           </div>
@@ -21,8 +21,8 @@
       <div ng-if="pmenuCtrl.selection">
         <div>Sauce:</div>
         <div class="flexitems">
-          <div class="flexitem" ng-repeat="sauce in pmenuCtrl.CONFIG.SAUCES">
-            <input id="{{sauce.shortname}}_whole" class="input-whole" ng-model="pmenuCtrl.selection.sauce" ng-value="sauce" ng-disabled="!sauce.ShowOption(pmenuCtrl.selection)" type="radio" ng-change="pmenuCtrl.updateSelection()">
+          <div class="flexitem" ng-repeat="sauce in pmenuCtrl.CONFIG.MENU.sauces">
+            <input id="{{sauce.shortname}}_whole" class="input-whole" ng-model="pmenuCtrl.selection.sauce" ng-value="sauce" ng-disabled="!sauce.ShowOption(pmenuCtrl.selection, pmenuCtrl.CONFIG.MENU)" type="radio" ng-change="pmenuCtrl.updateSelection()">
             <span class="option-circle-container">
               <label for="{{sauce.shortname}}_whole" class="option-whole option-circle"></label>
             </span>
@@ -32,14 +32,14 @@
         <div>Cheese:</div>
         <div class="flexitems">
           <div class="flexitem" ng-if="pmenuCtrl.CONFIG.CHEESE_SELECTION_MODE === 2">
-            <input type="checkbox" id="{{pmenuCtrl.CONFIG.CHEESE_OPTIONS['ex_chz'].shortname}}_whole" class="input-whole" ng-model="pmenuCtrl.cheese_toggle" ng-true-value="true" ng-false-value="false" ng-change="pmenuCtrl.updateSelection()">
+            <input type="checkbox" id="{{pmenuCtrl.CONFIG.MENU.cheeses['ex_chz'].shortname}}_whole" class="input-whole" ng-model="pmenuCtrl.cheese_toggle" ng-true-value="true" ng-false-value="false" ng-change="pmenuCtrl.updateSelection()">
             <span class="option-circle-container">
-              <label for="{{pmenuCtrl.CONFIG.CHEESE_OPTIONS['ex_chz'].shortname}}_whole" class="option-whole option-circle"></label>
+              <label for="{{pmenuCtrl.CONFIG.MENU.cheeses['ex_chz'].shortname}}_whole" class="option-whole option-circle"></label>
             </span>
-            <label class="topping_text" for="{{pmenuCtrl.CONFIG.CHEESE_OPTIONS['ex_chz'].shortname}}_whole">{{pmenuCtrl.CONFIG.CHEESE_OPTIONS['ex_chz'].name}}</label>
+            <label class="topping_text" for="{{pmenuCtrl.CONFIG.MENU.cheeses['ex_chz'].shortname}}_whole">{{pmenuCtrl.CONFIG.MENU.cheeses['ex_chz'].name}}</label>
           </div>
-          <div class="flexitem" ng-if="pmenuCtrl.CONFIG.CHEESE_SELECTION_MODE > 2" ng-repeat="cheese in pmenuCtrl.CONFIG.CHEESE_OPTIONS" >
-            <input id="{{cheese.shortname}}_whole" class="input-whole" ng-model="pmenuCtrl.selection.cheese_option" ng-value="cheese" ng-disabled="!cheese.ShowOption(pmenuCtrl.selection)" type="radio" ng-change="pmenuCtrl.updateSelection()">
+          <div class="flexitem" ng-if="pmenuCtrl.CONFIG.CHEESE_SELECTION_MODE > 2" ng-repeat="cheese in pmenuCtrl.CONFIG.MENU.cheeses" >
+            <input id="{{cheese.shortname}}_whole" class="input-whole" ng-model="pmenuCtrl.selection.cheese_option" ng-value="cheese" ng-disabled="!cheese.ShowOption(pmenuCtrl.selection, pmenuCtrl.CONFIG.MENU)" type="radio" ng-change="pmenuCtrl.updateSelection()">
             <span class="option-circle-container">
               <label for="{{cheese.shortname}}_whole" class="option-whole option-circle"></label>
             </span>
@@ -48,7 +48,7 @@
         </div>
         <div>Toppings:</div>
         <div class="flexitems">
-          <div class="flexitem" wcptoppingdir ng-repeat="topping in pmenuCtrl.CONFIG.TOPPINGS" selection="pmenuCtrl.selection" pmenuctrl="pmenuCtrl" topping="topping" config="orderCtrl.CONFIG" split="orderCtrl.split_toppings">
+          <div class="flexitem" wcptoppingdir ng-repeat="topping in pmenuCtrl.CONFIG.MENU.toppings" selection="pmenuCtrl.selection" pmenuctrl="pmenuCtrl" topping="topping" config="orderCtrl.CONFIG" split="orderCtrl.s.enable_split_toppings">
           </div>
         </div>
       </div>
@@ -64,21 +64,20 @@
         </span>
       </div>
     </div>
-    <md-content ng-show="orderCtrl.s.stage === 2" ng-controller="AccordionController as accordionCtrl">
+    <md-content ng-show="orderCtrl.s.stage === 2">
       <h3 class="flush--top"><strong>Add small plates or beverages to your order.</strong></h3>
-      <div class="ordering-menu menu-list menu-list__dotted md-accordion" ng-repeat="submenu in pmenuCtrl.CONFIG.EXTRAS_MENU">
-        <md-toolbar ng-click="accordionCtrl.toggleAccordion($index); orderCtrl.ScrollTop()" role="button">
+      <div class="ordering-menu menu-list menu-list__dotted md-accordion" ng-repeat="submenu in pmenuCtrl.CONFIG.MENU.extras">
+        <md-toolbar ng-click="orderCtrl.toggleAccordion($index); orderCtrl.ScrollTop()" role="button">
           <div class="md-toolbar-tools">
             <h2>
-              <span><strong>{{submenu.menu_name}}</strong></span>
-              <span style="color: red;" ng-if="submenu.in_red"><strong>{{submenu.in_red}}</strong></span>
+              <span><strong><span ng-bind-html="submenu.menu_name"></span></strong></span>
             </h2>
             <span flex="" class="flex"></span>
-            <span ng-class="{expandCollapse:true, active:accordionCtrl.accordionstate[$index]}"></span> 
+            <span ng-class="{expandCollapse:true, active:orderCtrl.s.accordionstate[$index]}"></span> 
           </div>
         </md-toolbar> 
-        <ul ng-class="{dataContent:true, activeContent:accordionCtrl.accordionstate[$index]}" class="menu-list__items">
-          <li class="menu-list__item" ng-if="submenu.subtitle"><strong>{{submenu.subtitle}}</strong></li>
+        <ul ng-class="{dataContent:true, activeContent:orderCtrl.s.accordionstate[$index]}" class="menu-list__items">
+          <li class="menu-list__item" ng-if="submenu.subtitle"><strong><span ng-bind-html="submenu.subtitle"></span></strong></li>
           <li class="menu-list__item" ng-repeat="extra in submenu.menu">
             <div class="offer-link" ng-click="orderCtrl.ScrollTop(); orderCtrl.addExtraToOrder(extra)">
               <h4 class="menu-list__item-title"><span class="item_title">{{extra.name}}</span><span class="dots"></span></h4>
@@ -633,6 +632,7 @@
 <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.12/angular-material.min.css">
 <script type="text/javascript" src="https://js.squareup.com/v2/paymentform"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.11/angular.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.11/angular-sanitize.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.11/angular-animate.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mailcheck/1.1.2/mailcheck.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.maskedinput/1.4.1/jquery.maskedinput.min.js"></script>
@@ -640,3 +640,15 @@
 <script src="https://www.windycitypie.com/wp-includes/js/socket.io.js"></script>
 <script src="https://www.windycitypie.com/wp-includes/js/socket.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
+<script>
+var EXTRAS_CATID = "5ef6cf1a3991a469ceda2598";
+var PIZZAS_CATID = "5eb21d084f5f1946916c6baf";
+
+var TOPPINGS_MTID = "5ef6cf743991a469ceda25aa";
+var CHEESE_MTID = "5ef6cf603991a469ceda25a3";
+var SAUCE_MTID = "5ef6cf6b3991a469ceda25a6";
+var WARIO_ENDPOINT = "https://wario.windycitypie.com/";
+//var WARIO_ENDPOINT = "http://localhost:4001/";
+var WCP_BLOG_LOAD_TIME = moment(new Date([WCP_blog_epoch_time]));
+</script>
+<script src="https://www.windycitypie.com/wp-includes/js/WCPJSFE8.js"></script>
