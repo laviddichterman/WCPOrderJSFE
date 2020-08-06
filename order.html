@@ -5,6 +5,7 @@
       <h3 class="flush--top" ng-if="orderCtrl.s.cart.pizza.length === 0"><strong>Click a pizza below to get started</strong></h3>
       <h3 class="flush--top" ng-if="orderCtrl.s.cart.pizza.length > 0"><strong>Click a pizza below or next to continue</strong></h3>
       <ul class="flexitems menu-list__items">
+        <li class="flexitem menu-list__item" ng-if="pmenuCtrl.CONFIG.MENU.pizzas.length === 0">Loading menu...</li>
         <li class="flexitem menu-list__item" ng-repeat="pizza in pmenuCtrl.CONFIG.MENU.pizzas">
           <div class="offer-link" ng-click="orderCtrl.ScrollTop(); pmenuCtrl.setPizza(pizza)">
             <wcppizzacartitem pizza="pizza" description="true" dots="true" price="true"></wcppizzacartitem>
@@ -46,7 +47,7 @@
             <label class="topping_text" for="{{cheese.shortname}}_whole">{{cheese.name}}</label>
           </div>
         </div>
-        <div>Toppings:</div>
+        <div>Toppings&nbsp;(limit&nbsp;{{pmenuCtrl.CONFIG.BAKE_MAX}}<span ng-if="pmenuCtrl.selection.is_split">&nbsp;per&nbsp;side</span>):</div>
         <div class="flexitems">
           <div class="flexitem" wcptoppingdir ng-repeat="topping in pmenuCtrl.CONFIG.MENU.toppings" selection="pmenuCtrl.selection" pmenuctrl="pmenuCtrl" topping="topping" config="orderCtrl.CONFIG" split="orderCtrl.s.enable_split_toppings">
           </div>
@@ -150,6 +151,7 @@
   </div>
   <div ng-show="orderCtrl.s.stage === 3">
     <h3 class="flush--top">Tell us a little about you.</h3>
+    All information is used solely to facilitate the getting of your pizza to you. We don't sell or share customer information, ever.
     <div class="wpcf7-response-output wpcf7-mail-sent-ng" ng-if="orderCtrl.s.submit_failed">There was an error submitting your order. This is generally caused by a bad email address. Please check your information and try again.</div>
     <form novalidate name="stage3">
       <span class="flexbox">
@@ -198,11 +200,23 @@
     <div class="flexitems">
       <div class="flexitem" ng-repeat="service in orderCtrl.CONFIG.SERVICE_TYPES track by $index">
         <div ng-if="orderCtrl.s.service_type_functors[$index](orderCtrl.s)">
-          <label><input type="radio" ng-change="orderCtrl.ValidateDate(); orderCtrl.ClearAddress();" ng-model="orderCtrl.s.service_type" ng-value="service[1]">
+          <label><input type="radio" ng-change="orderCtrl.ValidateDate(); orderCtrl.ClearAddress(); orderCtrl.ClearSlicing();" ng-model="orderCtrl.s.service_type" ng-value="service[1]">
           {{service[0]}}</label>
         </div>
       </div>
     </div>
+    <span ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DINEIN">
+      <br /><label><input type="checkbox" ng-model="orderCtrl.s.acknowledge_dine_in_terms">
+      REQUIRED: For the health and safety of our staff and fellow guests, you and all members of your party understand and agree to:
+    <ul><li>Have been following good social distancing practices.</li>
+      <li>Are actively monitoring for any possible COVID-19 symptoms and have not had any.</li>
+      <li>Are NOT knowlingly sick or contagious.</li>
+      <li>Will wear a mask whilst on premise, excepting whilst eating/drinking.</li>
+      <li>Will maintain a safe distance from our crew.</li>
+      <li>Parties are limited to 5 persons.</li>
+      <li>Table reservations last 60 minutes.</li>
+      </ul></label>
+    </span>
     <label for="service-date">
       <span class="service-date-text">Date</span>
     </label>
@@ -256,13 +270,18 @@
         Found an address in our delivery area: <br />
         <span class="title cart">{{orderCtrl.s.validated_delivery_address}} <button name="remove" ng-click="orderCtrl.ClearAddress()" class="button-remove">X</button></span>
       </div>
-      <div class="wpcf7-response-output wpcf7-mail-sent-ng" ng-show="!orderCtrl.s.is_address_validated">The address {{orderCtrl.s.validated_delivery_address}} isn't in our <a target="_blank" href="http://bit.ly/2QsrfV8">delivery area</a></div>
+      <div class="wpcf7-response-output wpcf7-mail-sent-ng" ng-show="!orderCtrl.s.is_address_validated">The address {{orderCtrl.s.validated_delivery_address}} isn't in our <a target="_blank" ng-href="{{orderCtrl.CONFIG.DELIVERY_LINK}}">delivery area</a></div>
     </span>
     <div class="wpcf7-response-output wpcf7-mail-sent-ng" ng-show="orderCtrl.s.address_invalid">Unable to determine the specified address. Send us a text or email if you continue having issues.</div>
     </form>
+    <span ng-show="orderCtrl.s.service_type === orderCtrl.CONFIG.PICKUP && orderCtrl.CONFIG.ALLOW_SLICING">
+      <br /><label><input type="checkbox" ng-model="orderCtrl.s.slice_pizzas">
+      Please slice my pizzas (not recommended)</label>
+      <span ng-show="orderCtrl.s.slice_pizzas">Crust, like any good bread, should be given time to rest after baking. Slicing your pizzas as they come out of the oven also causes the trapped moisture at the top of the pizza to permiate the crust itself. If you do stick with this option, we'd recommend crisping up your slice on a hot skillet, as needed.</span>
+    </span>
     <div class="order-nav">
       <button type="submit" class="btn scrolltotop" ng-show="orderCtrl.HasPreviousStage()" ng-click="orderCtrl.PreviousStage()">Previous</button>
-      <button type="submit" class="btn scrolltotop" ng-disabled="!orderCtrl.s.date_valid || (orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && (!orderCtrl.s.is_address_validated))" ng-show="orderCtrl.HasNextStage()" ng-click="orderCtrl.NextStage(); orderCtrl.ClearTimeoutFlag();">{{(!orderCtrl.s.date_valid || (orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && (!orderCtrl.s.is_address_validated))) ? "Pick a date & time" : "Next"}}</button>
+      <button type="submit" class="btn scrolltotop" ng-disabled="!orderCtrl.s.date_valid || (orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && (!orderCtrl.s.is_address_validated)) || (orderCtrl.s.service_type == orderCtrl.CONFIG.DINEIN && !orderCtrl.s.acknowledge_dine_in_terms)" ng-show="orderCtrl.HasNextStage()" ng-click="orderCtrl.NextStage(); orderCtrl.ClearTimeoutFlag();">{{(!orderCtrl.s.date_valid || (orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && (!orderCtrl.s.is_address_validated))) ? "Pick a date & time" : "Next"}}</button>
     </div>
   </div>
   <div ng-show="orderCtrl.s.stage === 5 && !orderCtrl.s.isProcessing">
@@ -431,7 +450,7 @@
   <div ng-if="orderCtrl.s.stage === 6">
     <div ng-hide="orderCtrl.s.isProcessing">
       <h3 ng-show="orderCtrl.computeDefaultTipIfClean()" class="flush--top">Add gratuity to your order and settle up!</h3>
-      <h5>The Windy City Pie family is working hard to serve you, safely. All gratuity is shared with the entire staff. Everyone, from our team that makes the house-made dough, to the staff that handles your order appreciates your support!</h5>
+      <h5>{{orderCtrl.CONFIG.TIP_PREAMBLE}}</h5>
       <div class="flexbox">
         <div ng-hide="(orderCtrl.s.autograt === 0 && $index === 3) || (orderCtrl.s.autograt !== 0 && $index === 0)" class="flexbox__item one-third soft-quarter"  ng-repeat="tip in orderCtrl.s.tip_options" >
           <button ng-click="orderCtrl.s.selectPercentageTip($index)" ng-class="{btn:true, tipbtn:true, 'flexbox__item':true, 'one-whole':true, 'selected':orderCtrl.s.selected_tip==$index}" >
@@ -650,5 +669,16 @@ var SAUCE_MTID = "5ef6cf6b3991a469ceda25a6";
 var WARIO_ENDPOINT = "https://wario.windycitypie.com/";
 //var WARIO_ENDPOINT = "http://localhost:4001/";
 var WCP_BLOG_LOAD_TIME = moment(new Date([WCP_blog_epoch_time]));
+var CONFIG_ALLOW_SLICING = false;
+var ENABLE_DINE_IN = false;
+var ADD_SOMETHING_THRESHOLD = 2;
+var CONST_MESSAGE_ADD_MORE_TO_PIZZA = "Our pizza is designed as a vehicle for add-ons. We recommend at least two toppings to weigh the crust down during baking. If this is your first time dining with us, we'd suggest ordering a menu pizza without modifications.";
+var CONST_MESSAGE_REQUEST_VEGAN = "Our pizzas cannot be made vegan or without cheese. If you're looking for a vegan option, our Beets By Schrute salad can be made vegan by omitting the bleu cheese.";
+var CONST_MESSAGE_REQUEST_HALF = "While half toppings are not on the menu, we can do them (with the exception of half roasted garlic or half red sauce, half white sauce) but they are charged the same as full toppings. As such, we recommend against them as they're not a good value for the customer and an imbalance of toppings will cause uneven baking of your pizza.";
+var CONST_MESSAGE_REQUEST_SLICING = "In order to ensure the quality of our pizzas, we will not slice them. We'd recommend bringing anything from a bench scraper to a butter knife to slice the pizza. Slicing the whole pizza when it's hot inhibits the crust from properly setting, and can cause the crust to get soggy both during transit and as the pie is eaten. We want your pizza to be the best possible and bringing a tool with which to slice the pie will make a big difference. You will need to remove this request to continue with your order.";
+var CONST_MESSAGE_TIP_PREAMBLE = "The Windy City Pie family is working hard to serve you, safely. All gratuity is shared with the entire staff. Everyone, from our team that makes the house-made dough, to the staff that handles your order appreciates your support!";
+var DELIVERY_LINK = "http://bit.ly/2QsrfV8";
+var FLAVOR_MAX = 5;
+var BAKE_MAX = 5;
 </script>
-<script src="https://www.windycitypie.com/wp-includes/js/WCPJSFE8.js"></script>
+<script src="https://www.windycitypie.com/wp-includes/js/WCPJSFE12.js"></script>
