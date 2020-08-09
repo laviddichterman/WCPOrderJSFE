@@ -1,614 +1,618 @@
+// TODO: must add polyfill JS
+function GetPlacementFromMIDOID(pi, mid, oid) {
+  var option_placement = pi.modifiers.hasOwnProperty(mid) ?
+    pi.modifiers[mid].find(function (x) { return x[1] === oid }) : null;
+  option_placement ? option_placement[0] : TOPPING_NONE;
+}
+
+// TODO: refactor these! they need to use the product.modifiers list and use mtid, moid and basically be defined in WARIO itself
+var ENABLE_FUNCTIONS = {
+  never: function (pi, location, MENU) {
+    return false;
+  },
+  always: function (pi, location, MENU) {
+    return true;
+  },
+  enable_on_white: function (pi, location, MENU) {
+    return GetPlacementFromMIDOID(pi, SAUCE_MTID, SAUCE_WHITE_OID) != TOPPING_NONE;
+  },
+  disable_on_brussels_sprout: function (pi, location, MENU) {
+    return GetPlacementFromMIDOID(pi, TOPPINGS_MTID, TOPPING_BRUSSELS_OID) === TOPPING_NONE;
+  },
+  disable_on_meatball: function (pi, location, MENU) {
+    return GetPlacementFromMIDOID(pi, TOPPINGS_MTID, TOPPING_MB_OID) === TOPPING_NONE;
+  },
+  disable_on_chicken_sausage: function (pi, location, MENU) {
+    return GetPlacementFromMIDOID(pi, TOPPINGS_MTID, TOPPING_CHIX_OID) === TOPPING_NONE;
+  },
+  disable_on_pork_sausage: function (pi, location, MENU) {
+    return GetPlacementFromMIDOID(pi, TOPPINGS_MTID, TOPPING_SAUSAGE_OID) === TOPPING_NONE;
+  },
+  disable_on_ital: function (pi, location, MENU) {
+    return GetPlacementFromMIDOID(pi, TOPPINGS_MTID, TOPPING_ITAL_OID) === TOPPING_NONE;
+  },
+  disable_on_dairy: function (pi, location, MENU) {
+    return GetPlacementFromMIDOID(pi, TOPPINGS_MTID, TOPPING_MB_OID) === TOPPING_NONE && GetPlacementFromMIDOID(pi, SAUCE_MTID, SAUCE_WHITE_OID) === TOPPING_NONE && GetPlacementFromMIDOID(pi, TOPPINGS_MTID, TOPPING_BLEU_OID) === TOPPING_NONE;
+  },
+  disable_on_vegan: function (pi, location, MENU) {
+    return GetPlacementFromMIDOID(pi, CHEESE_MTID, CHEESE_VEGAN_OID) === TOPPING_NONE;
+  }
+};
+
 var TOPPING_NONE = 0;
 var TOPPING_LEFT = 1;
 var TOPPING_RIGHT = 2;
 var TOPPING_WHOLE = 3;
-var FLAVOR_MAX = 5;
-var BAKE_MAX = 5;
+var NO_MATCH = 0;
+var AT_LEAST = 1;
+var EXACT_MATCH = 2;
+var LEFT_SIDE = 0;
+var RIGHT_SIDE = 1;
 
-var WCPOption = function (name, shortname, price) {
-  this.name = name;
-  this.shortname = shortname;
-  this.price = price;
-  // should enable filter live here?
-};
+// TODO: not addressed: disabling options and that entire dependency chain
 
-var WCPSauce = function (name, shortname, price, enable_filter) {
-  WCPOption.call(this, name, shortname, price);
-  this.enable = enable_filter;
-  this.ShowOption = function (pizza, MENU) {
-    return pizza && (this.enable(pizza, MENU) || pizza.sauce == this.shortname);
-  };
-};
-
-var WCPCheese = function (name, shortname, price, enable_filter) {
-  WCPOption.call(this, name, shortname, price);
-  this.enable = enable_filter;
-  this.ShowOption = function (pizza, MENU) {
-    return pizza && (this.enable(pizza, MENU) || pizza.cheese_option == this.shortname);
-  };
-};
-
-var WCPProduct = function (name, shortcode, price) {
-  this.name = name;
-  this.shortcode = shortcode;
-  this.price = price;
-};
-
-var WCPSalad = function (name, shortcode, price, description) {
-  WCPProduct.call(this, name, shortcode, price);
-  this.description = description;
-};
-
-var WCPTopping = function (name, shortname, price, index, enable_filter, flavor_factor, bake_factor) {
-  WCPOption.call(this, name, shortname, price);
+var WCPOption = function (w_modifier, w_option, index, enable_function) {
+  this.modifier = w_modifier;
+  this.moid = w_option._id
+  this.name = w_option.item.display_name;
+  this.shortname = w_option.item.shortcode;
+  this.description = w_option.item.description;
+  this.price = w_option.item.price.amount / 100;
   this.index = index;
-  this.enable = enable_filter;
-  this.flavor_factor = flavor_factor;
-  this.bake_factor = bake_factor;
-  this.ShowOption = function (pizza, location, MENU) {
-    var base = pizza && this.enable(pizza, MENU);
-    var this_topping_state = pizza.toppings_tracker[this.index];
-    var left_bake = pizza.bake_count[0];
-    var right_bake = pizza.bake_count[1];
-    var left_flavor = pizza.flavor_count[0];
-    var right_flavor = pizza.flavor_count[1];
+  this.enable_filter = enable_function;
+  this.flavor_factor = w_option.metadata.flavor_factor;
+  this.bake_factor = w_option.metadata.bake_factor;
+  this.can_split = w_option.metadata.can_split;
+  this.disable_data = w_option.item.disabled;
+  this.ShowOption = function (product, location, MENU) {
+    // TODO: needs to factor in disable data for time based disable
+    // TODO: needs to return false if we would exceed the limit for this modifier, IF that limit is > 1, because if it's === 1
+    // we would handle the limitation by using smarts at the wcpmodifierdir level
+    var modifier_option_find_function = function (val) {
+      return val[1] === this.moid;
+    };
+    modifier_option_find_function = modifier_option_find_function.bind(this);
+    var base = product && product.modifiers.hasOwnProperty(this.modifier._id) && this.enable_filter(product, location, MENU);
+    var modifier_placement = product.modifiers[this.modifier._id].find(modifier_option_find_function);
+    modifier_placement = modifier_placement === undefined ? TOPPING_NONE : modifier_placement[0];
+    // TODO: bake and flavor stuff should move into the enable_filter itself, the option itself should just hold generalized metadata the enable filter function can use/reference
+    var left_bake = product.bake_count[LEFT_SIDE];
+    var right_bake = product.bake_count[RIGHT_SIDE];
+    var left_flavor = product.flavor_count[LEFT_SIDE];
+    var right_flavor = product.flavor_count[RIGHT_SIDE];
+    var has_room_on_left = left_bake + this.bake_factor <= BAKE_MAX && left_flavor + this.flavor_factor <= FLAVOR_MAX;
+    var has_room_on_right = right_bake + this.bake_factor <= BAKE_MAX && right_flavor + this.flavor_factor <= FLAVOR_MAX;
     switch (location) {
-      case TOPPING_NONE: return base;
-      case TOPPING_LEFT: return base && (this_topping_state == TOPPING_WHOLE || this_topping_state == TOPPING_LEFT || (left_bake + this.bake_factor <= BAKE_MAX && left_flavor + this.flavor_factor <= FLAVOR_MAX));
-      case TOPPING_RIGHT: return base && (this_topping_state == TOPPING_WHOLE || this_topping_state == TOPPING_RIGHT || (right_bake + this.bake_factor <= BAKE_MAX && right_flavor + this.flavor_factor <= FLAVOR_MAX));
-      case TOPPING_WHOLE: return base && (this_topping_state == TOPPING_WHOLE || (left_bake + this.bake_factor <= BAKE_MAX && left_flavor + this.flavor_factor <= FLAVOR_MAX && this_topping_state == TOPPING_RIGHT) || (right_bake + this.bake_factor <= BAKE_MAX && right_flavor + this.flavor_factor <= FLAVOR_MAX && this_topping_state == TOPPING_LEFT) || (left_bake + this.bake_factor <= BAKE_MAX && left_flavor + this.flavor_factor <= FLAVOR_MAX && right_bake + this.bake_factor <= BAKE_MAX && right_flavor + this.flavor_factor <= FLAVOR_MAX));
+      case TOPPING_NONE: return base; //TODO, this case might need re-evaluation. is there a case when a generic modifier could NOT be removed? if so, maybe the other cases here need to be looked at as well.
+      case TOPPING_LEFT: return base && this.can_split && (modifier_placement === TOPPING_WHOLE || modifier_placement === TOPPING_LEFT || has_room_on_left);
+      case TOPPING_RIGHT: return base && this.can_split && (modifier_placement === TOPPING_WHOLE || modifier_placement === TOPPING_RIGHT || has_room_on_right);
+      case TOPPING_WHOLE: return base && (modifier_placement === TOPPING_WHOLE || (has_room_on_left && modifier_placement === TOPPING_RIGHT) || (has_room_on_right && modifier_placement === TOPPING_LEFT) || (has_room_on_left && has_room_on_right));
     }
     console.assert(false, "invariant");
     return false; // error?
   };
 };
 
-var ENABLE_FUNCTIONS = {
-  never: function (pizza, MENU) {
-    return false;
-  },
-  always: function (pizza, MENU) {
-    return true;
-  },
-  enable_on_white: function (pizza, MENU) {
-    return pizza && pizza.sauce.shortname == "white";
-  },
-  disable_on_brussels_sprout: function (pizza, MENU) {
-    return pizza && pizza.toppings_tracker[MENU.toppings_dict.brussels.index] > 0 ? false : true;
-  },
-  disable_on_meatball: function (pizza, MENU) {
-    return pizza && pizza.toppings_tracker[MENU.toppings_dict.meatball.index] > 0 ? false : true;
-  },
-  disable_on_chicken_sausage: function (pizza, MENU) {
-    return pizza && pizza.toppings_tracker[MENU.toppings_dict.chix.index] > 0 ? false : true;
-  },
-  disable_on_pork_sausage: function (pizza, MENU) {
-    return pizza && pizza.toppings_tracker[MENU.toppings_dict.sausage.index] > 0 ? false : true;
-  },
-  disable_on_dairy: function (pizza, MENU) {
-    return (pizza && pizza.toppings_tracker[MENU.toppings_dict.meatball.index] > 0 ? false : true) && pizza.sauce.shortname != "white" && (pizza.toppings_tracker[MENU.toppings_dict.bleu.index] > 0 ? false : true);
-  },
-  disable_on_vegan: function (pizza, MENU) {
-    return pizza && pizza.cheese_option.shortname != "vegan_chz";
-  }
+// helper function for WCPProduct
+function ExtractMatchForSide(side, matrix) {
+  return Math.min(matrix.map(function (modcompare_arr) {
+    //TODO check that when there's a modifier without any options, that doesn't make this result in NaN
+    return Math.min(modcompare_arr.map(function (comp) {
+      return comp[side];
+    }));
+  }));
 };
 
-var WCPPizza = function (name, shortcode, cheese, sauce, toppings, menu) {
-  WCPProduct.call(this, name, shortcode, 0);
-  // topping enum is 0: none, 1: left, 2: right, 3: both
-  // toppings is array<tuple<enum, topping>>
-  function ComputePrice(pizza, MENU) {
-    var val = 19;
-    val = val + pizza.cheese_option.price;
-    val = val + pizza.sauce.price;
-    for (var i in pizza.toppings_tracker) {
-      if (pizza.toppings_tracker[i] > 0) {
-        val = val + MENU.toppings[i].price;
-      }
-    }
-    return val;
+function DeepCopyPlacedOptions(modifiers) {
+  var ret = {};
+  for (var mid in modifiers) {
+    ret[mid] = modifiers[mid].map(function (x) { return [x[0], x[1]]; });
   }
-  function RecomputeToppingsMetadata(pizza, MENU) {
-    var addon_chz = 0;//pizza.cheese_option != cheese_options['regular'].shortname ? 1 : 0;
-    pizza.bake_count = [addon_chz, addon_chz];
-    pizza.flavor_count = [0, 0];
-    pizza.is_split = false;
-    for (var i in pizza.toppings_tracker) {
-      var topping = pizza.toppings_tracker[i];
-      if (topping == TOPPING_LEFT || topping == TOPPING_WHOLE) {
-        pizza.bake_count[0] = pizza.bake_count[0] + MENU.toppings[i].bake_factor;
-        pizza.flavor_count[0] = pizza.flavor_count[0] + MENU.toppings[i].flavor_factor;
-      }
-      if (topping == TOPPING_RIGHT || topping == TOPPING_WHOLE) {
-        pizza.bake_count[1] = pizza.bake_count[1] + MENU.toppings[i].bake_factor;
-        pizza.flavor_count[1] = pizza.flavor_count[1] + MENU.toppings[i].flavor_factor;
-      }
-      pizza.is_split = pizza.is_split || topping == TOPPING_LEFT || topping == TOPPING_RIGHT;
-    }
-  }
+  return ret;
+}
 
-  function GetSauceCheeseList(pizza, getter, verbose, MENU) {
-    var ret = [];
-    if (verbose || pizza.sauce.shortname != MENU.sauces.red.shortname) {
-      ret.push(getter(pizza.sauce));
-    }
-    if (verbose || pizza.cheese_option.shortname != MENU.cheeses.regular.shortname) {
-      ret.push(getter(pizza.cheese_option));
-    }
-    return ret;
-  }
+function GetModifierOptionFromMIDOID(menu, mid, oid) {
+  return menu.modifiers[mid].options[oid];
+}
 
-  function BuildCustomShortcode(pizza) {
-    var shortcode_builder = "";
-    if (pizza.sauce.shortname === "red") {
-      shortcode_builder = "z";
-    }
-    if (pizza.sauce.shortname === "white") {
-      shortcode_builder = shortcode_builder + "w";
-    }
-    return shortcode_builder;
-  }
+function CopyWCPProduct(pi, MENU) {
+  return new WCPProduct(pi.PRODUCT_CLASS, pi.piid, pi.name, pi.description, pi.ordinal, pi.modifiers, pi.shortcode, pi.base_price, pi.disable_data, pi.is_base, MENU);
+}
+function WCPProductFromDTO(dto, MENU) {
+  return new WCPProduct(MENU.product_classes[dto.pid].product, "", "", "", 0, dto, modifiers, "", dto.base_price, null, false, MENU);
+}
 
-  // begin member functions
-  this.GenerateToppingsList = function (TOPPINGS_ARRAY) {
-    // generates and returns a topping list for use by the constructor or something iterating over the toppings
-    var new_toppings_list = [];
-    for (var i in this.toppings_tracker) {
-      if (this.toppings_tracker[i] > 0) {
-        new_toppings_list.push([this.toppings_tracker[i], TOPPINGS_ARRAY[i]]);
+
+// we need to take a map of these fields and allow name to be null if piid is _NOT_ set, piid should only be set if it's an exact match of a product instance in the catalog
+var WCPProduct = function (product_class, piid, name, description, ordinal, modifiers, shortcode, base_price, disable_data, is_base, MENU) {
+  this.PRODUCT_CLASS = product_class;
+  this.piid = piid;
+  this.name = name;
+  this.description = description;
+  this.ordinal = ordinal;
+  this.disable_data = disable_data;
+  this.is_base = is_base;
+  this.shortcode = shortcode;
+  // base price is passed in, computed price represents the item with modifiers
+  this.base_price = base_price;
+  // product.modifiers[mtid] = [[placement, option_id]]
+  // enum is 0: none, 1: left, 2: right, 3: both
+  this.modifiers = DeepCopyPlacedOptions(modifiers);
+  // memoized metadata
+  this.price = null;
+  this.is_split = false;
+  this.bake_count = [0, 0];
+  this.flavor_count = [0, 0];
+
+  function ComputePrice(MENU) {
+    var price = this.base_price;
+    for (var mt in this.modifiers) {
+      for (var opt of this.modifiers[mt]) {
+        if (opt[0] != TOPPING_NONE) {
+          price += MENU.modifiers[mt].options[opt[1]].price;
+        }
       }
     }
-    return new_toppings_list;
+    return price;
   };
 
-  this.SplitToppingsList = function () {
-    // generates three lists ordered from top to bottom: whole toppings, left only toppings, right only toppings
-    var ret = { left: [], right: [], whole: [] };
-    for (var i in this.toppings_tracker) {
-      switch (this.toppings_tracker[i]) {
-        case TOPPING_LEFT: ret.left.push(i); break;
-        case TOPPING_RIGHT: ret.right.push(i); break;
-        case TOPPING_WHOLE: ret.whole.push(i);
+  function RecomputeMetadata(MENU) {
+    // recomputes bake_count, flavor_count, is_split
+    this.bake_count = [0, 0];
+    this.flavor_count = [0, 0];
+    this.is_split = false;
+    for (var mt in this.modifiers) {
+      for (var opt of this.modifiers[mt]) {
+        var option_obj = MENU.modifiers[mt].options[opt[1]];
+        if (opt[0] === TOPPING_LEFT || opt[0] === TOPPING_WHOLE) {
+          this.bake_count[LEFT_SIDE] += option_obj.bake_factor;
+          this.flavor_count[LEFT_SIDE] += option_obj.flavor_factor;
+        }
+        if (opt[0] === TOPPING_RIGHT || opt[0] === TOPPING_WHOLE) {
+          this.bake_count[RIGHT_SIDE] += option_obj.bake_factor;
+          this.flavor_count[RIGHT_SIDE] += option_obj.flavor_factor;
+        }
+        this.is_split = this.is_split || opt[0] === TOPPING_LEFT || opt[0] === TOPPING_RIGHT;
       }
     }
-    return ret;
   };
 
-  this.DisplayToppings = function (MENU) {
-    var split_toppings = this.SplitToppingsList();
-    var toppings_sections = [];
-
-    //whole toppings begin
-    var whole_toppings = split_toppings.whole.map(function (x) { return MENU.toppings[x].name; });
-    var sauce_cheese = GetSauceCheeseList(this, function (x) { return x.name; }, true, MENU);
-    whole_toppings = sauce_cheese.concat(whole_toppings);
-    toppings_sections.push(["Whole", whole_toppings.join(" + ")]);
-    //whole toppings end
-
-    //split toppings begin
-    if (this.is_split) {
-      if (split_toppings.left.length > 0) {
-        toppings_sections.push(["Left", split_toppings.left.map(function (x) { return MENU.toppings[x].name; }).join(" + ")]);
-      }
-      if (split_toppings.right.length > 0) {
-        toppings_sections.push(["Right", split_toppings.right.map(function (x) { return MENU.toppings[x].name; }).join(" + ")]);
-      }
-    }
-    //split toppings end
-    return toppings_sections;
-  };
-
-  this.OneLineDisplayToppings = function () {
-    var split_toppings = this.SplitToppingsList();
-    var sections = [];
-    sections.push(GetSauceCheeseList(this, function (x) { return x.name; }, true, MENU).join(" + "));
-
-    var whole_toppings = split_toppings.whole.map(function (x) { return MENU.toppings[x].name; });
-    if (whole_toppings.length > 0) {
-      sections.push(whole_toppings.join(" + "));
-    }
-    if (this.is_split) {
-      var left = split_toppings.left.length > 0 ? split_toppings.left.map(function (x) { return MENU.toppings[x].name; }).join(" + ") : "∅";
-      var right = split_toppings.right.length > 0 ? split_toppings.right.map(function (x) { return MENU.toppings[x].name; }).join(" + ") : "∅";
-      sections.push("(" + [left, right].join(" | ") + ")");
-    }
-    return sections.join(" + ");
-  };
-
-  Compare = function (first, other) {
-    // 0 no match
-    // 1 at least
-    // 2 exact match
-    var sauce_match = first.sauce.shortname == other.sauce.shortname ? 2 : 1;
-    var cheese_match = first.cheese_option.shortname === other.cheese_option.shortname ? 2 : (other.cheese_option.shortname === "regular" ? 1 : 0);
-    var toppings_match = [[], []];
-    var non_topping_match = Math.min(sauce_match, cheese_match);
-    var is_mirror = first.is_split && other.is_split && non_topping_match == 2;
-    for (var i in other.toppings_tracker) {
-      switch (other.toppings_tracker[i]) {
-        case 0:
-          switch (first.toppings_tracker[i]) {
-            case 0: toppings_match[0].push(2); toppings_match[1].push(2); break;
-            case 1: toppings_match[0].push(1); toppings_match[1].push(2); is_mirror = false; break;
-            case 2: toppings_match[0].push(2); toppings_match[1].push(1); is_mirror = false; break;
-            case 3: toppings_match[0].push(1); toppings_match[1].push(1); is_mirror = false; break;
-            default: console.assert(false, "invalid topping value");
-          }
-          break;
-        case 1:
-          switch (first.toppings_tracker[i]) {
-            case 0: toppings_match[0].push(0); toppings_match[1].push(2); is_mirror = false; break;
-            case 1: toppings_match[0].push(2); toppings_match[1].push(2); is_mirror = false; break;
-            case 2: toppings_match[0].push(0); toppings_match[1].push(0); break;
-            case 3: toppings_match[0].push(2); toppings_match[1].push(1); is_mirror = false; break;
-            default: console.assert(false, "invalid topping value");
-          }
-          break;
-        case 2:
-          switch (first.toppings_tracker[i]) {
-            case 0: toppings_match[0].push(2); toppings_match[1].push(0); is_mirror = false; break;
-            case 1: toppings_match[0].push(0); toppings_match[1].push(0); break;
-            case 2: toppings_match[0].push(2); toppings_match[1].push(2); is_mirror = false; break;
-            case 3: toppings_match[0].push(1); toppings_match[1].push(2); is_mirror = false; break;
-            default: console.assert(false, "invalid topping value");
-          }
-          break;
-        case 3:
-          switch (first.toppings_tracker[i]) {
-            case 0: toppings_match[0].push(0); toppings_match[1].push(0); is_mirror = false; break;
-            case 1: toppings_match[0].push(2); toppings_match[1].push(0); is_mirror = false; break;
-            case 2: toppings_match[0].push(0); toppings_match[1].push(2); is_mirror = false; break;
-            case 3: toppings_match[0].push(2); toppings_match[1].push(2); break;
-            default: console.assert(false, "invalid topping value");
-          }
-          break;
-        default: console.assert(false, "invalid topping value");
-      }
-    }
-    return {
-      sauce: sauce_match,
-      cheese: cheese_match,
-      toppings: toppings_match,
-      mirror: is_mirror,
-      min_non_topping: non_topping_match,
-      min_topping_left: Math.min.apply(null, toppings_match[0]),
-      min_topping_right: Math.min.apply(null, toppings_match[1])
+  function Compare(first, other, MENU) {
+    var modifier_option_find_function_factory = function (moid) {
+      return function (val) {
+        return val[1] === moid;
+      };
     };
-  };
 
-  IsEquals = function (a, b) {
-    var comparison_info = Compare(a, b);
-    return comparison_info.mirror || (comparison_info.min_non_topping == 2 && comparison_info.min_topping_left == 2 && comparison_info.min_topping_right == 2);
+    var modifiers_match_matrix = [];
+
+    // need to compare PIDs of first and other, then use the PID to develop the modifiers matrix since one of the two product instances might not have a value for every modifier.
+    if (first.PRODUCT_CLASS._id != other.PRODUCT_CLASS._id) {
+      // no match on PID so we need to return 0
+      // maybe this should be an assert? probably not since we might have a specialty pizza in the main menu
+      return { mirror: false, match_matrix: modifiers_match_matrix, match: [[[NO_MATCH, NO_MATCH]]] }
+    }
+
+    // this is a multi-dim array, in order of the MTID as it exists in the product class definition
+    // disabled modifier types and modifier options are all present as they shouldn't contribute to comparison mismatch
+    // elements of the modifiers_match_matrix are arrays of <LEFT_MATCH, RIGHT_MATCH> tuples
+    first.PRODUCT_CLASS.modifiers.forEach(function (MID) {
+      modifiers_match_matrix.push(MENU.modifiers[MID].options_list.map(function () { return [EXACT_MATCH, EXACT_MATCH]; }));
+    })
+
+    // identify the base PIID of this product class
+    // var BASE_PRODUCT_INSTANCE = MENU.catalog.products[first.pid].instances_list.find(function(prod) { return prod.is_base === true; });
+    // if (!BASE_PRODUCT_INSTANCE) { 
+    //   console.error(`Cannot find base product instance of ${JSON.stringify(this.PRODUCT_CLASS)}.`);
+    //   return { mirror: false, match: [[[NO_MATCH, NO_MATCH]]] }
+    // }
+
+    var is_mirror = true;
+    // main comparison loop!
+    first.PRODUCT_CLASS.modifiers.forEach(function (MID, midx) {
+      var first_option_list = first.modifiers.hasOwnProperty(MID) ? first.modifiers[MID] : [];
+      var other_option_list = other.modifiers.hasOwnProperty(MID) ? other.modifiers[MID] : [];
+      // in each modifier, need to determine if it's a SINGLE or MANY select 
+      var CATALOG_MODIFIER_INFO = MENU.modifiers[MID];
+      if (CATALOG_MODIFIER_INFO.modifier_type.min_selected === 1 && CATALOG_MODIFIER_INFO.modifier_type.max_selected === 1) {
+        // CASE: SINGLE select modifier, this logic isn't very well-defined. TODO: rework
+        console.assert(first_option_list.length === 1 && other_option_list.length === 1, "Split options for single select modifiers not supported yet");
+        var first_option = first_option_list[0];
+        var other_option = other_option_list[0];
+        if (first_option[1] !== other_option[1]) {
+          // OID doesn't match, need to set AT_LEAST for both options
+          modifiers_match_matrix[midx][0] = [AT_LEAST, AT_LEAST];
+        }
+      }
+      else {
+        // CASE: MULTI select modifier
+        CATALOG_MODIFIER_INFO.options.forEach(function (option, oidx) {
+          // todo: since the options will be in order, we can be smarter about not using a find here and track 2 indices instead
+          var finder = modifier_option_find_function_factory(option.moid);
+          var first_option = first_option_list.find(finder);
+          var other_option = other_option_list.find(finder);
+          var first_option_placement = first_option ? first_option[0] : TOPPING_NONE;
+          var other_option_placement = other_option ? other_option[0] : TOPPING_NONE;
+          switch (other_option_placement) {
+            case TOPPING_NONE:
+              switch (first_option_placement) {
+                case TOPPING_NONE: modifiers_match_matrix[midx][oidx] = [EXACT_MATCH, EXACT_MATCH]; break;
+                case TOPPING_LEFT: modifiers_match_matrix[midx][oidx] = [AT_LEAST, EXACT_MATCH]; is_mirror = false; break;
+                case TOPPING_RIGHT: modifiers_match_matrix[midx][oidx] = [EXACT_MATCH, AT_LEAST]; is_mirror = false; break;
+                case TOPPING_WHOLE: modifiers_match_matrix[midx][oidx] = [AT_LEAST, AT_LEAST]; is_mirror = false; break;
+                default: console.assert(false, "invalid topping value");
+              }
+              break;
+            case TOPPING_LEFT:
+              switch (first_option_placement) {
+                case TOPPING_NONE: modifiers_match_matrix[midx][oidx] = [NO_MATCH, EXACT_MATCH]; is_mirror = false; break;
+                case TOPPING_LEFT: modifiers_match_matrix[midx][oidx] = [EXACT_MATCH, EXACT_MATCH]; is_mirror = false; break;
+                case TOPPING_RIGHT: modifiers_match_matrix[midx][oidx] = [NO_MATCH, NO_MATCH]; break;
+                case TOPPING_WHOLE: modifiers_match_matrix[midx][oidx] = [EXACT_MATCH, AT_LEAST]; is_mirror = false; break;
+                default: console.assert(false, "invalid topping value");
+              }
+              break;
+            case TOPPING_RIGHT:
+              switch (first_option_placement) {
+                case TOPPING_NONE: modifiers_match_matrix[midx][oidx] = [EXACT_MATCH, NO_MATCH]; is_mirror = false; break;
+                case TOPPING_LEFT: modifiers_match_matrix[midx][oidx] = [NO_MATCH, NO_MATCH]; break;
+                case TOPPING_RIGHT: modifiers_match_matrix[midx][oidx] = [EXACT_MATCH, EXACT_MATCH]; is_mirror = false; break;
+                case TOPPING_WHOLE: modifiers_match_matrix[midx][oidx] = [AT_LEAST, EXACT_MATCH]; is_mirror = false; break;
+                default: console.assert(false, "invalid topping value");
+              }
+              break;
+            case TOPPING_WHOLE:
+              switch (first_option_placement) {
+                case TOPPING_NONE: modifiers_match_matrix[midx][oidx] = [NO_MATCH, NO_MATCH]; is_mirror = false; break;
+                case TOPPING_LEFT: modifiers_match_matrix[midx][oidx] = [EXACT_MATCH, NO_MATCH]; is_mirror = false; break;
+                case TOPPING_RIGHT: modifiers_match_matrix[midx][oidx] = [NO_MATCH, EXACT_MATCH]; is_mirror = false; break;
+                case TOPPING_WHOLE: modifiers_match_matrix[midx][oidx] = [EXACT_MATCH, EXACT_MATCH]; break;
+                default: console.assert(false, "invalid topping value");
+              }
+              break;
+            default: console.assert(false, "invalid topping value");
+          }
+        }
+        }
+    });
+
+    return {
+      mirror: is_mirror,
+      match_matrix: modifiers_match_matrix,
+      match: [ExtractMatchForSide(LEFT_SIDE, modifiers_match_matrix), ExtractMatchForSide(RIGHT_SIDE, modifiers_match_matrix)]
+    };
   }
 
-  this.Equals = function (other) {
-    return IsEquals(this, other);
+  IsEquals = function (a, b, MENU) {
+    var comparison_info = Compare(a, b, MENU);
+    return comparison_info.mirror ||
+      (comparison_info.match[LEFT_SIDE] === EXACT_MATCH && comparison_info.match[RIGHT_SIDE] === EXACT_MATCH);
+  }
+
+  this.Equals = function (other, MENU) {
+    return IsEquals(this, other, MENU);
   };
 
   this.RecomputeName = function (MENU) {
-    // TODO: this logic lacks elegance. Fix that.
-    var byo_shortcode = BuildCustomShortcode(this);
-    var shortcodes = [byo_shortcode, byo_shortcode];
-    var menu_match = [null, null];
-    var shortname_components = { sauce: null, cheese: null, };
-    var name_components = { sauce: null, cheese: null };
-    var toppings_name_tracker = [];
-    for (var i in MENU.toppings) {
-      toppings_name_tracker.push([0, 0]);
+    var PRODUCT_CLASS_MENU_ENTRY = MENU.product_classes[this.PRODUCT_CLASS._id];
+    if (this.piid != null) {
+      // if we have a PI ID then that means we're an unmodified product instance from the catalog
+      // and we should find that product and assume its name.
+      var catalog_pi = PRODUCT_CLASS_MENU_ENTRY.instances[this.piid];
+      this.name = catalog_pi.name;
+      this.shortname = catalog_pi.shortname;
+      this.shortcode = catalog_pi.shortcode;
+      return;
     }
 
-    function ComputeForSide(pizza, idx, comparison, menu_compare) {
-      if (menu_match[idx] !== null) {
+    // at this point we only know what product class we belong to. we might be an unmodified product, 
+    // but that will need to be determined.
+    var BASE_PRODUCT_INSTANCE = PRODUCT_CLASS_MENU_ENTRY.instances_list.find(function (prod) { return prod.is_base === true; });
+    if (!BASE_PRODUCT_INSTANCE) {
+      console.error(`Cannot find base product instance of ${JSON.stringify(this.PRODUCT_CLASS)}.`);
+      return;
+    }
+
+    var shortcodes = [BASE_PRODUCT_INSTANCE.item.shortcode, BASE_PRODUCT_INSTANCE.item.shortcode];
+    var menu_match = [null, null];
+    var menu_match_compare = [EXACT_MATCH, EXACT_MATCH];
+    // name_components is an ordered list of things that are AT_LEAST compared to the menu match, on a per-side basis
+    // that makes this a list of list of the tuple <display_left, display_right>
+    // note that every modifier that belongs to this product class exists in this list, meaning if a pizza has no toppings, there's still an empty array for that modifier type
+    // from the index in this array, we can determine the name or shortnames like this:
+    // name_components[mid_index][option_index][side_index] ? MENU.modifiers[this.PRODUCT_CLASS.modifiers[mid_index]].options_list[option_index].item.display_name : ""
+    var name_components = [];
+    this.PRODUCT_CLASS.modifiers.forEach(function (MID) {
+      name_components.push(MENU.modifiers[MID].options_list.map(function () { return [false, false]; }));
+    })
+
+    function ComputeForSide(side, comparison, menu_compare) {
+      if (menu_match[side] !== null) {
         return;
       }
-      switch (comparison) {
-        case 2: // exact match
-          menu_match[idx] = MENU.pizzas[menu_compare];
-          shortcodes[idx] = MENU.pizzas[menu_compare].shortcode;
-          break;
-        case 1: // at least other
-          // menu pizza with add-ons
-
-          // first pull out any sauce, cheese differences
-          if (menu_compare === "z") {
-            name_components.sauce = pizza.sauce;
-            name_components.cheese = pizza.cheese_option;
+      var comparison_product = PRODUCT_CLASS_MENU_ENTRY.instances[menu_compare];
+      var is_compare_to_base = BASE_PRODUCT_INSTANCE.piid === comparison_product.piid;
+      if (comparison.match[side] !== NO_MATCH) {
+        this.PRODUCT_CLASS.modifiers.forEach(function (mtid, mid_index) {
+          var CATALOG_MODIFIER_INFO = MENU.modifiers[mtid];
+          if (CATALOG_MODIFIER_INFO.modifier_type.min_selected === 1 && CATALOG_MODIFIER_INFO.modifier_type.max_selected === 1) {
+            // if the comparison is to the base product instance, 
+            // then single select options need to be displayed even if they're exact matches
+            comparison.match_matrix[mid_index].forEach(function (option_match, oid_index) {
+              if (is_compare_to_base || option_match[side] === AT_LEAST) {
+                name_components[mid_index][oid_index][side] = true;
+              }
+            });
           }
-          if (comparison_info.sauce === 1) {
-            shortname_components.sauce = name_components.sauce = pizza.sauce;
+          else if (comparison.match[side] === AT_LEAST) {
+            comparison.match_matrix[mid_index].forEach(function (option_match, oid_index) {
+              if (option_match[side] === AT_LEAST) {
+                name_components[mid_index][oid_index][side] = true;
+              }
+            });
           }
-          if (comparison_info.cheese === 1) {
-            shortname_components.cheese = name_components.cheese = pizza.cheese_option;
-          }
-
-          // determine what toppings are additions for the matching pizza
-          for (var i in comparison_info.toppings[idx]) {
-            if (comparison_info.toppings[idx][i] === 1) {
-              toppings_name_tracker[i][idx] = 1;
-            }
-          }
-          menu_match[idx] = MENU.pizzas[menu_compare];
-          break;
-        default: // no match, no need to create any name
+        });
+        menu_match[side] = comparison_product;
+        menu_match_compare[side] = comparison.match[side];
+        shortcodes[side] = comparison_product.shortcode;
       }
     }
 
-    function BuildName(pizza) {
-      console.assert(menu_match[0] !== null && menu_match[1] !== null, "We should have both names determined by now.");
+    function BuildName(product) {
+      console.assert(menu_match[LEFT_SIDE] !== null && menu_match[RIGHT_SIDE] !== null, "We should have both matches determined by now.");
       // assign shortcode (easy)
-      pizza.shortcode = pizza.is_split && shortcodes[0] !== shortcodes[1] ? shortcodes.join("|") : shortcodes[0];
+      product.shortcode = product.is_split && shortcodes[LEFT_SIDE] !== shortcodes[RIGHT_SIDE] ? shortcodes.join("|") : shortcodes[LEFT_SIDE];
 
-      // set byo flag
-      pizza.is_byo = IsEquals(menu_match[0], MENU.pizzas["z"]) || IsEquals(menu_match[1], MENU.pizzas["z"]);
+      // determine if we're comparing to the base product on the left and right sides
+      var is_compare_to_base = [
+        BASE_PRODUCT_INSTANCE.piid === menu_match[LEFT_SIDE].piid,
+        BASE_PRODUCT_INSTANCE.piid === menu_match[RIGHT_SIDE].piid];
 
-      // split out toppings into left additions, right additions, and whole additions
-      var additional_toppings = { left: [], right: [], whole: [] };
-      for (var i in toppings_name_tracker) {
-        if (toppings_name_tracker[i][0] === 1 && toppings_name_tracker[i][1] === 1) {
-          additional_toppings.whole.push(MENU.toppings[i]);
-        }
-        else if (toppings_name_tracker[i][0] === 1 && toppings_name_tracker[i][1] === 0) {
-          additional_toppings.left.push(MENU.toppings[i]);
-        }
-        else if (toppings_name_tracker[i][0] === 0 && toppings_name_tracker[i][1] === 1) {
-          additional_toppings.right.push(MENU.toppings[i]);
+      // split out options beyond the base product into left additions, right additions, and whole additions
+      // each entry in these arrays represents the modifier index on the product class and the option index in that particular modifier
+      var additional_options = { left: [], right: [], whole: [] };
+      for (var mt_index = 0; name_components.length; ++mt_index) {
+        for (var opt_index = 0; name_components[i].length; ++opt_index) {
+          if (name_components[mt_index][opt_index][LEFT_SIDE] === true &&
+            name_components[mt_index][opt_index][RIGHT_SIDE] === true) {
+            additional_options.whole.push([mt_index, opt_index]);
+          }
+          else if (name_components[mt_index][opt_index][LEFT_SIDE] === true &&
+            name_components[mt_index][opt_index][RIGHT_SIDE] === false) {
+            additional_options.left.push([mt_index, opt_index]);
+          }
+          else if (name_components[mt_index][opt_index][LEFT_SIDE] === false &&
+            name_components[mt_index][opt_index][RIGHT_SIDE] === true) {
+            additional_options.right.push([mt_index, opt_index]);
+          }
         }
       }
-      var split_toppings = ["∅", "∅"];
-      var short_split_toppings = ["∅", "∅"];
-      if (additional_toppings.left.length) {
-        split_toppings[0] = additional_toppings.left.map(function (x) { return x.name; }).join(" + ");
-        short_split_toppings[0] = additional_toppings.left.map(function (x) { return x.shortname; }).join(" + ");
+
+      function ExtractOptionFromIndices(indices, cat, product_class) {
+        return cat.modifiers[product_class.modifiers[indices[0]]].options[indices[1]];
       }
-      if (additional_toppings.right.length) {
-        split_toppings[1] = additional_toppings.right.map(function (x) { return x.name; }).join(" + ");
-        short_split_toppings[1] = additional_toppings.right.map(function (x) { return x.shortname; }).join(" + ");
+      function ComponentsList(source, getter) {
+        return source.map(function (x) {
+          return getter(ExtractOptionFromIndices(x, MENU.catalog, this.PRODUCT_CLASS));
+        });
       }
 
-      function BuildComponentsList(source, getter) {
-        var lst = [];
-        if (source.sauce) {
-          lst.push(getter(source.sauce));
-        }
-        if (source.cheese) {
-          lst.push(getter(source.cheese));
-        }
-        return lst.concat(additional_toppings.whole.map(function (x) { return getter(x); }));
+      var split_options = ["∅", "∅"];
+      var short_split_options = ["∅", "∅"];
+      if (additional_options.left.length) {
+        split_options[LEFT_SIDE] = ComponentsList(additional_options.left, function (x) { return x.name; }).join(" + ");
+        short_split_options[LEFT_SIDE] = ComponentsList(additional_options.left, function (x) { return x.shortname; }).join(" + ");
+      }
+      if (additional_options.right.length) {
+        split_options[RIGHT_SIDE] = ComponentsList(additional_options.right, function (x) { return x.name; }).join(" + ");
+        short_split_options[RIGHT_SIDE] = ComponentsList(additional_options.right, function (x) { return x.shortname; }).join(" + ");
       }
 
       var name_components_list = null;
       var shortname_components_list = null;
-      if (pizza.is_split) {
-        name_components_list = BuildComponentsList(name_components, function (x) { return x.name; });
-        shortname_components_list = BuildComponentsList(shortname_components, function (x) { return x.shortname; });
-        if (menu_match[0].name === menu_match[1].name) {
-          if (menu_match[0] !== MENU.pizzas["z"]) {
-            name_components_list.unshift(menu_match[0].name);
-            shortname_components_list.unshift(menu_match[0].name);
+      if (product.is_split) {
+        name_components_list = ComponentsList(additional_options.whole, function (x) { return x.name; });
+        shortname_components_list = ComponentsList(additional_options.whole, function (x) { return x.shortname; });
+        if (menu_match[LEFT_SIDE].piid === menu_match[RIGHT_SIDE].piid) {
+          if (!is_compare_to_base[LEFT_SIDE]) {
+            name_components_list.unshift(menu_match[LEFT_SIDE].item.display_name);
+            shortname_components_list.unshift(menu_match[LEFT_SIDE].item.display_name);
           }
-          name_components_list.push("(" + split_toppings.join(" | ") + ")");
-          shortname_components_list.push("(" + short_split_toppings.join(" | ") + ")");
+          name_components_list.push("(" + split_options.join(" | ") + ")");
+          shortname_components_list.push("(" + short_split_options.join(" | ") + ")");
         }
         else {
-          var names = [IsEquals(menu_match[0] !== MENU.pizzas["z"]) ? [menu_match[0].name] : [], IsEquals(menu_match[1] !== MENU.pizzas["z"]) ? [menu_match[1].name] : []];
-          var shortnames = [names[0], names[1]];
-          if (additional_toppings.left.length) {
-            names[0] = names[0].concat(split_toppings[0]);
-            shortnames[0] = shortnames[0].concat(short_split_toppings[0]);
+          // split product, different product instance match on each side
+          // logical assertion: if name_components for a given side are all false, then it's an exact match
+          var names = [
+            (menu_match_compare[LEFT_SIDE] === AT_LEAST || !is_compare_to_base[LEFT_SIDE]) ? [menu_match[LEFT_SIDE].name] : [],
+            (menu_match_compare[RIGHT_SIDE] === AT_LEAST || !is_compare_to_base[RIGHT_SIDE]) ? [menu_match[RIGHT_SIDE].name] : []
+          ];
+          var shortnames = names.slice();
+          if (additional_options.left.length) {
+            names[LEFT_SIDE] = names[LEFT_SIDE].concat(split_options[LEFT_SIDE]);
+            shortnames[LEFT_SIDE] = shortnames[LEFT_SIDE].concat(short_split_options[LEFT_SIDE]);
           }
-          if (additional_toppings.right.length) {
-            names[1] = names[1].concat(split_toppings[1]);
-            shortnames[1] = shortnames[1].concat(short_split_toppings[1]);
+          if (additional_options.right.length) {
+            names[RIGHT_SIDE] = names[RIGHT_SIDE].concat(split_options[RIGHT_SIDE]);
+            shortnames[RIGHT_SIDE] = shortnames[RIGHT_SIDE].concat(short_split_options[RIGHT_SIDE]);
           }
-          names[0].length ? 0 : names[0].push("∅");
-          names[1].length ? 0 : names[1].push("∅");
-          name_components_list.push("(" + names[0].join(" + ") + " | " + names[1].join(" + ") + ")");
-          shortnames[0].length ? 0 : shortnames[0].push("∅");
-          shortnames[1].length ? 0 : shortnames[1].push("∅");
-          shortname_components_list.push("(" + shortnames[0].join(" + ") + " | " + shortnames[1].join(" + ") + ")");
+          names[LEFT_SIDE].length ? 0 : names[LEFT_SIDE].push("∅");
+          names[RIGHT_SIDE].length ? 0 : names[RIGHT_SIDE].push("∅");
+          name_components_list.push(`( ${names[LEFT_SIDE].join(" + ")} | ${names[RIGHT_SIDE].join(" + ")} )`);
+          shortnames[LEFT_SIDE].length ? 0 : shortnames[LEFT_SIDE].push("∅");
+          shortnames[RIGHT_SIDE].length ? 0 : shortnames[RIGHT_SIDE].push("∅");
+          shortname_components_list.push(`( ${shortnames[LEFT_SIDE].join(" + ")} | ${shortnames[RIGHT_SIDE].join(" + ")} )`);
+        }
+      } // end is_split case
+      else {
+        name_components_list = ComponentsList(additional_options.whole, function (x) { return x.name; });
+        shortname_components_list = ComponentsList(additional_options.whole, function (x) { return x.shortname; });
+        // we're using the left side because we know left and right are the same
+        if (menu_match_compare[LEFT_SIDE] !== EXACT_MATCH || !is_compare_to_base[LEFT_SIDE]) {
+          // if exact match to base product, no need to show the name
+          name_components_list.unshift(menu_match[LEFT_SIDE].name);
+          shortname_components_list.unshift(menu_match[LEFT_SIDE].name);
+        }
+        if (menu_match_compare[LEFT_SIDE] === EXACT_MATCH) {
+          // assign PIID
         }
       }
-      else if (IsEquals(menu_match[0], MENU.pizzas["z"])) {
-        // we've got a build your own pizza, make sure sauce and cheese name components are present
-        name_components.sauce = name_components.sauce !== null ? name_components.sauce : menu_match[0].sauce;
-        name_components.cheese = name_components.cheese !== null ? name_components.cheese : menu_match[0].cheese_option;
-        name_components_list = BuildComponentsList(name_components, function (x) { return x.name; });
-        shortname_components_list = BuildComponentsList(shortname_components, function (x) { return x.shortname; });
-      }
-      else {
-        name_components_list = BuildComponentsList(name_components, function (x) { return x.name; });
-        shortname_components_list = BuildComponentsList(shortname_components, function (x) { return x.shortname; });
-        name_components_list.unshift(menu_match[0].name);
-        shortname_components_list.unshift(menu_match[0].name);
-      }
-      pizza.name = name_components_list.join(" + ");
-      pizza.shortname = shortname_components_list.length === 0 ? "cheese" : shortname_components_list.join(" + ");
+      product.name = name_components_list.join(" + ");
+      product.shortname = shortname_components_list.length === 0 ? "BASE PRODUCT" : shortname_components_list.join(" + ");
     }
 
     // iterate through menu, until has_left and has_right are true
     // a name can be assigned once an exact or at least match is found for a given side
-    for (var menu_pizza in MENU.pizzas) {
-      var comparison_info = Compare(this, MENU.pizzas[menu_pizza]);
-      var comparison_left = Math.min.apply(null, [comparison_info.min_non_topping, comparison_info.min_topping_left]);
-      var comparison_right = Math.min.apply(null, [comparison_info.min_non_topping, comparison_info.min_topping_right]);
-      ComputeForSide(this, 0, comparison_left, menu_pizza);
-      ComputeForSide(this, 1, comparison_right, menu_pizza);
-      if (menu_match[0] !== null && menu_match[1] !== null) {
+    // TODO: need to actually iterate over WCPProduct instances and not just WARIO JSON objects
+    // NOTE the guarantee of ordering the instances in most modified to base product isn't guaranteed and shouldn't be assumed, but we need it here. how can we order the instances in a helpful way? Need to figure this out
+    for (var pi_index = 0; pi_index < PRODUCT_CLASS_MENU_ENTRY.instances_list.length; ++pi_index) {
+      var comparison_info = Compare(this, PRODUCT_CLASS_MENU_ENTRY.instances_list[pi_index]);
+      ComputeForSide(LEFT_SIDE, comparison_info, pi_index);
+      ComputeForSide(RIGHT_SIDE, comparison_info, pi_index);
+      if (menu_match[LEFT_SIDE] !== null && menu_match[RIGHT_SIDE] !== null) {
+        // TODO: if it's an exact match on both sides, we need to set the PIID accordingly
         // finished, proceed to build the names and assign shortcodes
         return BuildName(this);
       }
     }
   };
 
-  this.UpdatePie = function (MENU) {
-    this.price = ComputePrice(this, MENU);
-    RecomputeToppingsMetadata(this, MENU);
-    this.RecomputeName(MENU);
-    this.toppings_sections = this.DisplayToppings(MENU);
+  this.SplitOptionsList = function () {
+    // generates three lists ordered from top to bottom: whole, left only, right only
+    // returns a list of <MTID, OID> tuples
+    var ret = { left: [], right: [], whole: [] };
+    this.modifiers.forEach(function (mid) {
+      this.modifiers[mid].forEach(function (option_placement) {
+        switch (option_placement[0]) {
+          case TOPPING_LEFT: ret.left.push([mid, option_placement[1]]); break;
+          case TOPPING_RIGHT: ret.right.push([mid, option_placement[1]]); break;
+          case TOPPING_WHOLE: ret.whole.push([mid, option_placement[1]]); break;
+          default: break;
+        }
+      });
+    });
+    return ret;
   };
 
-  this.ToDTO = function (MENU) {
+
+  this.DisplayOptions = function (MENU) {
+    var split_options = this.SplitOptionsList();
+    var options_sections = [];
+
+    if (split_options.whole.length > 0) {
+      var option_names = split_options.whole.map(function (x) { return GetModifierOptionFromMIDOID(MENU, x[0], x[1]).name; });
+      options_sections.push(["Whole", option_names.join(" + ")]);
+    }
+    if (split_options.left.length > 0) {
+      var option_names = split_options.left.map(function (x) { return GetModifierOptionFromMIDOID(MENU, x[0], x[1]).name; });
+      options_sections.push(["Left", option_names.join(" + ")]);
+    }
+    if (split_options.right.length > 0) {
+      var option_names = split_options.left.map(function (x) { return GetModifierOptionFromMIDOID(MENU, x[0], x[1]).name; });
+      options_sections.push(["Right", option_names.join(" + ")]);
+    }
+    return options_sections;
+  };
+
+  // rename to initialize
+  this.Initialize = function (MENU) {
+    this.price = ComputePrice(this, MENU);
+    RecomputeMetadata(this, MENU);
+    this.RecomputeName(MENU);
+    this.options_sections = this.DisplayOptions(MENU);
+  };
+
+  this.ToDTO = function () {
     return {
-      name: this.name,
-      shortname: this.shortname,
-      shortcode: this.shortcode,
-      cheese: this.cheese_option.shortname,
-      sauce: this.sauce.shortname,
-      toppings: this.GenerateToppingsList(MENU.toppings).map(function (x) { return [x[0], x[1].shortname]; })
+      pid: this.PRODUCT_CLASS._id,
+      base_price: this.base_price,
+      modifiers: this.modifiers
     };
   };
 
-  // begin initialization
-  this.cheese_option = cheese;
-  this.sauce = sauce;
-  this.toppings_tracker = [];
-  this.is_split = false;
-  this.toppings_sections = [];
-  this.bake_count = [0, 0];
-  this.flavor_count = [0, 0];
-  this.shortname = "undef";
-  this.is_byo = false;
-  for (var i in menu.toppings) {
-    this.toppings_tracker.push(TOPPING_NONE);
-  }
-  for (var j in toppings) {
-    this.toppings_tracker[toppings[j][1].index] = toppings[j][0];
-  }
-  this.UpdatePie(menu);
-  // end initialization
 };
 
-function WCPPizzaFromDTO(dto, MENU) {
-  return new WCPPizza(dto.name, dto.shortcode, MENU.cheeses[dto.cheese], MENU.sauces[dto.sauce], dto.toppings.map(function (x) { return [x[0], MENU.toppings_dict[x[1]]] }), MENU);
-}
 
-
-function GenerateCatalogMapFromCatalog(cat, $sce) {
-  function GetModifierObjectsFromDicts(mod, indexed) {
-    var opts = [];
-    var has_disabled = false;
-    var mt = cat.modifiers[mod.modifier_type_id];
-    mod.options.forEach(function (opt) {
-      var idx;
-      for (idx = 0; idx < mt.options.length; ++idx) {
-        if (mt.options[idx]._id === opt.option_id) {
-          if (mt.options[idx].catalog_item.disabled) {
-            has_disabled = true;
-          }
-          break;
-        }
-      }
-      opts.push(indexed[mod.modifier_type_id][mt.options[idx].catalog_item.shortcode])
-    })
-    return [has_disabled, opts];
+function GenerateCatalogMapFromCatalog(CONFIG, cat, $sce) {
+  function WARIOPlacementToLocalPlacementEnum(w_placement) {
+    switch (w_placement) {
+      case "WHOLE": return TOPPING_WHOLE; break;
+      case "LEFT": return TOPPING_LEFT; break;
+      case "RIGHT": return TOPPING_RIGHT; break;
+      default: break;
+    };
+    return TOPPING_NONE;
   }
   console.log(cat);
+  if (cat.version === CONFIG.MENU.version) {
+    return CONFIG.MENU;
+  }
   var menu = {
-    extras: [],
-    pizzas: {},
-    toppings: [],
-    toppings_dict: {},
-    sauces: {},
-    cheeses: {}
+    // modifiers are { MID: { modifier_type: WARIO modifier type JSON, options_list: [WCPOption], options: {OID: WCPOption} } }
+    modifiers: {},
+    // product_classes are { PID: { product: WARIO product class, instances_list: [WCPProduct], instances: {PIID: WCPProduct} } }
+    product_classes: {},
+    // categories are {CID: { menu: [WCPProducts], children: [CID], menu_name: HTML, subtitle: HTML } }
+    categories: {},
+    version: cat.version
   };
-  var mod_dicts = {};
 
-  // first pull toppings
-  mod_dicts[TOPPINGS_MTID] = {};
-  var opt_index = 0;
-  cat.modifiers[TOPPINGS_MTID].options.sort(function (a, b) { return a.ordinal - b.ordinal }).forEach(function (opt) {
-    if (!opt.catalog_item.disabled) {
+  for (var mtid in cat.modifiers) {
+    var mod = cat.modifiers[mtid].modifier_type;
+    var opt_index = 0;
+    var modifier_entry = { modifier_type: mod, options_list: [], options: {} };
+    cat.modifiers[mtid].options.sort(function (a, b) { return a.ordinal - b.ordinal }).forEach(function (opt) {
       var enable_function = ENABLE_FUNCTIONS[opt.enable_function_name];
-      var top = new WCPTopping(opt.catalog_item.display_name, opt.catalog_item.shortcode, opt.catalog_item.price.amount / 100, opt_index, enable_function, opt.metadata.flavor_factor, opt.metadata.bake_factor);
-      menu.toppings.push(top);
-      mod_dicts[TOPPINGS_MTID][opt.catalog_item.shortcode] = top;
+      var option = new WCPOption(mod, opt, opt_index, enable_function);
+      modifier_entry.options_list.push(option);
+      modifier_entry.options[option.moid] = option;
       ++opt_index;
-    }
-  })
-  menu.toppings_dict = mod_dicts[TOPPINGS_MTID];
-  
-  mod_dicts[CHEESE_MTID] = {};
-  cat.modifiers[CHEESE_MTID].options.sort(function (a, b) { return a.ordinal - b.ordinal }).forEach(function (opt) {
-    if (!opt.catalog_item.disabled) {
-      var enable_function = ENABLE_FUNCTIONS[opt.enable_function_name];
-      mod_dicts[CHEESE_MTID][opt.catalog_item.shortcode] = new WCPCheese(opt.catalog_item.display_name, opt.catalog_item.shortcode, opt.catalog_item.price.amount / 100, enable_function);
-    }
-  })
-  menu.cheeses = mod_dicts[CHEESE_MTID];
-
-  mod_dicts[SAUCE_MTID] = {};
-  cat.modifiers[SAUCE_MTID].options.sort(function (a, b) { return a.ordinal - b.ordinal }).forEach(function (opt) {
-    if (!opt.catalog_item.disabled) {
-      var enable_function = ENABLE_FUNCTIONS[opt.enable_function_name];
-      mod_dicts[SAUCE_MTID][opt.catalog_item.shortcode] = new WCPSauce(opt.catalog_item.display_name, opt.catalog_item.shortcode, opt.catalog_item.price.amount / 100, enable_function);
-    }
-  });
-  menu.sauces = mod_dicts[SAUCE_MTID];
-
-  //TODO need to sort categories by ordinal
-  cat.categories[EXTRAS_CATID].children.sort(function (a, b) { return cat.categories[a].category.ordinal - cat.categories[b].category.ordinal; }).forEach(function (subcat) {
-    var computed_submenu = [];
-    var wario_extras_for_subcat = cat.categories[subcat].products;
-    wario_extras_for_subcat.forEach(function (pid) {
-      if (!cat.products[pid].product.item.disabled) {
-        cat.products[pid].instances.forEach(function (product_instance) {
-          var is_disabled = product_instance.item.disabled;
-          if (!is_disabled) {
-            computed_submenu.push([product_instance.ordinal, new WCPSalad(product_instance.item.display_name, product_instance.item.shortcode, product_instance.item.price.amount / 100, product_instance.item.description)]);
-          }
-        });
-      }
     });
-    if (computed_submenu.length) {
-      var computed_submenu_map = {};
-      computed_submenu.sort(function (a, b) { return a[0] - b[0] }).forEach(function (itm) {
-        computed_submenu_map[itm[1].shortcode] = itm[1];
-      })
-      menu.extras.push({
-        menu_name: cat.categories[subcat].category.description ? $sce.trustAsHtml(cat.categories[subcat].category.description) : cat.categories[subcat].category.name,
-        subtitle: cat.categories[subcat].category.subheading ? $sce.trustAsHtml(cat.categories[subcat].category.subheading) : null,
-        menu: Object.values(computed_submenu_map)
-      });
-    }
-  });
+    menu.modifiers[mtid] = modifier_entry;
+  }
 
+  for (var pid in cat.products) {
+    var product_class = cat.products[pid].product;
+    //var prod_index = 0;
+    var product_entry = { product: product_class, instances_list: [], instances: {} };
+    cat.products[pid].instances.sort(function (a, b) { return a.ordinal - b.ordinal }).forEach(function (prod) {
+      var modifiers = {};
+      for (var mod of prod.modifiers) {
+        modifiers[mod.modifier_type_id] = mod.options.map(function (option_placement) { return [WARIOPlacementToLocalPlacementEnum(option_placement.placement), option_placement.option_id] });
+      }
+      var product_instance = new WCPProduct(
+        product_class,
+        prod._id,
+        prod.item.display_name,
+        prod.item.description,
+        prod.ordinal, // this might need to be prod_index, not sure if that is even needed anymore 
+        modifiers,
+        prod.item.shortcode,
+        prod.item.price / 100,
+        prod.item.disable,
+        prod.is_base);
+      product_entry.instances_list.push(product_instance);
+      product_entry.instances[product_instance.piid] = product_instance;
+      //++prod_index;
+    });
+    menu.product_classes[pid] = product_entry;
+  }
 
-  var wario_pizza_products = cat.categories[PIZZAS_CATID].products;
-  var pizzas_temp = [];
-  wario_pizza_products.forEach(function (pid) {
-    if (!cat.products[pid].product.item.disabled) {
-      cat.products[pid].instances.forEach(function (product_instance) {
-        var is_disabled = product_instance.item.disabled;
-        var pi_chz = [];
-        var pi_sauce = [];
-        var pi_toppings = [];
-        product_instance.modifiers.forEach(function (mt) {
-          var ret = GetModifierObjectsFromDicts(mt, mod_dicts);
-          var obj = ret[1];
-          is_disabled = is_disabled || ret[0];
-          switch (mt.modifier_type_id) {
-            case CHEESE_MTID:
-              pi_chz = obj[0];
-              break;
-            case SAUCE_MTID:
-              pi_sauce = obj[0];
-              break;
-            case TOPPINGS_MTID:
-              pi_toppings = obj;
-              break;
-            default:
-              console.log("something went wrong!");
-          }
-        })
-        if (!is_disabled) {
-          pizzas_temp.push([product_instance.ordinal, new WCPPizza(product_instance.item.display_name, product_instance.item.shortcode, pi_chz, pi_sauce, pi_toppings.map(function (x) { return [TOPPING_WHOLE, x] }), menu)]);
-        }
-      })
+  for (var catid in cat.categories) {
+    var category_entry = {
+      menu: [],
+      children: cat.categories[catid].children.sort(function (a, b) { return cat.categories[a].category.ordinal - cat.categories[b].category.ordinal; }),
+      menu_name: cat.categories[catid].category.description ? $sce.trustAsHtml(cat.categories[catid].category.description) : cat.categories[catid].category.name,
+      subtitle: cat.categories[catid].category.subheading ? $sce.trustAsHtml(cat.categories[catid].category.subheading) : null,
     }
-  });
-  pizzas_temp.sort(function (a, b) { return a[0] - b[0] }).forEach(function (itm) {
-    menu.pizzas[itm[1].shortcode] = itm[1];
-  })
+    cat.categories[subcat].products.forEach(function (product_class) {
+      category_entry.menu = category_entry.menu.concat(menu.product_classes[product_class].instances_list);
+    })
+    category_entry.menu.sort(function (a, b) { return a.ordinal - b.ordinal; });
+    menu.categories[catid] = category_entry;
+  }
+
   return menu;
 }
 
@@ -655,7 +659,7 @@ var WCPStoreConfig = function () {
     ["Delivery", this.DELIVERY],
   ];
 
-  // topping enums
+  // option placement enums
   this.NONE = TOPPING_NONE;
   this.LEFT = TOPPING_LEFT;
   this.RIGHT = TOPPING_RIGHT;
@@ -709,23 +713,30 @@ var WCPStoreConfig = function () {
 
   // menu related
   this.MENU = {
-    extras: [],
-    pizzas: {},
-    toppings: [],
-    toppings_dict: {},
-    sauces: {},
-    cheeses: {} 
+    // modifiers are { MID: { modifier_type: WARIO modifier type JSON, options_list: [WCPOption], options: {OID: WCPOption} } }
+    modifiers: {},
+    // product_classes are { PID: { product: WARIO product class, instances_list: [WCPProduct], instances: {PIID: WCPProduct} } }
+    product_classes: {},
+    // categories are {CID: { menu: [WCPProducts], children: [CID], menu_name: HTML, subtitle: HTML } }
+    categories: {},
+    version: "NONE"
   };
-  this.CHEESE_SELECTION_MODE = 2;
+
+  this.ALLOW_SLICING = CONFIG_ALLOW_SLICING;
+  this.FLAVOR_MAX = FLAVOR_MAX;
+  this.BAKE_MAX = BAKE_MAX;
   // END menu related
 
   // user messaging
+
   this.REQUEST_ANY = "By adding any special instructions, you will only be able to pay in person.";
-  this.REQUEST_SLICING = "In order to ensure the quality of our pizzas, we will not slice them. We'd recommend bringing anything from a bench scraper to a butter knife to slice the pizza. Slicing the whole pizza when it's hot inhibits the crust from properly setting, and can cause the crust to get soggy both during transit and as the pie is eaten. We want your pizza to be the best possible and bringing a tool with which to slice the pie will make a big difference. You will need to remove this request to continue with your order.";
-  this.REQUEST_VEGAN = "Our pizzas cannot be made vegan or without cheese. If you're looking for a vegan option, our Beets By Schrute salad can be made vegan by omitting the bleu cheese.";
-  this.REQUEST_HALF = "While half toppings are not on the menu, we can do them (with the exception of half roasted garlic or half red sauce, half white sauce) but they are charged the same as full toppings. As such, we recommend against them as they're not a good value for the customer and an imbalance of toppings will cause uneven baking of your pizza.";
+  this.REQUEST_HALF = CONST_MESSAGE_REQUEST_HALF;
+  this.REQUEST_SLICING = CONST_MESSAGE_REQUEST_SLICING;
+  this.REQUEST_VEGAN = CONST_MESSAGE_REQUEST_VEGAN;
   this.REQUEST_SOONER = "It looks like you're trying to ask us to make your pizza sooner. While we would love to do so, the times you were able to select represents our real-time availability. Please send us a text if you're looking for your pizza earlier and it's not a Friday, Saturday, or Sunday, otherwise, you'll need to remove this request to continue with your order.";
   // END user messaging
+  this.TIP_PREAMBLE = CONST_MESSAGE_TIP_PREAMBLE;
+  this.DELIVERY_LINK = DELIVERY_LINK;
 
   this.UpdateBlockedOffVal = function (bo) {
     this.BLOCKED_OFF = bo;
@@ -747,9 +758,8 @@ var WCPStoreConfig = function () {
   }
 
   this.UpdateCatalog = function (cat, $sce) {
-    var catalog_map = GenerateCatalogMapFromCatalog(cat, $sce);
+    var catalog_map = GenerateCatalogMapFromCatalog(this, cat, $sce);
     Object.assign(this.MENU, catalog_map);
-    this.CHEESE_SELECTION_MODE = Object.keys(catalog_map.cheeses).length;
   }
   //END WCP store config
 };
@@ -955,37 +965,36 @@ function UpdateLeadTime() {
 
   var WCPOrderState = function (cfg, enable_delivery, enable_split_toppings) {
 
-    this.ClearCredit = function() { 
-      this.credit = { 
+    this.ClearCredit = function () {
+      this.credit = {
         code: "",
-        validation_successful: false, 
+        validation_successful: false,
         validation_processing: false,
         validation_fail: false,
         amount: 0.00,
         amount_used: 0.00,
         type: "MONEY",
-        encoded: { }
+        encoded: {}
       };
     }
-    this.ReinitializeAccordion = function () { 
-      this.accordionstate = Array.apply(null, Array(cfg.MENU.extras.length)).map(function (x, i) { return i === 0; });
+    this.ReinitializeAccordion = function () {
+      this.accordionstate = Array.apply(null, Array(cfg.MENU.categories[EXTRAS_CATID].children.length)).map(function (x, i) { return i === 0; });
     }
 
     this.RecomputeOrderSize = function () {
       var size = 0;
-      for (var i in this.cart.pizza) {
-        size = size + this.cart.pizza[i][0];
+      for (var i = 0; i < this.cart[PIZZAS_CATID].length; ++i) {
+        size = size + this.cart[PIZZAS_CATID][i][0];
       }
       this.num_pizza = size;
     };
 
     this.ComputeSubtotal = function () {
       var val = 0;
-      for (var i in this.cart.pizza) {
-        val += this.cart.pizza[i][0] * this.cart.pizza[i][1].price;
-      }
-      for (var j in this.cart.extras) {
-        val += this.cart.extras[j][0] * this.cart.extras[j][1].price;
+      for (var cid in this.cart) {
+        for (var i = 0; i < this.cart[cid].length; ++i) {
+          val += this.cart[cid][i][0] * this.cart[cid][i][1].price;
+        }
       }
       this.computed_subtotal = val;
     }
@@ -1046,9 +1055,9 @@ function UpdateLeadTime() {
       if (this.credit.validation_successful && this.credit.type === "DISCOUNT") {
         pre_tax_store_credit = Math.min(this.credit.amount, pre_tax_monies);
         this.credit.amount_used = pre_tax_store_credit;
-      } 
+      }
       this.computed_tax = parseFloat(Number((pre_tax_monies - pre_tax_store_credit) * cfg.TAX_RATE).toFixed(2));
-      this.autograt = this.num_pizza >= 5 || this.service_type === cfg.DELIVERY || this.service_type === cfg.DINEIN  ? .2 : 0;
+      this.autograt = this.num_pizza >= 5 || this.service_type === cfg.DELIVERY || this.service_type === cfg.DINEIN ? .2 : 0;
       var compute_tip_from = pre_tax_monies + this.computed_tax;
       var mintip = compute_tip_from * this.autograt;
       mintip = parseFloat(mintip.toFixed(2));
@@ -1089,11 +1098,11 @@ function UpdateLeadTime() {
       this.TotalsUpdate();
     }
 
-    this.CartToDTO = function() {
-      const dto = {
-        pizza: this.cart.pizza.map(function(x) { return [x[0], x[1].ToDTO(cfg.MENU)]}),
-        extras: this.cart.extras.map(function(x) { return [x[0], { shortcode: x[1].shortcode, name: x[1].name } ]})
-      };
+    this.CartToDTO = function () {
+      const dto = {};
+      for (var cid in this.cart) {
+        dto[cid] = this.cart[cid].map(function (x) { return [x[0], x[1].ToDTO(cfg.MENU)] });
+      }
       return dto;
     }
 
@@ -1132,7 +1141,7 @@ function UpdateLeadTime() {
         }
         console.log("FAILWHALE");
       };
-      
+
       state.isProcessing = true;
       http_provider({
         method: "POST",
@@ -1150,7 +1159,7 @@ function UpdateLeadTime() {
             instructions: SanitizeIfExists(state.delivery_instructions),
             validated_delivery_address: state.validated_delivery_address,
             validation_result: state.address_validation_result
-          },  
+          },
           user_email: state.email_address,
           sliced: state.slice_pizzas,
           products: state.CartToDTO(),
@@ -1184,15 +1193,15 @@ function UpdateLeadTime() {
 
       var onSuccess = function (response) {
         if (response.status === 200 && response.data.validated === true) {
-          state.credit = { 
+          state.credit = {
             code: cached_code,
-            validation_successful: true, 
+            validation_successful: true,
             validation_processing: false,
             validation_fail: false,
             amount: response.data.amount,
             amount_used: 0,
             type: response.data.credit_type,
-            encoded: { 
+            encoded: {
               enc: response.data.enc,
               iv: response.data.iv,
               auth: response.data.auth
@@ -1236,8 +1245,7 @@ function UpdateLeadTime() {
     this.address_validation_result = null;
     this.email_address = "";
     this.cart = {
-      pizza: [],
-      extras: []
+      PIZZAS_CATID: []
     };
     this.slice_pizzas = false;
     this.cartstring = "";
@@ -1280,7 +1288,7 @@ function UpdateLeadTime() {
       },
       // DINEIN
       function (state) {
-        return false;
+        return ENABLE_DINE_IN;
       },
       // DELIVERY
       function (state) {
@@ -1318,8 +1326,8 @@ function UpdateLeadTime() {
         this.s = $rootScope.state = new WCPOrderState(this.CONFIG, enable_delivery, split_toppings);
       };
 
-      this.ClearTimeoutFlag = function () { 
-        this.s.selected_time_timeout = false;        
+      this.ClearTimeoutFlag = function () {
+        this.s.selected_time_timeout = false;
       }
 
       this.ServiceTimeChanged = function () {
@@ -1418,7 +1426,7 @@ function UpdateLeadTime() {
         this.ValidateDate();
       };
 
-      this.ChangedEscapableInfo = function() {
+      this.ChangedEscapableInfo = function () {
         this.s.special_instructions = SanitizeIfExists(this.s.special_instructions);
         this.s.delivery_instructions = SanitizeIfExists(this.s.delivery_instructions);
         this.s.referral = SanitizeIfExists(this.s.referral);
@@ -1431,59 +1439,37 @@ function UpdateLeadTime() {
         this.s.submit_failed = false;
       };
 
-      this.addPizzaToOrder = function (quantity, selection) {
+      this.AddToOrder = function (catid, quantity, pi) {
+        if (!this.s.cart.hasOwnProperty(cid)) {
+          this.s.cart[cid] = [];
+        }
         // check for existing entry
-        for (var i in this.s.cart.pizza) {
-          if (this.s.cart.pizza[i][1].Equals(selection)) {
-            this.s.cart.pizza[i][0] += quantity;
+        for (var i in this.s.cart[cid]) {
+          if (this.s.cart[cid][i][1].Equals(pi)) {
+            this.s.cart[cid][i][0] += quantity;
             this.PostCartUpdate();
             return;
           }
         }
         // add new entry
-        this.s.cart.pizza.push([quantity, selection]);
+        this.s.cart[cid].push([quantity, pi]);
         this.PostCartUpdate();
-      };
+      }
 
-      this.removePizzaFromOrder = function (idx) {
-        this.s.cart.pizza.splice(idx, 1);
-        this.PostCartUpdate();
-      };
-
-      this.addExtraToOrder = function (selection) {
-        // check for existing entry
-        for (var i in this.s.cart.extras) {
-          if (this.s.cart.extras[i][1].shortcode == selection.shortcode) {
-            // note, dumb check here for equality
-            this.s.cart.extras[i][0] += 1;
-            this.PostCartUpdate();
-            return;
-          }
-        }
-        // add new entry
-        this.s.cart.extras.push([1, selection]);
-        this.PostCartUpdate();
-      };
-      
       this.RevalidateItems = function () {
         //TODO
       }
 
-      this.removeExtraFromOrder = function (idx) {
-        this.s.cart.extras.splice(idx, 1);
-        this.PostCartUpdate();
-      };
 
       this.subtotal = function () {
         return this.s.computed_subtotal;
       };
 
       this.fixQuantities = function (clear_if_invalid) {
-        for (var item in this.s.cart.pizza) {
-          this.s.cart.pizza[item][0] = FixQuantity(this.s.cart.pizza[item][0], clear_if_invalid);
-        }
-        for (var j in this.s.cart.extras) {
-          this.s.cart.extras[j][0] = FixQuantity(this.s.cart.extras[j][0], clear_if_invalid);
+        for (var cid in this.s.cart) {
+          for (var i = 0; i < this.s.cart[cid].length; ++i) {
+            this.s.cart[cid][i][0] = FixQuantity(this.s.cart[cid][i][0], clear_if_invalid);
+          }
         }
         this.PostCartUpdate();
       };
@@ -1589,56 +1575,81 @@ function UpdateLeadTime() {
       $socket.on("WCP_CATALOG", UpdateCatalogFxn);
     }]);
 
-  app.controller("AccordionController", ["$rootScope" , function ($rootScope) {
-
-  }]);
-
   app.controller("PizzaMenuController", function () {
     this.CONFIG = wcpconfig;
     this.selection = null;
     this.quantity = 1;
-    this.cheese_toggle = false;
     this.messages = [];
-    this.suppress_guide = false;
+    this.modifier_map = {};
 
+    // leaving this for now...
     this.PopulateOrderGuide = function () {
-      var addon_chz = this.selection.cheese_option != this.CONFIG.MENU.cheeses.regular.shortname ? 1 : 0;
-      this.messages = [];
-      if (this.selection) {
-        if (this.selection.bake_count[0] + addon_chz < 2 || this.selection.bake_count[1] + addon_chz < 2) {
-          this.messages.push("Our pizza is designed as a vehicle for add-ons. We recommend at least two toppings to weigh the crust down during baking. If this is your first time dining with us, we'd suggest ordering a menu pizza without modifications.");
-        }
-        if (this.selection.flavor_count[0] > 5 || this.selection.flavor_count[1] > 5) {
-          this.messages.push("We love our toppings too, but adding this many flavors can end up detracting from the overall enjoyment. We'd suggest scaling this pizza back a bit. If this is your first time dining with us, we'd suggest ordering a menu pizza without modifications.");
-        }
-        if (this.selection.sauce == this.CONFIG.MENU.sauces.white && this.selection.toppings_tracker[this.CONFIG.MENU.toppings_dict.bleu.index] != TOPPING_NONE) {
-          this.messages.push("Our white sauce really lets the bleu cheese flavor come through. If you haven't had this pairing before, we'd suggest asking for light bleu cheese or switching back to red sauce.");
-        }
-      }
+      // var addon_chz = this.selection.cheese_option != this.CONFIG.MENU.cheeses.regular.shortname ? 1 : 0;
+      // this.messages = [];
+      // if (this.selection) {
+      //   if (this.selection.flavor_count[0] + addon_chz < ADD_SOMETHING_THRESHOLD || this.selection.flavor_count[1] + addon_chz < ADD_SOMETHING_THRESHOLD) {
+      //     this.messages.push(CONST_MESSAGE_ADD_MORE_TO_PIZZA);
+      //   }
+      //   if (this.selection.flavor_count[0] > 5 || this.selection.flavor_count[1] > 5) {
+      //     this.messages.push("We love our toppings too, but adding this many flavors can end up detracting from the overall enjoyment. We'd suggest scaling this pizza back a bit. If this is your first time dining with us, we'd suggest ordering a menu pizza without modifications.");
+      //   }
+      //   if (this.selection.sauce == this.CONFIG.MENU.sauces.white && this.selection.toppings_tracker[this.CONFIG.MENU.toppings_dict.bleu.index] != TOPPING_NONE) {
+      //     this.messages.push("Our white sauce really lets the bleu cheese flavor come through. If you haven't had this pairing before, we'd suggest asking for light bleu cheese or switching back to red sauce.");
+      //   }
+      // }
     };
 
-    this.updateSelection = function () {
-      if (this.CONFIG.CHEESE_SELECTION_MODE === 2) {
-        this.selection.cheese_option = this.cheese_toggle ? this.CONFIG.MENU.cheeses.ex_chz : this.CONFIG.MENU.cheeses.regular;
+    this.PostModifierChangeCallback = function (mid, oid, placement) {
+      assert(this.selection);
+
+      if (this.CONFIG.MENU.modifiers[mid].modifier_type.min_selected === 1 && this.CONFIG.MENU.modifiers[mid].modifier_type.max_selected === 1) {
+        // a single select option changed, so angular should have updated this.modifier_map[mid] to be the new OID
+        // TODO: figure out the single toggle case (mozz/extra mozz) 
       }
-      this.selection.UpdatePie(this.CONFIG.MENU);
+      else {
+        this.modifier_map[mid][oid] = placement;
+      }
+
+      var updated_modifiers = {};
+      for (var midx in this.modifier_map) {
+        var selected_list = [];
+        for (var oidx in this.modifier_map[midx]) {
+          selected_list.push([this.modifier_map[midx][oidx], oidx]);
+        }
+        if (selected_list.length) {
+          updated_modifiers[midx] = selected_list;
+        }
+      }
+      var selectionDTO = this.selection.ToDTO();
+      selectionDTO.modifiers = updated_modifiers;
+      this.selection = WCPProductFromDTO(selectionDTO, this.CONFIG.MENU);
+      this.selection.Initalize(this.CONFIG.MENU);
+      this.PopulateOrderGuide();
+    }
+
+    this.SetProduct = function (product_instance, quantity) {
+      this.selection = CopyWCPProduct(product_instance);
+      this.quantity = quantity;
+      // mod map is { MID: { OID: placement } }
+      var selection_modifiers_map = {};
+      for (var mid in this.selection.modifiers) {
+        var modifier_entry = this.CONFIG.MENU.modifiers[mid];
+        // create the { OID: placement } part of the map
+        selection_modifiers_map[mid] = {};
+        this.selection.modifiers[mid].forEach(function (option_placement) {
+          selection_modifiers_map[mid][option_placement[1]] = option_placement[0];
+        })
+      }
+      this.modifier_map = selection_modifiers_map;
       this.PopulateOrderGuide();
     };
 
-    this.setPizza = function (selectedPizza) {
-      this.selection = WCPPizzaFromDTO(selectedPizza.ToDTO(this.CONFIG.MENU), this.CONFIG.MENU);
-      this.quantity = 1;
-      this.cheese_toggle = selectedPizza.cheese_option.shortcode == 'ex_chz';
-      this.PopulateOrderGuide();
-    };
-
-    this.unsetPizza = function () {
+    this.UnsetProduct = function () {
       this.selection = null;
       this.quantity = 1;
-      this.cheese_toggle = false;
     };
 
-    this.fixQuantity = function () {
+    this.FixQuantity = function () {
       this.quantity = FixQuantity(this.quantity, true);
     };
   });
@@ -1647,7 +1658,7 @@ function UpdateLeadTime() {
     return {
       restrict: "E",
       scope: {
-        pizza: "=pizza",
+        pizza: "=prod",
         dots: "=dots",
         price: "=price",
         description: "=description"
@@ -1656,119 +1667,238 @@ function UpdateLeadTime() {
       controllerAs: "ctrl",
       bindToController: true,
       template: '<h4 class="menu-list__item-title"><span class="item_title">{{ctrl.pizza.name}}</span><span ng-if="ctrl.dots" class="dots"></span></h4>' +
-        '<p ng-repeat="topping_section in ctrl.pizza.toppings_sections" class="menu-list__item-desc">' +
-        '<span ng-if="ctrl.description && !ctrl.pizza.is_byo" class="desc__content">' +
-        '<span ng-if="ctrl.pizza.is_split"><strong>{{topping_section[0]}}: </strong></span>' +
-        '<span>{{topping_section[1]}}</span>' +
+        '<p ng-repeat="option_section in ctrl.prod.options_sections" class="menu-list__item-desc">' + // toppings selections might need to be moved elsewhere
+        '<span ng-if="ctrl.description class="desc__content">' +
+        '<span ng-if="ctrl.prod.is_split"><strong>{{option_section[0]}}: </strong></span>' +
+        '<span>{{option_section[1]}}</span>' +
         '</span>' +
         '</p>' +
         '<span ng-if="ctrl.dots" class="dots"></span>' +
-        '<span ng-if="ctrl.price" class="menu-list__item-price">{{ctrl.pizza.price}}</span>',
+        '<span ng-if="ctrl.price" class="menu-list__item-price">{{ctrl.prod.price}}</span>',
     };
   });
 
-  app.directive("wcptoppingdir", function () {
+  var MODDISP_RADIO = 0;
+  var MODDISP_TOGGLE = 1;
+  var MODDISP_CHECKBOX = 2;
+  app.directive("wcpmodifierdir", function () {
     return {
       restrict: "A",
       scope: {
-        topping: "=topping",
+        mtid: "=mtid",
         selection: "=selection",
         config: "=config",
-        split: "=split",
+        allow_split: "=allow_split",
         pmenuctrl: "=pmenuctrl",
       },
+      controllerAs: "ctrl",
+      bindToController: true,
       controller: function () {
         this.Initalize = function () {
-          this.split = this.split;
-          this.left = this.selection.toppings_tracker[this.topping.index] == 1;
-          this.right = this.selection.toppings_tracker[this.topping.index] == 2;
-          this.whole = this.selection.toppings_tracker[this.topping.index] == 3;
-        };
-        this.UpdateTopping = function () {
-          this.selection.toppings_tracker[this.topping.index] = (+this.right) * 2 + (+this.left) + (+this.whole) * 3;
-          this.pmenuctrl.updateSelection();
-          // commenting this out as i don't think it's needed this.selection.UpdatePie(this.pmenuctrl.CONFIG.MENU);
-        };
-        this.ToggleWhole = function () {
-          this.left = this.right = false;
-          this.UpdateTopping();
-        };
-        this.ToggleHalf = function () {
-          if (this.left && this.right) {
-            this.whole = true;
-            this.left = this.right = false;
-          } else {
-            this.whole = false;
+          var menu = this.config.MENU;
+          // determine list of visible options
+          var filtered_options = menu.modifiers[mtid].options_list.filter(function (x) {
+            // TODO: this should not be the current time, but rather the time the order is FOR
+            return !x.disable_data || (x.disable_data.start > moment().valueOf() || x.disable_data.end < moment().valueOf());
+          })
+          if (menu.modifiers[mtid].modifier_type.display_flags.omit_options_if_not_available) {
+            var filterfxn = function (x) {
+              return x.ShowOption(this.selection, this.config.WHOLE, menu) ||
+                (x.can_split && this.allow_split && (
+                  x.ShowOption(this.selection, this.config.LEFT, menu) ||
+                  x.ShowOption(this.selection, this.config.RIGHT, menu)
+                ));
+            };
+            filterfxn = filterfxn.bind(this);
+            filtered_options = filtered_options.filter(filterfxn);
           }
-          this.UpdateTopping();
+          this.visible_options = filtered_options;
+
+          // determines display type
+          // determines product base if this is a toggle style modifier
+          if (menu.modifiers[mtid].modifier_type.max_selected === 1) {
+            if (menu.modifiers[mtid].modifier_type.min_selected === 1) {
+              if (menu.modifiers[mtid].modifier_type.display_flags.use_toggle_if_only_two_options &&
+                this.visible_options.length === 2) {
+                var BASE_PRODUCT_INSTANCE = menu.product_classes[this.selection.PRODUCT_CLASS._id].instances_list.find(function (prod) { return prod.is_base === true; });
+                assert(BASE_PRODUCT_INSTANCE, `Cannot find base product instance of ${JSON.stringify(this.selection)}.`);
+                var base_option = menu.modifiers[mtid].options[BASE_PRODUCT_INSTANCE.modifiers[this.mtid][0][1]];
+                if (!visible_options.some(function (x) { return x.moid === base_option.moid; })) {
+                  console.error(`the base product's option ${base_option.moid} isn't visible. switching to RADIO modifier display for ${this.mtid}`);
+                  this.display_type = MODDISP_RADIO;
+                }
+                else {
+                  this.display_type = MODDISP_TOGGLE;
+                  var toggle_on_option = this.visible_options.find(function(x) { return x.moid !== base_option.moid; });
+                  assert(toggle_on_option);
+                  this.toggle_values = [base_option, toggle_on_option];
+                }
+                // sets the current single value to the MOID of the current selection
+                this.current_single_value = this.selection.modifiers[mtid][0][1];
+              }
+              else {
+                this.display_type = MODDISP_RADIO;
+              }
+            }
+            else { // if (menu.modifiers[mtid].modifier_type.min_selected === 0)
+              // checkbox that kinda functions like a radio button
+              this.display_type = MODDISP_CHECKBOX;
+            }
+          }
+          else {
+            this.display_type = MODDISP_CHECKBOX;
+          }
         };
 
+        this.PostModifyCallback = function (moid, placement) { 
+          if (this.display_type === MODDISP_CHECKBOX) {
+            if (placement === TOPPING_NONE) {
+              this.pmenuctrl.modifier_map[mtid][moid];
+            }
+            else {
+              if (this.config.MENU.modifiers[mtid].modifier_type.min_selected === 0 && 
+                this.config.MENU.modifiers[mtid].modifier_type.max_selected === 1) {
+                // checkbox that requires we unselect any other values since it kinda functions like a radio
+                this.pmenuctrl.modifier_map[mtid] = { };
+              }
+              this.pmenuctrl.modifier_map[mtid][moid] = placement;
+            }
+          }
+          else { // display_type === MODDISP_TOGGLE || display_type === MODDISP_RADIO
+            this.pmenuctrl.modifier_map[mtid] = { };
+            this.pmenuctrl.modifier_map[mtid][this.current_single_value] = TOPPING_WHOLE;
+          }
+          this.pmenuctrl.PostModifierChangeCallback(mtid, moid, placement);
+        };
         this.Initalize();
       },
-      controllerAs: 'ctrl',
-      bindToController: true,
-      template: '<input id="{{ctrl.topping.shortname}}_whole" class="input-whole" ng-model="ctrl.whole" ng-disabled="!ctrl.topping.ShowOption(ctrl.selection, ctrl.config.WHOLE, ctrl.pmenuctrl.CONFIG.MENU)" type="checkbox" ng-change="ctrl.ToggleWhole()">' +
-        '<input ng-show="ctrl.split" id="{{ctrl.topping.shortname}}_left" class="input-left"  ng-model="ctrl.left" ng-disabled="!ctrl.topping.ShowOption(ctrl.selection, ctrl.config.LEFT, ctrl.pmenuctrl.CONFIG.MENU)" type="checkbox" ng-change="ctrl.ToggleHalf()">' +
-        '<input ng-show="ctrl.split" id="{{ctrl.topping.shortname}}_right" class="input-right" ng-model="ctrl.right" ng-disabled="!ctrl.topping.ShowOption(ctrl.selection, ctrl.config.RIGHT, ctrl.pmenuctrl.CONFIG.MENU)" type="checkbox" ng-change="ctrl.ToggleHalf()">' +
-        '<span class="option-circle-container">' +
-        '<label for="{{ctrl.topping.shortname}}_whole" class="option-whole option-circle"></label>' +
-        '<label ng-show="ctrl.split" for="{{ctrl.topping.shortname}}_left" class="option-left option-circle"></label>' +
-        '<label ng-show="ctrl.split" for="{{ctrl.topping.shortname}}_right" class="option-right option-circle"></label>' +
-        '</span>' +
-        '<label class="topping_text" for="{{ctrl.topping.shortname}}_whole" ng-disabled="!ctrl.topping.ShowOption(ctrl.selection, ctrl.config.WHOLE, ctrl.pmenuctrl.CONFIG.MENU)">{{ctrl.topping.name}}</label>'
-    };
-  });
+      template: '\
+      <div>{{ctrl.config.MENU.modifiers[mtid].modifier_type.name}}:</div> \
+      <div class="flexitems"> \
+        <div ng-if="ctrl.display_type !== 1" class="flexitem" ng-repeat="option in ctrl.visible_options" wcpoptiondir \
+          selection="ctrl.selection" modctrl="ctrl" option="option" config="ctrl.config" allow_split="ctrl.allow_split"> \
+        </div> \
+        <div class="flexitem" ng-if="ctrl.display_type === 1"> \
+          <input type="checkbox" id="{{ctrl.toggle_values[1].shortname}}_whole" class="input-whole" \
+            ng-disabled="!ctrl.toggle_values[1].ShowOption(ctrl.selection, ctrl.config.LEFT, ctrl.config.MENU)" \
+            ng-model="ctrl.current_single_value" ng-true-value="ctrl.toggle_values[1].moid" \
+            ng-false-value="ctrl.toggle_values[0].moid" ng-change="ctrl.PostModifyCallback()"> \
+          <span class="option-circle-container"> \
+            <label for="{{ctrl.toggle_values[1].shortname}}_whole" class="option-whole option-circle"></label> \
+          </span> \
+          <label class="topping_text" for="{{ctrl.toggle_values[1].shortname}}_whole">{{ctrl.toggle_values[1].name}}</label> \
+        </div> \
+      </div>',
+    }
+});
 
+app.directive("wcpoptiondir", function () {
+  return {
+    restrict: "A",
+    scope: {
+      option: "=option",
+      selection: "=selection",
+      config: "=config",
+      allow_split: "=allow_split",
+      modctrl: "=modctrl",
+    },
+    controller: function () {
+      this.Initalize = function () {
+        this.MENU = this.config.MENU;
+        this.split = this.allow_split && this.option.can_split && this.modctrl.display_type === MODDISP_CHECKBOX;
+        var placement = GetPlacementFromMIDOID(this.selection, this.option.modifier._id, this.option.moid);
+        this.left = placement === TOPPING_LEFT;
+        this.right = placement === TOPPING_RIGHT;
+        this.whole = placement === TOPPING_WHOLE;
+      };
+
+      this.UpdateOption = function (placement) {
+        this.modctrl.PostModifyCallback(this.option.oid, placement);
+      };
+
+      this.ToggleWhole = function () {
+        this.left = this.right = false;
+        var new_placement = (+this.right * TOPPING_RIGHT) + (+this.left * TOPPING_LEFT) + (+this.whole * TOPPING_WHOLE);
+        this.UpdateOption(new_placement);
+      };
+
+      this.ToggleHalf = function () {
+        if (this.left && this.right) {
+          this.whole = true;
+          this.left = this.right = false;
+        } else {
+          this.whole = false;
+        }
+        var new_placement = (+this.right * TOPPING_RIGHT) + (+this.left * TOPPING_LEFT) + (+this.whole * TOPPING_WHOLE);
+        this.UpdateOption(new_placement);
+      };
+
+      this.Initalize();
+    },
+    controllerAs: 'ctrl',
+    bindToController: true,
+    template: '<input ng-if="ctrl.modctrl.display_type === 0" id="{{ctrl.option.shortname}}_whole" class="input-whole" ng-model="ctrl.modctrl.current_single_value" ng-value="ctrl.option.moid" ng-disabled=!ctrl.option.ShowOption(ctrl.selection, ctrl.config.WHOLE, ctrl.MENU)" type="radio" ng-change="ctrl.UpdateOption()"> \
+      <input ng-if="ctrl.modctrl.display_type === 2" id="{{ctrl.option.shortname}}_whole" class="input-whole" ng-model="ctrl.whole" ng-disabled="!ctrl.option.ShowOption(ctrl.selection, ctrl.config.WHOLE, ctrl.MENU)" type="checkbox" ng-change="ctrl.ToggleWhole()"> \
+        <input ng-if="ctrl.modctrl.display_type === 2" ng-show="ctrl.split" id="{{ctrl.option.shortname}}_left" class="input-left" ng-model="ctrl.left" ng-disabled="!ctrl.option.ShowOption(ctrl.selection, ctrl.config.LEFT, ctrl.MENU)" type="checkbox" ng-change="ctrl.ToggleHalf()"> \
+        <input ng-if="ctrl.modctrl.display_type === 2" ng-show="ctrl.split" id="{{ctrl.option.shortname}}_right" class="input-right" ng-model="ctrl.right" ng-disabled="!ctrl.option.ShowOption(ctrl.selection, ctrl.config.RIGHT, ctrl.MENU)" type="checkbox" ng-change="ctrl.ToggleHalf()"> \
+        <span class="option-circle-container"> \
+        <label for="{{ctrl.option.shortname}}_whole" class="option-whole option-circle"></label> \
+        <label ng-if="ctrl.modctrl.display_type === 2" ng-show="ctrl.split" for="{{ctrl.option.shortname}}_left" class="option-left option-circle"></label> \
+        <label ng-if="ctrl.modctrl.display_type === 2" ng-show="ctrl.split" for="{{ctrl.option.shortname}}_right" class="option-right option-circle"></label> \
+        </span> \
+        <label class="topping_text" for="{{ctrl.option.shortname}}_whole" ng-disabled="!ctrl.option.ShowOption(ctrl.selection, ctrl.config.WHOLE, ctrl.pmenuctrl.CONFIG.MENU)">{{ctrl.option.name}}</label>'
+  };
+});
 
   app.directive("cf7bridge", ["$interval", "$window", function ($interval, $window) {
     return {
-      restrict: "A",
+    restrict: "A",
       scope: {
-        orderinfo: "=orderinfo",
+    orderinfo: "=orderinfo",
       },
       link: function (scope, element, attrs) {
-        // set load time field once
-        scope.orderinfo.s.debug_info.load_time = timing_info.load_time.format("H:mm:ss");
+    // set load time field once
+    scope.orderinfo.s.debug_info.load_time = timing_info.load_time.format("H:mm:ss");
 
         var ParseSpecialInstructionsAndPopulateResponses = function () {
-          scope.orderinfo.s.special_instructions_responses = [];
+    scope.orderinfo.s.special_instructions_responses = [];
           scope.orderinfo.s.disableorder = false;
           var special_instructions_lower = scope.orderinfo.s.special_instructions ? scope.orderinfo.s.special_instructions.toLowerCase() : "";
           if (wcpconfig.REQUEST_ANY && scope.orderinfo.s.acknowledge_instructions_dialogue) {
-            scope.orderinfo.s.special_instructions_responses.push(wcpconfig.REQUEST_ANY);
+    scope.orderinfo.s.special_instructions_responses.push(wcpconfig.REQUEST_ANY);
           }
           if (wcpconfig.REQUEST_HALF && (special_instructions_lower.indexOf("split") >= 0 || special_instructions_lower.indexOf("half") >= 0 || special_instructions_lower.indexOf("1/2") >= 0)) {
-            scope.orderinfo.s.special_instructions_responses.push(wcpconfig.REQUEST_HALF);
+    scope.orderinfo.s.special_instructions_responses.push(wcpconfig.REQUEST_HALF);
           }
           if (wcpconfig.REQUEST_SLICING && (special_instructions_lower.indexOf("slice") >= 0 || special_instructions_lower.indexOf("cut") >= 0)) {
-            scope.orderinfo.s.disableorder = true;
+    scope.orderinfo.s.disableorder = true;
             scope.orderinfo.s.special_instructions_responses.push(wcpconfig.REQUEST_SLICING);
           }
           if (wcpconfig.REQUEST_SOONER && (special_instructions_lower.indexOf("soon") >= 0 || special_instructions_lower.indexOf("earl") >= 0 || special_instructions_lower.indexOf("time") >= 0) || special_instructions_lower.indexOf("asap") >= 0) {
-            scope.orderinfo.s.disableorder = true;
+    scope.orderinfo.s.disableorder = true;
             scope.orderinfo.s.special_instructions_responses.push(wcpconfig.REQUEST_SOONER);
           }
           if (wcpconfig.REQUEST_VEGAN && special_instructions_lower.indexOf("no cheese") >= 0 || special_instructions_lower.indexOf("vegan") >= 0 || special_instructions_lower.indexOf("without cheese") >= 0) {
-            scope.orderinfo.s.special_instructions_responses.push(wcpconfig.REQUEST_VEGAN);
+    scope.orderinfo.s.special_instructions_responses.push(wcpconfig.REQUEST_VEGAN);
           }
         };
         scope.$watch("orderinfo.s.credit.code", function () {
-          scope.orderinfo.ValidateStoreCredit();
+    scope.orderinfo.ValidateStoreCredit();
         }, true);
 
         scope.$watch("orderinfo.s.special_instructions", function () {
-          ParseSpecialInstructionsAndPopulateResponses();
+    ParseSpecialInstructionsAndPopulateResponses();
         }, true);
         scope.$watch("orderinfo.s.acknowledge_instructions_dialogue", function () {
-          ParseSpecialInstructionsAndPopulateResponses();
+    ParseSpecialInstructionsAndPopulateResponses();
         }, true);
         function UpdateCurrentTime() {
           var time_diff = moment().valueOf() - timing_info.browser_load_time.valueOf();
           if (time_diff < timing_info.load_time_diff) {
-            // cheater cheater
-            location.reload();
+    // cheater cheater
+    location.reload();
           } else {
-            timing_info.load_time_diff = time_diff;
+    timing_info.load_time_diff = time_diff;
           }
           timing_info.current_time = moment(timing_info.load_time.valueOf() + timing_info.load_time_diff);
           UpdateLeadTime();
@@ -1779,7 +1909,7 @@ function UpdateLeadTime() {
         var time_updater = $interval(UpdateCurrentTime, 60000);
         $window.document.onvisibilitychange = UpdateCurrentTime;
         element.on("$destroy", function () {
-          $interval.cancel(time_updater);
+    $interval.cancel(time_updater);
         });
       }
     };
@@ -1787,22 +1917,22 @@ function UpdateLeadTime() {
 
   app.directive("address", function () {
     return {
-      require: "ngModel",
+    require: "ngModel",
       link: function (scope, elm, attrs, ctrl) {
-        ctrl.$validators.address = function (modelValue, viewValue) {
-          if (ctrl.$isEmpty(modelValue)) {
-            // consider empty models to be invalid
-            return false;
-          }
-          return true;
-        };
+    ctrl.$validators.address = function (modelValue, viewValue) {
+      if (ctrl.$isEmpty(modelValue)) {
+        // consider empty models to be invalid
+        return false;
+      }
+      return true;
+    };
       }
     };
   });
 
   app.directive("zipcode", function () {
     return {
-      require: "ngModel",
+    require: "ngModel",
       link: function (scope, elm, attrs, ctrl) {
         var ZIPCODE_REGEX = /^\d{5}(?:[\-\s]\d{4})?$/;
         ctrl.$validators.zipcode = function (modelValue, viewValue) {
@@ -1820,10 +1950,10 @@ function UpdateLeadTime() {
 
   app.directive("jqdatepicker", ["OrderHelper", function (OrderHelper) {
     return {
-      restrict: "A",
+    restrict: "A",
       require: "ngModel",
       scope: {
-        orderinfo: "=orderinfo",
+    orderinfo: "=orderinfo",
       },
       link: function (scope, element, attrs, ctrl) {
         var DateActive = function (date) {
@@ -1832,11 +1962,11 @@ function UpdateLeadTime() {
           return [is_active, "", tooltip];
         };
         $j(element).datepicker({
-          dateFormat: "DD, MM dd, yy",
+    dateFormat: "DD, MM dd, yy",
           minDate: -1,
           beforeShowDay: DateActive,
           onSelect: function (date) {
-            ctrl.$setViewValue(date);
+    ctrl.$setViewValue(date);
             ctrl.$render();
             scope.$apply();
           }
@@ -1847,10 +1977,10 @@ function UpdateLeadTime() {
 
   app.directive("jqmaskedphone", function () {
     return {
-      restrict: "A",
+    restrict: "A",
       require: "ngModel",
       link: function (scope, element, attrs, ctrl) {
-        $j.mask.definitions['8'] = "[2-9]";
+    $j.mask.definitions['8'] = "[2-9]";
         $j(element).mask("(899) 999-9999");
       }
     };
@@ -1858,10 +1988,10 @@ function UpdateLeadTime() {
 
   app.directive("jqmaskedstorecredit", function () {
     return {
-      restrict: "A",
+    restrict: "A",
       require: "ngModel",
       link: function (scope, element, attrs, ctrl) {
-        $j.mask.definitions['C'] = "[A-Z0-9]";
+    $j.mask.definitions['C'] = "[A-Z0-9]";
         $j(element).mask("***-**-***-CCCCCCCC");
       }
     };
@@ -1871,47 +2001,47 @@ function UpdateLeadTime() {
     $scope.isBuilt = false;
 
     $scope.submitForm = function () {
-      $rootScope.state.isProcessing = true;
+    $rootScope.state.isProcessing = true;
       $scope.paymentForm.requestCardNonce();
       return false
     }
 
     $scope.paymentForm = new SqPaymentForm({
-      applicationId: "sq0idp-5Sc3Su9vHj_1Xf4t6-9CZg",
+    applicationId: "sq0idp-5Sc3Su9vHj_1Xf4t6-9CZg",
       inputClass: 'sq-input',
       autoBuild: false,
       inputStyles: [{
-        fontSize: '16px',
+    fontSize: '16px',
         lineHeight: '24px',
         padding: '16px',
         placeholderColor: '#a0a0a0',
         backgroundColor: 'transparent',
       }],
      card: {
-       elementId: 'sq-card',
+    elementId: 'sq-card',
      },
       callbacks: {
-        cardNonceResponseReceived: function (errors, nonce, cardData) {
+    cardNonceResponseReceived: function (errors, nonce, cardData) {
           if (errors) {
-            $rootScope.state.card_errors = errors
+    $rootScope.state.card_errors = errors
             $rootScope.state.isProcessing = false;
             $scope.$apply();
             $rootScope.$apply();
           } else {
-            $rootScope.state.card_errors = []
+    $rootScope.state.card_errors = []
             $scope.chargeCardWithNonce(nonce);
           }
 
         },
         unsupportedBrowserDetected: function () {
-          alert("Unfortunately, your browser or settings don't allow for pre-payment. Please go back and select that you'd like to pay later or try your order on a newer browser.");
+    alert("Unfortunately, your browser or settings don't allow for pre-payment. Please go back and select that you'd like to pay later or try your order on a newer browser.");
         }
       }
     });
 
     $scope.chargeCardWithNonce = function (nonce) {
       var data = {
-        nonce: nonce,
+    nonce: nonce,
         amount_money: $rootScope.state.total
       };
       return $rootScope.state.SubmitToWarioInternal($http, $rootScope.state, nonce);
@@ -1919,7 +2049,7 @@ function UpdateLeadTime() {
 
     $scope.buildForm = function () {
       if (!$scope.isBuilt) {
-        $scope.isBuilt = true;
+    $scope.isBuilt = true;
         $scope.paymentForm.build();
       }
       return $scope.isBuilt;
