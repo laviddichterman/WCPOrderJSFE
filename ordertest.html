@@ -2142,7 +2142,7 @@ function UpdateLeadTime() {
       // intermedite function that sees if we should be customizing this
       // product or add it directly to the cart
       this.SelectProduct = function(cid, pi, pmenuctrl) {
-        if (pi.display_flags.skip_customization) {
+        if (pi.display_flags && pi.display_flags.skip_customization) {
           var pi_copy = CopyWCPProduct(pi);
           pi_copy.Initialize(this.CONFIG.MENU);
           this.AddToOrder(cid, new CartEntry(pi_copy, 1));
