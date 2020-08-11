@@ -1,11 +1,11 @@
 <div ng-cloak class="orderform" ng-app="WCPOrder" ng-controller="OrderController as orderCtrl">
   <span id="ordertop"></span>
-  <div ng-show="orderCtrl.s.stage === 1 || orderCtrl.s.stage === 2" ng-controller="PizzaMenuController as pmenuCtrl">
+  <div ng-show="orderCtrl.s.stage === 1 || orderCtrl.s.stage === 2" ng-controller="ProductMenuController as pmenuCtrl">
     <div class="ordering-menu menu-list menu-list__dotted" ng-show="orderCtrl.s.stage === 1 && !pmenuCtrl.selection">
-      <h3 class="flush--top" ng-if="orderCtrl.s.cart.pizza.length === 0"><strong>Click a pizza below to get started</strong></h3>
-      <h3 class="flush--top" ng-if="orderCtrl.s.cart.pizza.length > 0"><strong>Click a pizza below or next to continue</strong></h3>
+      <h3 class="flush--top" ng-if="orderCtrl.s.num_pizza === 0"><strong>Click a pizza below to get started</strong></h3>
+      <h3 class="flush--top" ng-if="orderCtrl.s.num_pizza > 0"><strong>Click a pizza below or next to continue</strong></h3>
       <ul class="flexitems menu-list__items">
-        <li class="flexitem menu-list__item" ng-if="pmenuCtrl.CONFIG.MENU.pizzas.length === 0">Loading menu...</li>
+        <li class="flexitem menu-list__item" ng-if="pmenuCtrl.CONFIG.MENU[pmenuCtrl.CONFIG.PIZZAS_CATID].menu.length === 0">Loading menu...</li>
         <li class="flexitem menu-list__item" ng-repeat="pizza in pmenuCtrl.CONFIG.MENU.categories[pmenuCtrl.CONFIG.PIZZAS_CATID].menu">
           <div class="offer-link" ng-click="orderCtrl.ScrollTop(); pmenuCtrl.SetProduct(pizza, 1)">
             <wcppizzacartitem prod="pizza" description="true" dots="true" price="true"></wcppizzacartitem>
@@ -31,26 +31,26 @@
           <button name="remove" class="btn button-remove scrolltotop" ng-click="pmenuCtrl.UnsetProduct()">Cancel</button>
         </span>
         <span class="four-fifths">
-          <span class="order-nav-item float--right"><button name="add" class="btn scrolltotop" ng-click="orderCtrl.addPizzaToOrder(pmenuCtrl.quantity, pmenuCtrl.selection); pmenuCtrl.unsetPizza()">Add to order</button></span>
+          <span class="order-nav-item float--right"><button name="add" class="btn scrolltotop" ng-click="orderCtrl.AddToOrder(pmenuCtrl.CONFIG.PIZZAS_CATID, pmenuCtrl.cart_entry); pmenuCtrl.UnsetProduct()">Add to order</button></span>
         </span>
       </div>
     </div>
     <md-content ng-show="orderCtrl.s.stage === 2">
       <h3 class="flush--top"><strong>Add small plates or beverages to your order.</strong></h3>
-      <div class="ordering-menu menu-list menu-list__dotted md-accordion" ng-repeat="submenu in pmenuCtrl.CONFIG.MENU.extras">
+      <div class="ordering-menu menu-list menu-list__dotted md-accordion" ng-repeat="subcatid in pmenuCtrl.CONFIG.MENU.categories[pmenuCtrl.CONFIG.EXTRAS_CATID].children">
         <md-toolbar ng-click="orderCtrl.toggleAccordion($index); orderCtrl.ScrollTop()" role="button">
           <div class="md-toolbar-tools">
             <h2>
-              <span><strong><span ng-bind-html="submenu.menu_name"></span></strong></span>
+              <span><strong><span ng-bind-html="pmenuCtrl.CONFIG.MENU.categories[subcatid].menu_name"></span></strong></span>
             </h2>
             <span flex="" class="flex"></span>
             <span ng-class="{expandCollapse:true, active:orderCtrl.s.accordionstate[$index]}"></span> 
           </div>
         </md-toolbar> 
         <ul ng-class="{dataContent:true, activeContent:orderCtrl.s.accordionstate[$index]}" class="menu-list__items">
-          <li class="menu-list__item" ng-if="submenu.subtitle"><strong><span ng-bind-html="submenu.subtitle"></span></strong></li>
-          <li class="menu-list__item" ng-repeat="extra in submenu.menu">
-            <div class="offer-link" ng-click="orderCtrl.ScrollTop(); orderCtrl.addExtraToOrder(extra)">
+          <li class="menu-list__item" ng-if="pmenuCtrl.CONFIG.MENU.categories[subcatid].subtitle"><strong><span ng-bind-html="pmenuCtrl.CONFIG.MENU.categories[subcatid].subtitle"></span></strong></li>
+          <li class="menu-list__item" ng-repeat="extra in pmenuCtrl.CONFIG.MENU.categories[subcatid].menu">
+            <div class="offer-link" ng-click="orderCtrl.ScrollTop(); orderCtrl.AddToOrder(subcatid, pmenuCtrl.cart_entry); pmenuCtrl.UnsetProduct()">
               <h4 class="menu-list__item-title"><span class="item_title">{{extra.name}}</span><span class="dots"></span></h4>
               <p class="menu-list__item-desc">
                 <span class="desc__content">{{extra.description}}</span>
@@ -62,7 +62,7 @@
         </ul>
       </div>
     </md-content>
-    <div class="cart" ng-if="orderCtrl.s.cart.pizza.length > 0 || orderCtrl.s.cart.extras.length > 0">
+    <div class="cart" ng-if="!orderCtrl.s.cart_empty">
       <hr class="separator">
       <h3 class="flush">Current Order</h3>
         <div class="content">
@@ -74,7 +74,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr ng-repeat="item in orderCtrl.s.cart.pizza" class="cart-item">
+              <tr ng-repeat="item in orderCtrl.s.cart[pmenuCtrl.CONFIG.PIZZAS_CATID]" class="cart-item">
                 <td>
                   <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
                     <div class="menu-list__item">
@@ -86,12 +86,12 @@
                   <div class="grid-flex grid-valign-middle">
                     <input type="number" class="quantity" min=1 max=99 ng-model="item[0]" ng-blur="orderCtrl.fixQuantities(true)" ng-change="orderCtrl.fixQuantities(false)">
                     <span class="cart-item-remove">
-                      <button name="remove" ng-click="orderCtrl.ScrollTop(); orderCtrl.removePizzaFromOrder($index)" class="button-remove">X</button>
+                      <button name="remove" ng-click="orderCtrl.ScrollTop(); orderCtrl.RemoveFromOrder(pmenuCtrl.CONFIG.PIZZAS_CATID, $index)" class="button-remove">X</button>
                     </span>
                   </div>
                 </td>
               </tr>
-              <tr ng-repeat="item in orderCtrl.s.cart.extras" class="cart-item">
+              <tr ng-repeat="item in orderCtrl.s.cart[pmenuCtrl.CONFIG.PIZZAS_CATID]" class="cart-item">
                 <td>
                   <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
                     <div class="menu-list__item">
@@ -114,9 +114,9 @@
         </div>
     </div>
     <div class="order-nav" ng-hide="pmenuCtrl.selection">
-      <h5 class="order-nav-item float--right" ng-if="orderCtrl.s.cart.pizza.length < 1 && orderCtrl.s.stage === 1">First, click on an item above to add it to your order</h5>
+      <h5 class="order-nav-item float--right" ng-if="orderCtrl.s.cart[pmenuCtrl.CONFIG.PIZZAS_CATID].length < 1 && orderCtrl.s.stage === 1">First, click on an item above to add it to your order</h5>
       <button type="submit" class="btn scrolltotop" ng-show="orderCtrl.HasPreviousStage()" ng-click="orderCtrl.PreviousStage()">Previous</button>
-      <button type="submit" class="btn scrolltotop" ng-disabled="orderCtrl.s.cart.pizza.length < 1" ng-show="orderCtrl.HasNextStage() && orderCtrl.s.cart.pizza.length >= 1" ng-click="pmenuCtrl.unsetPizza(); orderCtrl.NextStage()">Next</button>
+      <button type="submit" class="btn scrolltotop" ng-disabled="orderCtrl.s.cart[pmenuCtrl.CONFIG.PIZZAS_CATID].length < 1" ng-show="orderCtrl.HasNextStage() && orderCtrl.s.cart[pmenuCtrl.CONFIG.PIZZAS_CATID].length >= 1" ng-click="pmenuCtrl.UnsetProduct(); orderCtrl.NextStage()">Next</button>
     </div>
   </div>
   <div ng-show="orderCtrl.s.stage === 3">
@@ -747,7 +747,7 @@ var WCPOption = function (w_modifier, w_option, index, enable_function) {
       return val[1] === this.moid;
     };
     modifier_option_find_function = modifier_option_find_function.bind(this);
-    var base = product && product.modifiers.hasOwnProperty(this.modifier._id) && this.enable_filter(product, location, MENU);
+    var base = product && this.enable_filter(product, location, MENU);
     var modifier_placement = product.modifiers[this.modifier._id] ? product.modifiers[this.modifier._id].find(modifier_option_find_function) : undefined;
     modifier_placement = modifier_placement === undefined ? TOPPING_NONE : modifier_placement[0];
     // TODO: bake and flavor stuff should move into the enable_filter itself, the option itself should just hold generalized metadata the enable filter function can use/reference
@@ -770,9 +770,9 @@ var WCPOption = function (w_modifier, w_option, index, enable_function) {
 
 // helper function for WCPProduct
 function ExtractMatchForSide(side, matrix) {
-  return Math.min(matrix.map(function (modcompare_arr) {
+  return Math.min.apply(0, matrix.map(function (modcompare_arr) {
     //TODO check that when there's a modifier without any options, that doesn't make this result in NaN
-    return Math.min(modcompare_arr.map(function (comp) {
+    return Math.min.apply(0, modcompare_arr.map(function (comp) {
       return comp[side];
     }));
   }));
@@ -839,7 +839,6 @@ var WCPProduct = function (product_class, piid, name, description, ordinal, modi
     for (var mt in this.modifiers) {
       for (var opt of this.modifiers[mt]) {
         var option_obj = MENU.modifiers[mt].options[opt[1]];
-        console.log(option_obj);
         if (opt[0] === TOPPING_LEFT || opt[0] === TOPPING_WHOLE) {
           this.bake_count[LEFT_SIDE] += option_obj.bake_factor;
           this.flavor_count[LEFT_SIDE] += option_obj.flavor_factor;
@@ -896,15 +895,19 @@ var WCPProduct = function (product_class, piid, name, description, ordinal, modi
         var first_option = first_option_list[0];
         var other_option = other_option_list[0];
         if (first_option[1] !== other_option[1]) {
-          // OID doesn't match, need to set AT_LEAST for both options
-          modifiers_match_matrix[midx][0] = [AT_LEAST, AT_LEAST];
+          // OID doesn't match, need to set AT_LEAST for JUST the option on the "first" product
+          CATALOG_MODIFIER_INFO.options_list.forEach(function (option, oidx) {
+            if (first_option[1] === option.moid) {
+              modifiers_match_matrix[midx][oidx] = [AT_LEAST, AT_LEAST];
+            }
+          });
         }
       }
       else {
         // CASE: MULTI select modifier
         CATALOG_MODIFIER_INFO.options_list.forEach(function (option, oidx) {
-          // todo: since the options will be in order, we can be smarter about not using a find here and track 2 indices instead
-          var finder = modifier_option_find_function_factory(option.moid);
+          // todo: since the options will be in order, we can be smarter about not using a find here and track 2 indices instead   
+          var finder = modifier_option_find_function_factory(option.moid);       
           var first_option = first_option_list.find(finder);
           var other_option = other_option_list.find(finder);
           var first_option_placement = first_option ? first_option[0] : TOPPING_NONE;
@@ -951,11 +954,13 @@ var WCPProduct = function (product_class, piid, name, description, ordinal, modi
         });
       }
     });
-    return {
+    var temp = {
       mirror: is_mirror,
       match_matrix: modifiers_match_matrix,
       match: [ExtractMatchForSide(LEFT_SIDE, modifiers_match_matrix), ExtractMatchForSide(RIGHT_SIDE, modifiers_match_matrix)]
     };
+    console.log(temp);
+    return temp;
   }
 
   IsEquals = function (a, b, MENU) {
@@ -969,7 +974,8 @@ var WCPProduct = function (product_class, piid, name, description, ordinal, modi
   };
 
   this.RecomputeName = function (MENU) {
-    var PRODUCT_CLASS_MENU_ENTRY = MENU.product_classes[this.PRODUCT_CLASS._id];
+    var PRODUCT_CLASS = this.PRODUCT_CLASS;
+    var PRODUCT_CLASS_MENU_ENTRY = MENU.product_classes[PRODUCT_CLASS._id];
     if (this.piid) {
       // if we have a PI ID then that means we're an unmodified product instance from the catalog
       // and we should find that product and assume its name.
@@ -997,7 +1003,7 @@ var WCPProduct = function (product_class, piid, name, description, ordinal, modi
     // from the index in this array, we can determine the name or shortnames like this:
     // name_components[mid_index][option_index][side_index] ? MENU.modifiers[this.PRODUCT_CLASS.modifiers[mid_index]].options_list[option_index].item.display_name : ""
     var name_components = [];
-    this.PRODUCT_CLASS.modifiers.forEach(function (MID) {
+    PRODUCT_CLASS.modifiers.forEach(function (MID) {
       name_components.push(MENU.modifiers[MID].options_list.map(function () { return [false, false]; }));
     })
 
@@ -1007,13 +1013,14 @@ var WCPProduct = function (product_class, piid, name, description, ordinal, modi
       }
       var is_compare_to_base = BASE_PRODUCT_INSTANCE.piid === comparison_product.piid;
       if (comparison.match[side] !== NO_MATCH) {
-        comparison_product.PRODUCT_CLASS.modifiers.forEach(function (mtid, mid_index) {
+        PRODUCT_CLASS.modifiers.forEach(function (mtid, mid_index) {
           var CATALOG_MODIFIER_INFO = MENU.modifiers[mtid];
           if (CATALOG_MODIFIER_INFO.modifier_type.min_selected === 1 && CATALOG_MODIFIER_INFO.modifier_type.max_selected === 1) {
             // if the comparison is to the base product instance, 
-            // then single select options need to be displayed even if they're exact matches
+            // then single select options THAT ARE SELECTED need to be displayed even if they're exact matches
+            //TODO: figure this one out
             comparison.match_matrix[mid_index].forEach(function (option_match, oid_index) {
-              if (is_compare_to_base || option_match[side] === AT_LEAST) {
+              if (option_match[side] === AT_LEAST) {
                 name_components[mid_index][oid_index][side] = true;
               }
             });
@@ -1062,14 +1069,13 @@ var WCPProduct = function (product_class, piid, name, description, ordinal, modi
         }
       }
 
-      function ExtractOptionFromIndices(indices, cat, product_class) {
-        return cat.modifiers[product_class.modifiers[indices[0]]].options[indices[1]];
-      }
       function ComponentsList(source, getter) {
         return source.map(function (x) {
-          return getter(ExtractOptionFromIndices(x, MENU.catalog, this.PRODUCT_CLASS));
+          return getter(MENU.modifiers[PRODUCT_CLASS.modifiers[x[0]]].options_list[x[1]]);
         });
       }
+
+      console.log(additional_options);
 
       var split_options = ["∅", "∅"];
       var short_split_options = ["∅", "∅"];
@@ -1183,7 +1189,7 @@ var WCPProduct = function (product_class, piid, name, description, ordinal, modi
       options_sections.push(["Left", option_names.join(" + ")]);
     }
     if (split_options.right.length > 0) {
-      var option_names = split_options.left.map(function (x) { return GetModifierOptionFromMIDOID(MENU, x[0], x[1]).name; });
+      var option_names = split_options.right.map(function (x) { return GetModifierOptionFromMIDOID(MENU, x[0], x[1]).name; });
       options_sections.push(["Right", option_names.join(" + ")]);
     }
     return options_sections;
@@ -1296,6 +1302,15 @@ function GenerateCatalogMapFromCatalog(CONFIG, cat, $sce) {
 
   return menu;
 }
+
+
+// handy class representing a line in the product cart
+// useful to allow modifications on the product by setting it to a new product instance
+// instead of modifying the product instance itself
+var CartEntry = function (product, quantity) {
+  this.pi = product;
+  this.quantity = quantity;
+};
 
 var $j = jQuery.noConflict();
 
@@ -1668,16 +1683,18 @@ function UpdateLeadTime() {
     this.RecomputeOrderSize = function () {
       var size = 0;
       for (var i = 0; i < this.cart[PIZZAS_CATID].length; ++i) {
-        size = size + this.cart[PIZZAS_CATID][i][0];
+        size = size + this.cart[PIZZAS_CATID][i].quantity;
       }
       this.num_pizza = size;
     };
 
     this.ComputeSubtotal = function () {
       var val = 0;
+      this.cart_empty = true;
       for (var cid in this.cart) {
         for (var i = 0; i < this.cart[cid].length; ++i) {
-          val += this.cart[cid][i][0] * this.cart[cid][i][1].price;
+          val += this.cart[cid][i].quantity * this.cart[cid][i].pi.price;
+          this.cart_empty = this.cart_empty && this.cart[cid][i].quantity === 0;
         }
       }
       this.computed_subtotal = val;
@@ -1785,7 +1802,7 @@ function UpdateLeadTime() {
     this.CartToDTO = function () {
       const dto = {};
       for (var cid in this.cart) {
-        dto[cid] = this.cart[cid].map(function (x) { return [x[0], x[1].ToDTO(cfg.MENU)] });
+        dto[cid] = this.cart[cid].map(function (x) { return [x.quantity, x.pi.ToDTO(cfg.MENU)] });
       }
       return dto;
     }
@@ -1929,15 +1946,13 @@ function UpdateLeadTime() {
     this.address_validation_result = null;
     this.email_address = "";
     this.cart = {
-      PIZZAS_CATID: []
     };
     this.slice_pizzas = false;
     this.cartstring = "";
-    this.cartlist = [];
     this.num_pizza = 0;
+    this.cart_empty = true;
     this.cart_based_lead_time = 0;
     this.shortcartstring = "";
-    this.shortcartlist = [];
     this.referral = "";
     this.acknowledge_dine_in_terms = false;
     this.acknowledge_instructions_dialogue = false;
@@ -2001,7 +2016,7 @@ function UpdateLeadTime() {
     function (OrderHelper, $http, $location, $rootScope, $sce, $socket) {
       this.ORDER_HELPER = OrderHelper;
       this.CONFIG = $rootScope.CONFIG = OrderHelper.cfg;
-      var split_toppings = $location.search().split === true;
+      var split_toppings = true;//$location.search().split === true;
       var enable_delivery = true;
       this.ScrollTop = ScrollTopJQ;
       this.s = $rootScope.state = new WCPOrderState(this.CONFIG, enable_delivery, split_toppings);
@@ -2123,20 +2138,20 @@ function UpdateLeadTime() {
         this.s.submit_failed = false;
       };
 
-      this.AddToOrder = function (catid, quantity, pi) {
+      this.AddToOrder = function (cid, cart_entry) {
         if (!this.s.cart.hasOwnProperty(cid)) {
           this.s.cart[cid] = [];
         }
         // check for existing entry
         for (var i in this.s.cart[cid]) {
-          if (this.s.cart[cid][i][1].Equals(pi)) {
-            this.s.cart[cid][i][0] += quantity;
+          if (this.s.cart[cid][i].pi.Equals(cart_entry.pi, this.CONFIG.MENU)) {
+            this.s.cart[cid][i].quantity += cart_entry.quantity;
             this.PostCartUpdate();
             return;
           }
         }
         // add new entry
-        this.s.cart[cid].push([quantity, pi]);
+        this.s.cart[cid].push(cart_entry);
         this.PostCartUpdate();
       }
 
@@ -2149,10 +2164,15 @@ function UpdateLeadTime() {
         return this.s.computed_subtotal;
       };
 
+      this.RemoveFromOrder = function (cid, idx) {
+          this.s.cart[cid].splice(idx, 1);
+          this.PostCartUpdate();
+      };
+
       this.fixQuantities = function (clear_if_invalid) {
         for (var cid in this.s.cart) {
           for (var i = 0; i < this.s.cart[cid].length; ++i) {
-            this.s.cart[cid][i][0] = FixQuantity(this.s.cart[cid][i][0], clear_if_invalid);
+            this.s.cart[cid][i].quantity = FixQuantity(this.s.cart[cid][i].quantity, clear_if_invalid);
           }
         }
         this.PostCartUpdate();
@@ -2259,10 +2279,10 @@ function UpdateLeadTime() {
       $socket.on("WCP_CATALOG", UpdateCatalogFxn);
     }]);
 
-  app.controller("PizzaMenuController", function () {
+  app.controller("ProductMenuController", function () {
     this.CONFIG = wcpconfig;
     this.selection = null;
-    this.quantity = 1;
+    this.cart_entry = null;
     this.messages = [];
     this.modifier_map = {};
 
@@ -2305,16 +2325,19 @@ function UpdateLeadTime() {
 
     this.SetProduct = function (product_instance, quantity) {
       this.selection = CopyWCPProduct(product_instance);
-      this.quantity = quantity;
+      this.selection.Initialize(this.CONFIG.MENU);
+      this.cart_entry = new CartEntry(this.selection, quantity);
       // mod map is { MID: { OID: placement } }
       var selection_modifiers_map = {};
-      for (var mid in this.selection.modifiers) {
+      for (var mid of this.selection.PRODUCT_CLASS.modifiers) {
         var modifier_entry = this.CONFIG.MENU.modifiers[mid];
         // create the { OID: placement } part of the map
         selection_modifiers_map[mid] = {};
-        this.selection.modifiers[mid].forEach(function (option_placement) {
-          selection_modifiers_map[mid][option_placement[1]] = option_placement[0];
-        })
+        if (this.selection.modifiers.hasOwnProperty(mid)) {
+          this.selection.modifiers[mid].forEach(function (option_placement) {
+            selection_modifiers_map[mid][option_placement[1]] = option_placement[0];
+          })
+        }
       }
       this.modifier_map = selection_modifiers_map;
       this.PopulateOrderGuide();
@@ -2322,11 +2345,13 @@ function UpdateLeadTime() {
 
     this.UnsetProduct = function () {
       this.selection = null;
-      this.quantity = 1;
+      this.cart_entry = null;
     };
 
     this.FixQuantity = function () {
-      this.quantity = FixQuantity(this.quantity, true);
+      if (this.cart_entry) {
+        this.cart_entry.quantity = FixQuantity(this.cart_entry.quantity, true);
+      }
     };
   });
 
@@ -2371,6 +2396,7 @@ function UpdateLeadTime() {
       bindToController: true,
       controller: function () {
         this.Initialize = function () {
+          
           var menu = this.config.MENU;
           // determine list of visible options
           var filtered_options = menu.modifiers[this.mtid].options_list.filter(function (x) {
@@ -2414,6 +2440,7 @@ function UpdateLeadTime() {
               }
               else {
                 this.display_type = MODDISP_RADIO;
+                this.current_single_value = this.selection.modifiers[this.mtid][0][1];
               }
             }
             else { // if (menu.modifiers[this.mtid].modifier_type.min_selected === 0)
@@ -2449,7 +2476,7 @@ function UpdateLeadTime() {
               this.pmenuctrl.modifier_map[this.mtid][this.toggle_values[this.current_single_value].moid] = TOPPING_WHOLE;  
             }
             else {
-              this.pmenuctrl.modifier_map[this.mtid][moid] = TOPPING_WHOLE;
+              this.pmenuctrl.modifier_map[this.mtid][this.current_single_value] = TOPPING_WHOLE;
             }
           }
           this.pmenuctrl.PostModifierChangeCallback(this.mtid, moid, placement);
@@ -2489,7 +2516,7 @@ app.directive("wcpoptiondir", function () {
     controller: function () {
       this.Initialize = function () {
         this.MENU = this.config.MENU;
-        this.split = this.allow_split && this.option.can_split && this.modctrl.display_type === MODDISP_CHECKBOX;
+        this.split =  this.option.can_split && this.modctrl.display_type === MODDISP_CHECKBOX;
         var placement = GetPlacementFromMIDOID(this.selection, this.option.modifier._id, this.option.moid);
         this.left = placement === TOPPING_LEFT;
         this.right = placement === TOPPING_RIGHT;
