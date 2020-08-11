@@ -5,16 +5,42 @@
       <h3 class="flush--top" ng-if="orderCtrl.s.num_pizza === 0"><strong>Click a pizza below to get started</strong></h3>
       <h3 class="flush--top" ng-if="orderCtrl.s.num_pizza > 0"><strong>Click a pizza below or next to continue</strong></h3>
       <ul class="flexitems menu-list__items">
-        <li class="flexitem menu-list__item" ng-if="pmenuCtrl.CONFIG.MENU[pmenuCtrl.CONFIG.PIZZAS_CATID].menu.length === 0">Loading menu...</li>
         <li class="flexitem menu-list__item" ng-repeat="pizza in pmenuCtrl.CONFIG.MENU.categories[pmenuCtrl.CONFIG.PIZZAS_CATID].menu">
-          <div class="offer-link" ng-click="orderCtrl.ScrollTop(); pmenuCtrl.SetProduct(pizza, 1)">
+          <div class="offer-link" ng-click="orderCtrl.ScrollTop(); orderCtrl.SelectProduct(pmenuCtrl.CONFIG.PIZZAS_CATID, pizza, pmenuCtrl)">
             <wcppizzacartitem prod="pizza" description="true" dots="true" price="true"></wcppizzacartitem>
           </div>
         </li>
       </ul>
     </div>
+    <md-content ng-show="orderCtrl.s.stage === 2 && !pmenuCtrl.selection">
+      <h3 class="flush--top"><strong>Add small plates or beverages to your order.</strong></h3>
+      <div class="ordering-menu menu-list menu-list__dotted md-accordion" ng-repeat="subcatid in pmenuCtrl.CONFIG.MENU.categories[pmenuCtrl.CONFIG.EXTRAS_CATID].children">
+        <md-toolbar ng-click="orderCtrl.toggleAccordion($index); orderCtrl.ScrollTop()" role="button">
+          <div class="md-toolbar-tools">
+            <h2>
+              <span><strong><span ng-bind-html="pmenuCtrl.CONFIG.MENU.categories[subcatid].menu_name"></span></strong></span>
+            </h2>
+            <span flex="" class="flex"></span>
+            <span ng-class="{expandCollapse:true, active:orderCtrl.s.accordionstate[$index]}"></span> 
+          </div>
+        </md-toolbar> 
+        <ul ng-class="{dataContent:true, activeContent:orderCtrl.s.accordionstate[$index]}" class="menu-list__items">
+          <li class="menu-list__item" ng-if="pmenuCtrl.CONFIG.MENU.categories[subcatid].subtitle"><strong><span ng-bind-html="pmenuCtrl.CONFIG.MENU.categories[subcatid].subtitle"></span></strong></li>
+          <li class="menu-list__item" ng-repeat="extra in pmenuCtrl.CONFIG.MENU.categories[subcatid].menu">
+            <div class="offer-link" ng-click="orderCtrl.ScrollTop(); orderCtrl.SelectProduct(subcatid, extra, pmenuCtrl)">
+              <h4 class="menu-list__item-title"><span class="item_title">{{extra.name}}</span><span class="dots"></span></h4>
+              <p class="menu-list__item-desc">
+                <span class="desc__content">{{extra.description}}</span>
+              </p>
+              <span class="dots"></span>
+              <span class="menu-list__item-price">{{extra.price}}</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </md-content>
     <div class="customizer menu-list__items" ng-if="pmenuCtrl.selection">
-      <h3 class="flush--top"><strong>Customize your pizza</strong></h3>
+      <h3 class="flush--top"><strong>Customize it!</strong></h3>
       <div class="menu-list__item">
         <wcppizzacartitem prod="pmenuCtrl.selection" description="false" dots="true" price="true"></wcppizzacartitem>
       </div>
@@ -35,33 +61,6 @@
         </span>
       </div>
     </div>
-    <md-content ng-show="orderCtrl.s.stage === 2">
-      <h3 class="flush--top"><strong>Add small plates or beverages to your order.</strong></h3>
-      <div class="ordering-menu menu-list menu-list__dotted md-accordion" ng-repeat="subcatid in pmenuCtrl.CONFIG.MENU.categories[pmenuCtrl.CONFIG.EXTRAS_CATID].children">
-        <md-toolbar ng-click="orderCtrl.toggleAccordion($index); orderCtrl.ScrollTop()" role="button">
-          <div class="md-toolbar-tools">
-            <h2>
-              <span><strong><span ng-bind-html="pmenuCtrl.CONFIG.MENU.categories[subcatid].menu_name"></span></strong></span>
-            </h2>
-            <span flex="" class="flex"></span>
-            <span ng-class="{expandCollapse:true, active:orderCtrl.s.accordionstate[$index]}"></span> 
-          </div>
-        </md-toolbar> 
-        <ul ng-class="{dataContent:true, activeContent:orderCtrl.s.accordionstate[$index]}" class="menu-list__items">
-          <li class="menu-list__item" ng-if="pmenuCtrl.CONFIG.MENU.categories[subcatid].subtitle"><strong><span ng-bind-html="pmenuCtrl.CONFIG.MENU.categories[subcatid].subtitle"></span></strong></li>
-          <li class="menu-list__item" ng-repeat="extra in pmenuCtrl.CONFIG.MENU.categories[subcatid].menu">
-            <div class="offer-link" ng-click="orderCtrl.ScrollTop(); orderCtrl.AddToOrder(subcatid, pmenuCtrl.cart_entry); pmenuCtrl.UnsetProduct()">
-              <h4 class="menu-list__item-title"><span class="item_title">{{extra.name}}</span><span class="dots"></span></h4>
-              <p class="menu-list__item-desc">
-                <span class="desc__content">{{extra.description}}</span>
-              </p>
-              <span class="dots"></span>
-              <span class="menu-list__item-price">{{extra.price}}</span>
-            </div>
-          </li>
-        </ul>
-      </div>
-    </md-content>
     <div class="cart" ng-if="!orderCtrl.s.cart_empty">
       <hr class="separator">
       <h3 class="flush">Current Order</h3>
@@ -790,16 +789,16 @@ function GetModifierOptionFromMIDOID(menu, mid, oid) {
   return menu.modifiers[mid].options[oid];
 }
 
-function CopyWCPProduct(pi, MENU) {
-  return new WCPProduct(pi.PRODUCT_CLASS, pi.piid, pi.name, pi.description, pi.ordinal, pi.modifiers, pi.shortcode, pi.base_price, pi.disable_data, pi.is_base, MENU);
+function CopyWCPProduct(pi) {
+  return new WCPProduct(pi.PRODUCT_CLASS, pi.piid, pi.name, pi.description, pi.ordinal, pi.modifiers, pi.shortcode, pi.base_price, pi.disable_data, pi.is_base, pi.display_flags);
 }
-function WCPProductFromDTO(dto, MENU) {
-  return new WCPProduct(MENU.product_classes[dto.pid].product, "", "", "", 0, dto.modifiers, "", dto.base_price, null, false, MENU);
+function WCPProductFromDTO(dto) {
+  return new WCPProduct(MENU.product_classes[dto.pid].product, "", "", "", 0, dto.modifiers, "", dto.base_price, null, false, {});
 }
 
 
 // we need to take a map of these fields and allow name to be null if piid is _NOT_ set, piid should only be set if it's an exact match of a product instance in the catalog
-var WCPProduct = function (product_class, piid, name, description, ordinal, modifiers, shortcode, base_price, disable_data, is_base, MENU) {
+var WCPProduct = function (product_class, piid, name, description, ordinal, modifiers, shortcode, base_price, disable_data, is_base, display_flags) {
   this.PRODUCT_CLASS = product_class;
   this.piid = piid;
   this.name = name;
@@ -808,6 +807,7 @@ var WCPProduct = function (product_class, piid, name, description, ordinal, modi
   this.disable_data = disable_data;
   this.is_base = is_base;
   this.shortcode = shortcode;
+  this.display_flags = display_flags;
   // base price is passed in, computed price represents the item with modifiers
   this.base_price = base_price;
   // product.modifiers[mtid] = [[placement, option_id]]
@@ -1271,7 +1271,8 @@ function GenerateCatalogMapFromCatalog(CONFIG, cat, $sce) {
         prod.item.shortcode,
         prod.item.price.amount / 100,
         prod.item.disable,
-        prod.is_base);
+        prod.is_base,
+        prod.display_flags);
       product_entry.instances_list.push(product_instance);
       product_entry.instances[product_instance.piid] = product_instance;
       //++prod_index;
@@ -2138,6 +2139,19 @@ function UpdateLeadTime() {
         this.s.submit_failed = false;
       };
 
+      // intermedite function that sees if we should be customizing this
+      // product or add it directly to the cart
+      this.SelectProduct = function(cid, pi, pmenuctrl) {
+        if (pi.display_flags.skip_customization) {
+          var pi_copy = CopyWCPProduct(pi);
+          pi_copy.Initialize(this.CONFIG.MENU);
+          this.AddToOrder(cid, new CartEntry(pi_copy, 1));
+        }
+        else {
+          pmenuctrl.SetProduct(pi, 1);
+        }
+      }
+
       this.AddToOrder = function (cid, cart_entry) {
         if (!this.s.cart.hasOwnProperty(cid)) {
           this.s.cart[cid] = [];
@@ -2318,7 +2332,7 @@ function UpdateLeadTime() {
       }
       var selectionDTO = this.selection.ToDTO();
       selectionDTO.modifiers = updated_modifiers;
-      this.selection = WCPProductFromDTO(selectionDTO, this.CONFIG.MENU);
+      this.selection = WCPProductFromDTO(selectionDTO);
       this.selection.Initialize(this.CONFIG.MENU);
       this.PopulateOrderGuide();
     }
@@ -2327,6 +2341,7 @@ function UpdateLeadTime() {
       this.selection = CopyWCPProduct(product_instance);
       this.selection.Initialize(this.CONFIG.MENU);
       this.cart_entry = new CartEntry(this.selection, quantity);
+
       // mod map is { MID: { OID: placement } }
       var selection_modifiers_map = {};
       for (var mid of this.selection.PRODUCT_CLASS.modifiers) {
@@ -2346,6 +2361,7 @@ function UpdateLeadTime() {
     this.UnsetProduct = function () {
       this.selection = null;
       this.cart_entry = null;
+      this.messages = [];
     };
 
     this.FixQuantity = function () {
