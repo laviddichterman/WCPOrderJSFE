@@ -14,7 +14,7 @@
     </div>
     <md-content ng-show="orderCtrl.s.stage === 2 && !pmenuCtrl.selection">
       <h3 class="flush--top"><strong>Add small plates or beverages to your order.</strong></h3>
-      <div class="ordering-menu menu-list menu-list__dotted md-accordion" ng-repeat="subcatid in pmenuCtrl.CONFIG.MENU.categories[pmenuCtrl.CONFIG.EXTRAS_CATID].children | filter:orderCtrl.FilterEmptyCategories ">
+      <div class="ordering-menu menu-list menu-list__dotted md-accordion" ng-repeat="subcatid in pmenuCtrl.CONFIG.MENU.categories[pmenuCtrl.CONFIG.EXTRAS_CATID].children | filter:orderCtrl.FilterEmptyCategories(pmenuCtrl.CONFIG.MENU) ">
         <md-toolbar ng-click="orderCtrl.toggleAccordion($index); orderCtrl.ScrollTop()" role="button">
           <div class="md-toolbar-tools">
             <h2>
@@ -73,17 +73,17 @@
               </tr>
             </thead>
             <tbody>
-              <tr ng-repeat="item in orderCtrl.s.cart[pmenuCtrl.CONFIG.PIZZAS_CATID]" class="cart-item">
+              <tr ng-repeat="cart_entry in orderCtrl.s.cart[pmenuCtrl.CONFIG.PIZZAS_CATID]" class="cart-item">
                 <td>
                   <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
                     <div class="menu-list__item">
-                      <wcppizzacartitem prod="item[1]" description="true" dots="false" price="false"></wcppizzacartitem>
+                      <wcppizzacartitem prod="cart_entry.pi" description="true" dots="false" price="false"></wcppizzacartitem>
                     </div>
                   </div>
                 </td>
                 <td>
                   <div class="grid-flex grid-valign-middle">
-                    <input type="number" class="quantity" min=1 max=99 ng-model="item[0]" ng-blur="orderCtrl.fixQuantities(true)" ng-change="orderCtrl.fixQuantities(false)">
+                    <input type="number" class="quantity" min=1 max=99 ng-model="cart_entry.quantity" ng-blur="orderCtrl.fixQuantities(true)" ng-change="orderCtrl.fixQuantities(false)">
                     <span class="cart-item-remove">
                       <button name="remove" ng-click="orderCtrl.ScrollTop(); orderCtrl.RemoveFromOrder(pmenuCtrl.CONFIG.PIZZAS_CATID, $index)" class="button-remove">X</button>
                     </span>
@@ -91,18 +91,18 @@
                 </td>
               </tr>
               <div ng-repeat="cat in orderCtrl.s.cart">
-                <tr ng-repeat="item in orderCtrl.s.cart[cat]" class="cart-item">
+                <tr ng-repeat="cart_entry in orderCtrl.s.cart[cat]" class="cart-item">
                   <td>
                     <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
                       <div class="menu-list__item">
-                        <h4 class="menu-list__item-title"><span class="item_title">{{item[1].name}}</span></h4>
-                        <p class="menu-list__item-desc"><span class="desc__content">{{item[1].description}}</span></p>
+                        <h4 class="menu-list__item-title"><span class="item_title">{{cart_entry.pi.name}}</span></h4>
+                        <p class="menu-list__item-desc"><span class="desc__content">{{cart_entry.pi.description}}</span></p>
                       </div>
                     </div>
                   </td>
                   <td>
                     <div class="grid-flex grid-valign-middle">
-                      <input type="number" class="quantity" min=1 max=99 ng-model="item[0]" ng-blur="orderCtrl.fixQuantities(true)" ng-change="orderCtrl.fixQuantities(false)">
+                      <input type="number" class="quantity" min=1 max=99 ng-model="cart_entry.quantity" ng-blur="orderCtrl.fixQuantities(true)" ng-change="orderCtrl.fixQuantities(false)">
                       <span class="cart-item-remove">
                         <button name="remove" ng-click="orderCtrl.ScrollTop(); orderCtrl.RemoveFromOrder(cat, $index)" class="button-remove">X</button>
                       </span>
@@ -794,7 +794,7 @@ function GetModifierOptionFromMIDOID(menu, mid, oid) {
 function CopyWCPProduct(pi) {
   return new WCPProduct(pi.PRODUCT_CLASS, pi.piid, pi.name, pi.description, pi.ordinal, pi.modifiers, pi.shortcode, pi.base_price, pi.disable_data, pi.is_base, pi.display_flags);
 }
-function WCPProductFromDTO(dto) {
+function WCPProductFromDTO(dto, MENU) {
   return new WCPProduct(MENU.product_classes[dto.pid].product, "", "", "", 0, dto.modifiers, "", dto.base_price, null, false, {});
 }
 
@@ -2154,10 +2154,9 @@ function UpdateLeadTime() {
         }
       }
 
-      this.FilterEmptyCategories = function() {
-        var cats = this.CONFIG.MENU.categories;
+      this.FilterEmptyCategories = function(menu) {
         return function ( item ) {
-          return cats[item].menu.length > 0;
+          return menu.categories[item].menu.length > 0;
         }
       }
 
@@ -2341,7 +2340,7 @@ function UpdateLeadTime() {
       }
       var selectionDTO = this.selection.ToDTO();
       selectionDTO.modifiers = updated_modifiers;
-      this.selection = WCPProductFromDTO(selectionDTO);
+      this.selection = WCPProductFromDTO(selectionDTO, this.CONFIG.MENU);
       this.selection.Initialize(this.CONFIG.MENU);
       this.PopulateOrderGuide();
     }
