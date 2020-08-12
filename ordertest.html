@@ -835,23 +835,26 @@ var WCPProduct = function (product_class, piid, name, description, ordinal, modi
 
   this.RecomputeMetadata = function(MENU) {
     // recomputes bake_count, flavor_count, is_split
-    this.bake_count = [0, 0];
-    this.flavor_count = [0, 0];
-    this.is_split = false;
+    var bake_count = [0, 0];
+    var flavor_count = [0, 0];
+    var is_split = false;
     for (var mt in this.modifiers) {
       this.modifiers[mt].forEach(function(opt) {
         var option_obj = MENU.modifiers[mt].options[opt[1]];
         if (opt[0] === TOPPING_LEFT || opt[0] === TOPPING_WHOLE) {
-          this.bake_count[LEFT_SIDE] += option_obj.bake_factor;
-          this.flavor_count[LEFT_SIDE] += option_obj.flavor_factor;
+          bake_count[LEFT_SIDE] += option_obj.bake_factor;
+          flavor_count[LEFT_SIDE] += option_obj.flavor_factor;
         }
         if (opt[0] === TOPPING_RIGHT || opt[0] === TOPPING_WHOLE) {
-          this.bake_count[RIGHT_SIDE] += option_obj.bake_factor;
-          this.flavor_count[RIGHT_SIDE] += option_obj.flavor_factor;
+          bake_count[RIGHT_SIDE] += option_obj.bake_factor;
+          flavor_count[RIGHT_SIDE] += option_obj.flavor_factor;
         }
-        this.is_split = this.is_split || opt[0] === TOPPING_LEFT || opt[0] === TOPPING_RIGHT;
+        is_split = is_split || opt[0] === TOPPING_LEFT || opt[0] === TOPPING_RIGHT;
       });
     }
+    this.bake_count = bake_count;
+    this.flavor_count = flavor_count;
+    this.is_split = is_split;
   };
 
   function Compare(first, other, MENU) {
@@ -2355,7 +2358,7 @@ function UpdateLeadTime() {
       // mod map is { MID: { OID: placement } }
       var selection_modifiers_map = {};
       for (var midx = 0; midx < this.selection.PRODUCT_CLASS.modifiers.length; ++midx) {
-        var mid = this.selection.PRODUCT_CLASS.modifier[midx];
+        var mid = this.selection.PRODUCT_CLASS.modifiers[midx];
         var modifier_entry = this.CONFIG.MENU.modifiers[mid];
         // create the { OID: placement } part of the map
         selection_modifiers_map[mid] = {};
