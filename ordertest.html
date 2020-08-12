@@ -820,7 +820,6 @@ var WCPProduct = function (product_class, piid, name, description, ordinal, modi
     // need to compare PIDs of first and other, then use the PID to develop the modifiers matrix since one of the two product instances might not have a value for every modifier.
     if (first.PRODUCT_CLASS._id != other.PRODUCT_CLASS._id) {
       // no match on PID so we need to return 0
-      // maybe this should be an assert? probably not since we might have a specialty pizza in the main menu
       return { mirror: false, match_matrix: modifiers_match_matrix, match: [[[NO_MATCH, NO_MATCH]]] }
     }
 
@@ -2148,7 +2147,16 @@ function UpdateLeadTime() {
 
       this.UpdateOrderEntry = function(cart_entry, new_pi) {
         cart_entry.pi = new_pi;
-        this.PostCartUpdate();
+        for (var i = 0; i < this.s.linear_cart.length; ++i) {
+          if (cart_entry !== this.s.linear_cart[i] && this.s.linear_cart[i].pi.Equals(new_pi, this.CONFIG.MENU)) {
+            console.log("Found a duplicate item! Merging");
+            this.s.linear_cart[i].quantity += cart_entry.quantity;
+            cart_entry.quantity = 0;
+            break;
+          }
+        }
+        // TODO: RESUME HERE, need to just add CATID to the damn cart entry, fixQuantities isn't what we want to call here
+        this.fixQuantities();
       }
 
       this.RevalidateItems = function () {
