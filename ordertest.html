@@ -61,7 +61,7 @@
         </span>
       </div>
     </div>
-    <div class="cart" ng-if="!orderCtrl.s.cart_empty">
+    <div class="cart" ng-if="orderCtrl.s.linear_cart.length > 0">
       <hr class="separator">
       <h3 class="flush">Current Order</h3>
         <div class="content">
@@ -73,7 +73,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr ng-repeat="cart_entry in orderCtrl.s.cart[pmenuCtrl.CONFIG.PIZZAS_CATID]" class="cart-item">
+              <tr ng-repeat="cart_entry in orderCtrl.s.linear_cart" ng-class="{'cart-item':true, editible:cart_entry.can_edit}" >
                 <td>
                   <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
                     <div class="menu-list__item">
@@ -90,24 +90,6 @@
                   </div>
                 </td>
               </tr>
-              <div ng-repeat="cat in orderCtrl.s.cart">
-                <tr ng-repeat="cart_entry in orderCtrl.s.cart[cat]" class="cart-item">
-                  <td>
-                    <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
-                      <div class="menu-list__item">
-                        <wcppizzacartitem prod="cart_entry.pi" description="true" dots="false" price="false"></wcppizzacartitem>
-                      </div>
-                    </div>
-                  </td>
-                    <div class="grid-flex grid-valign-middle">
-                      <input type="number" class="quantity" min=1 max=99 ng-model="cart_entry.quantity" ng-blur="orderCtrl.fixQuantities(true)" ng-change="orderCtrl.fixQuantities(false)">
-                      <span class="cart-item-remove">
-                        <button name="remove" ng-click="orderCtrl.ScrollTop(); orderCtrl.RemoveFromOrder(cat, $index)" class="button-remove">X</button>
-                      </span>
-                    </div>
-                  </td>
-                </tr>
-              </div>
             </tbody>
           </table>
         </div>
@@ -294,7 +276,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr ng-repeat="cart_item in orderCtrl.s.cart[orderCtrl.CONFIG.PIZZAS_CATID]" class="cart-item">
+              <tr ng-repeat="cart_item in orderCtrl.s.linear_cart" class="cart-item">
                 <td class="cart-item-description">
                   <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
                     <div class="menu-list__item">
@@ -311,25 +293,6 @@
                 </td>
                 <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{cart_item.pi.price * cart_item.quantity | number:2}}</span></td>
               </tr>
-              <div ng-repeat="cat in orderCtrl.s.cart">
-                <tr ng-repeat="cart_item in orderCtrl.s.cart[cat]" class="cart-item">
-                  <td class="cart-item-description">
-                    <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
-                      <div class="menu-list__item">
-                        <wcppizzacartitem prod="cart_item.pi" description="true" dots="false" price="false"></wcppizzacartitem>
-                      </div>
-                    </div>
-                  </td>
-                  <td class="cart-item-quantity-price no-wrap">
-                    <div class="grid-flex grid-valign-middle">
-                      <span class="column no-shrink menu-list__item-price">{{cart_item.quantity}}</span>
-                      <span class="column no-shrink">×</span>
-                      <span class="column no-shrink menu-list__item-price">{{cart_item.pi.price}}</span>
-                    </div>
-                  </td>
-                  <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{cart_item.pi.price * cart_item.quantity | number:2}}</span></td>
-                </tr>
-              </div>
               <tr class="cart-item" ng-if="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY">
                 <td class="cart-item-description">
                   <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
@@ -454,7 +417,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr ng-repeat="cart_item in orderCtrl.s.cart[orderCtrl.CONFIG.PIZZAS_CATID]" class="cart-item">
+              <tr ng-repeat="cart_item in orderCtrl.s.linear_cart" class="cart-item">
                 <td class="cart-item-description">
                   <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
                     <div class="menu-list__item">
@@ -471,25 +434,6 @@
                 </td>
                 <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{cart_item.pi.price * cart_item.quantity | number:2}}</span></td>
               </tr>
-              <div ng-repeat="cat in orderCtrl.s.cart">
-                <tr ng-repeat="cart_item in orderCtrl.s.cart[cat]" class="cart-item">
-                  <td class="cart-item-description">
-                    <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
-                      <div class="menu-list__item">
-                        <wcppizzacartitem prod="cart_item.pi" description="true" dots="false" price="false"></wcppizzacartitem>
-                      </div>
-                    </div>
-                  </td>
-                  <td class="cart-item-quantity-price no-wrap">
-                    <div class="grid-flex grid-valign-middle">
-                      <span class="column no-shrink menu-list__item-price">{{cart_item.quantity}}</span>
-                      <span class="column no-shrink">×</span>
-                      <span class="column no-shrink menu-list__item-price">{{cart_item.pi.price}}</span>
-                    </div>
-                  </td>
-                  <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{cart_item.pi.price * cart_item.quantity | number:2}}</span></td>
-                </tr>
-              </div>
               <tr class="cart-item" ng-if="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY">
                 <td class="cart-item-description">
                   <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
@@ -771,12 +715,13 @@ var WCPOption = function (w_modifier, w_option, index, enable_function) {
 
 // helper function for WCPProduct
 function ExtractMatchForSide(side, matrix) {
-  return Math.min.apply(0, matrix.map(function (modcompare_arr) {
+  // we take the min of EXACT_MATCH and the thing we just computed because if there are no modifiers, then we'll get Infinity
+  return Math.min(EXACT_MATCH, Math.min.apply(0, matrix.map(function (modcompare_arr) {
     //TODO check that when there's a modifier without any options, that doesn't make this result in NaN
     return Math.min.apply(0, modcompare_arr.map(function (comp) {
       return comp[side];
     }));
-  }));
+  })));
 };
 
 function DeepCopyPlacedOptions(modifiers) {
@@ -1313,9 +1258,10 @@ function GenerateCatalogMapFromCatalog(CONFIG, cat, $sce) {
 // handy class representing a line in the product cart
 // useful to allow modifications on the product by setting it to a new product instance
 // instead of modifying the product instance itself
-var CartEntry = function (product, quantity) {
+var CartEntry = function (product, quantity, can_edit) {
   this.pi = product;
   this.quantity = quantity;
+  this.can_edit = can_edit;
 };
 
 var $j = jQuery.noConflict();
@@ -1696,11 +1642,9 @@ function UpdateLeadTime() {
 
     this.ComputeSubtotal = function () {
       var val = 0;
-      this.cart_empty = true;
       for (var cid in this.cart) {
         for (var i = 0; i < this.cart[cid].length; ++i) {
           val += this.cart[cid][i].quantity * this.cart[cid][i].pi.price;
-          this.cart_empty = this.cart_empty && this.cart[cid][i].quantity === 0;
         }
       }
       this.computed_subtotal = val;
@@ -1799,7 +1743,22 @@ function UpdateLeadTime() {
       this.balance = this.total - post_tax_credit_used - pre_tax_store_credit;
     }
 
+    // dumb function that gets a cart we can iterate over in the proper order (pizzas first then the rest) so we can still use crappy tables
+    // this would be a great thing to get rid of.
+    this.GenerateLinearCart = function() {
+      var pizza_portion = [];
+      var extras_portion = [];
+      for (var catid in this.cart) {
+        for (var i = 0; i < this.cart[catid].length; ++i) {
+          var entry = this.cart[catid][i];
+          catid === PIZZAS_CATID ? pizza_portion.push(entry) : extras_portion.push(entry);
+        }
+      }
+      this.linear_cart = pizza_portion.concat(extras_portion);
+    }
+
     this.StatePostCartUpdate = function () {
+      this.GenerateLinearCart();
       this.RecomputeOrderSize();
       this.ComputeSubtotal();
       this.TotalsUpdate();
@@ -1886,7 +1845,7 @@ function UpdateLeadTime() {
           load_time: state.debug_info.load_time,
           time_selection_time: state.debug_info["time-selection-time"] ? state.debug_info["time-selection-time"].format("H:mm:ss") : "",
           submittime: moment().format("MM-DD-YYYY HH:mm:ss"),
-          useragent: navigator.userAgent + " FEV5",
+          useragent: navigator.userAgent + " FEV6",
         }
       }).then(onSuccess).catch(onFail);
     }
@@ -1954,11 +1913,9 @@ function UpdateLeadTime() {
     this.cart = {
     };
     this.slice_pizzas = false;
-    this.cartstring = "";
     this.num_pizza = 0;
-    this.cart_empty = true;
+    this.linear_cart = [];
     this.cart_based_lead_time = 0;
-    this.shortcartstring = "";
     this.referral = "";
     this.acknowledge_dine_in_terms = false;
     this.acknowledge_instructions_dialogue = false;
@@ -2150,7 +2107,8 @@ function UpdateLeadTime() {
         if ((pi.display_flags && pi.display_flags.skip_customization) || pi.PRODUCT_CLASS.modifiers.length === 0) {
           var pi_copy = CopyWCPProduct(pi);
           pi_copy.Initialize(this.CONFIG.MENU);
-          this.AddToOrder(cid, new CartEntry(pi_copy, 1));
+          // TODO: the modifiers length check isn't actually exhaustive as some modifiers might be disabled for any reason
+          this.AddToOrder(cid, new CartEntry(pi_copy, 1, pi.PRODUCT_CLASS.modifiers.length !== 0));
         }
         else {
           pmenuctrl.SetProduct(pi, 1);
@@ -2347,13 +2305,14 @@ function UpdateLeadTime() {
       selection_copy.description = this.selection.description;
       selection_copy.Initialize(this.CONFIG.MENU);
       this.selection = selection_copy;
+      this.cart_entry.pi = this.selection;
       this.PopulateOrderGuide();
     }
 
     this.SetProduct = function (product_instance, quantity) {
       this.selection = CopyWCPProduct(product_instance);
       this.selection.Initialize(this.CONFIG.MENU);
-      this.cart_entry = new CartEntry(this.selection, quantity);
+      this.cart_entry = new CartEntry(this.selection, quantity, true);
 
       // mod map is { MID: { OID: placement } }
       var selection_modifiers_map = {};
@@ -2551,7 +2510,7 @@ app.directive("wcpoptiondir", function () {
     controller: function () {
       this.Initialize = function () {
         this.MENU = this.config.MENU;
-        this.split =  this.option.can_split && this.modctrl.display_type === MODDISP_CHECKBOX;
+        this.split =  this.allow_split && this.option.can_split && this.modctrl.display_type === MODDISP_CHECKBOX;
         var placement = GetPlacementFromMIDOID(this.selection, this.option.modifier._id, this.option.moid);
         this.left = placement === TOPPING_LEFT;
         this.right = placement === TOPPING_RIGHT;
