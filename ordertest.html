@@ -2144,7 +2144,7 @@ function UpdateLeadTime() {
       // intermedite function that sees if we should be customizing this
       // product or add it directly to the cart
       this.SelectProduct = function(cid, pi, pmenuctrl) {
-        if (pi.display_flags && pi.display_flags.skip_customization) {
+        if ((pi.display_flags && pi.display_flags.skip_customization) || pi.PRODUCT_CLASS.modifiers.length === 0) {
           var pi_copy = CopyWCPProduct(pi);
           pi_copy.Initialize(this.CONFIG.MENU);
           this.AddToOrder(cid, new CartEntry(pi_copy, 1));
@@ -2340,8 +2340,10 @@ function UpdateLeadTime() {
       }
       var selectionDTO = this.selection.ToDTO();
       selectionDTO.modifiers = updated_modifiers;
-      this.selection = WCPProductFromDTO(selectionDTO, this.CONFIG.MENU);
-      this.selection.Initialize(this.CONFIG.MENU);
+      var selection_copy = WCPProductFromDTO(selectionDTO, this.CONFIG.MENU);
+      selection_copy.description = this.selection.description;
+      selection_copy.Initialize(this.CONFIG.MENU);
+      this.selection = selection_copy;
       this.PopulateOrderGuide();
     }
 
