@@ -855,6 +855,7 @@ var WCPProduct = function (product_class, piid, name, description, ordinal, modi
           CATALOG_MODIFIER_INFO.options_list.forEach(function (option, oidx) {
             if (first_option[1] === option.moid) {
               modifiers_match_matrix[midx][oidx] = [AT_LEAST, AT_LEAST];
+              is_mirror = false;
             }
           });
         }
