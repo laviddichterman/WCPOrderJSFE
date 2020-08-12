@@ -57,7 +57,10 @@
           <button name="remove" class="btn button-remove scrolltotop" ng-click="pmenuCtrl.UnsetProduct()">Cancel</button>
         </span>
         <span class="four-fifths">
-          <span class="order-nav-item float--right"><button name="add" class="btn scrolltotop" ng-click="orderCtrl.AddToOrder(pmenuCtrl.CONFIG.PIZZAS_CATID, pmenuCtrl.cart_entry); pmenuCtrl.UnsetProduct()">Add to order</button></span>
+          <span class="order-nav-item float--right">
+            <button ng-if="pmenuCtrl.is_addition" name="add" class="btn scrolltotop" ng-click="orderCtrl.AddToOrder(pmenuCtrl.catid, pmenuCtrl.selection); pmenuCtrl.UnsetProduct()">Add to order</button>
+            <button ng-if="!pmenuCtrl.is_addition" name="save" class="btn scrolltotop" ng-click="orderCtrl.UpdateOrderEntry(pmenuCtrl.cart_entry, pmenuCtrl.selection); pmenuCtrl.UnsetProduct()">Save Changes</button>
+          </span>
         </span>
       </div>
     </div>
@@ -85,7 +88,10 @@
                   <div class="grid-flex grid-valign-middle">
                     <input type="number" class="quantity" min=1 max=99 ng-model="cart_entry.quantity" ng-blur="orderCtrl.fixQuantities(true)" ng-change="orderCtrl.fixQuantities(false)">
                     <span class="cart-item-remove">
-                      <button name="remove" ng-click="orderCtrl.ScrollTop(); orderCtrl.RemoveFromOrder(pmenuCtrl.CONFIG.PIZZAS_CATID, $index)" class="button-remove">X</button>
+                      <button ng-disabled="!pmenuCtrl.is_addition" name="remove" ng-click="orderCtrl.ScrollTop(); orderCtrl.RemoveFromOrder(pmenuCtrl.CONFIG.PIZZAS_CATID, $index)" class="button-remove">X</button>
+                    </span>
+                    <span ng-if="cart_entry.can_edit" class="cart-item-remove">
+                      <button name="edit" ng-click="orderCtrl.ScrollTop(); pmenuCtrl.EditCartEntry(cart_entry)" class="button-remove"><div class="icon-gear"></div></button>
                     </span>
                   </div>
                 </td>
@@ -2107,11 +2113,11 @@ function UpdateLeadTime() {
         if ((pi.display_flags && pi.display_flags.skip_customization) || pi.PRODUCT_CLASS.modifiers.length === 0) {
           var pi_copy = CopyWCPProduct(pi);
           pi_copy.Initialize(this.CONFIG.MENU);
-          // TODO: the modifiers length check isn't actually exhaustive as some modifiers might be disabled for any reason
-          this.AddToOrder(cid, new CartEntry(pi_copy, 1, pi.PRODUCT_CLASS.modifiers.length !== 0));
+
+          this.AddToOrder(cid, pi_copy);
         }
         else {
-          pmenuctrl.SetProduct(pi, 1);
+          pmenuctrl.SetProduct(cid, pi, true);
         }
       }
 
@@ -2121,20 +2127,26 @@ function UpdateLeadTime() {
         }
       }
 
-      this.AddToOrder = function (cid, cart_entry) {
+      this.AddToOrder = function (cid, pi) {
         if (!this.s.cart.hasOwnProperty(cid)) {
           this.s.cart[cid] = [];
         }
         // check for existing entry
         for (var i in this.s.cart[cid]) {
-          if (this.s.cart[cid][i].pi.Equals(cart_entry.pi, this.CONFIG.MENU)) {
-            this.s.cart[cid][i].quantity += cart_entry.quantity;
+          if (this.s.cart[cid][i].pi.Equals(pi, this.CONFIG.MENU)) {
+            this.s.cart[cid][i].quantity += 1;
             this.PostCartUpdate();
             return;
           }
         }
         // add new entry
-        this.s.cart[cid].push(cart_entry);
+        // TODO: the modifiers length check isn't actually exhaustive as some modifiers might be disabled for any reason
+        this.s.cart[cid].push(new CartEntry(pi, 1, pi.PRODUCT_CLASS.modifiers.length !== 0));
+        this.PostCartUpdate();
+      }
+
+      this.UpdateOrderEntry = function(cart_entry, new_pi) {
+        cart_entry.pi = new_pi;
         this.PostCartUpdate();
       }
 
@@ -2266,6 +2278,8 @@ function UpdateLeadTime() {
     this.CONFIG = wcpconfig;
     this.selection = null;
     this.cart_entry = null;
+    this.catid = null;
+    this.is_addition = true;
     this.messages = [];
     this.modifier_map = {};
 
@@ -2305,14 +2319,21 @@ function UpdateLeadTime() {
       selection_copy.description = this.selection.description;
       selection_copy.Initialize(this.CONFIG.MENU);
       this.selection = selection_copy;
-      this.cart_entry.pi = this.selection;
       this.PopulateOrderGuide();
     }
 
-    this.SetProduct = function (product_instance, quantity) {
+    this.EditCartEntry = function(cart_entry) {
+      this.selection = CopyWCPProduct(cart_entry.pi);
+      this.selection.Initialize(this.CONFIG.MENU);
+      this.cart_entry = cart_entry;
+      this.is_addition = false;
+    }
+
+    this.SetProduct = function (catid, product_instance, is_new) {
       this.selection = CopyWCPProduct(product_instance);
       this.selection.Initialize(this.CONFIG.MENU);
-      this.cart_entry = new CartEntry(this.selection, quantity, true);
+      this.catid = catid;
+      this.is_addition = is_new;
 
       // mod map is { MID: { OID: placement } }
       var selection_modifiers_map = {};
@@ -2331,17 +2352,15 @@ function UpdateLeadTime() {
       this.PopulateOrderGuide();
     };
 
+
     this.UnsetProduct = function () {
       this.selection = null;
       this.cart_entry = null;
+      this.catid = null;
+      this.is_addition = true;
       this.messages = [];
     };
 
-    this.FixQuantity = function () {
-      if (this.cart_entry) {
-        this.cart_entry.quantity = FixQuantity(this.cart_entry.quantity, true);
-      }
-    };
   });
 
   app.directive("wcppizzacartitem", function () {
