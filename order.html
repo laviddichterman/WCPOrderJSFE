@@ -5,7 +5,7 @@
       <h3 class="flush--top" ng-if="orderCtrl.s.num_pizza === 0"><strong>Click a pizza below to get started</strong></h3>
       <h3 class="flush--top" ng-if="orderCtrl.s.num_pizza > 0"><strong>Click a pizza below or next to continue</strong></h3>
       <ul class="flexitems menu-list__items">
-        <li class="flexitem menu-list__item" ng-repeat="pizza in pmenuCtrl.CONFIG.MENU.categories[pmenuCtrl.CONFIG.PIZZAS_CATID].menu | orderCtrl.FilterDisabledProducts(pmenuCtrl.CONFIG.MENU)">
+        <li class="flexitem menu-list__item" ng-repeat="pizza in pmenuCtrl.CONFIG.MENU.categories[pmenuCtrl.CONFIG.PIZZAS_CATID].menu | filter:orderCtrl.FilterDisabledProducts(pmenuCtrl.CONFIG.MENU)">
           <div class="offer-link" ng-click="orderCtrl.ScrollTop(); orderCtrl.SelectProduct(pmenuCtrl.CONFIG.PIZZAS_CATID, pizza, pmenuCtrl)">
             <wcppizzacartitem prod="pizza" description="true" dots="true" price="true"></wcppizzacartitem>
           </div>
@@ -26,15 +26,9 @@
         </md-toolbar> 
         <ul ng-class="{dataContent:true, activeContent:orderCtrl.s.accordionstate[$index]}" class="menu-list__items">
           <li class="menu-list__item" ng-if="pmenuCtrl.CONFIG.MENU.categories[subcatid].subtitle"><strong><span ng-bind-html="pmenuCtrl.CONFIG.MENU.categories[subcatid].subtitle"></span></strong></li>
-          <li class="menu-list__item" ng-repeat="extra in pmenuCtrl.CONFIG.MENU.categories[subcatid].menu | orderCtrl.FilterDisabledProducts(pmenuCtrl.CONFIG.MENU)">
+          <li class="menu-list__item" ng-repeat="extra in pmenuCtrl.CONFIG.MENU.categories[subcatid].menu | filter:orderCtrl.FilterDisabledProducts(pmenuCtrl.CONFIG.MENU)">
             <div class="offer-link" ng-click="orderCtrl.ScrollTop(); orderCtrl.SelectProduct(subcatid, extra, pmenuCtrl)">
-              <h4 class="menu-list__item-title"><span class="item_title">{{extra.name}}</span><span class="dots"></span></h4>
-              <p class="menu-list__item-desc">
-                <span class="desc__content">{{extra.description}}</span>
-              </p>
-              <span class="dots"></span>
-              <span class="menu-list__item-price">{{extra.price}}</span>
-            </div>
+              <wcppizzacartitem prod="extra" description="true" dots="true" price="true"></wcppizzacartitem>
           </li>
         </ul>
       </div>

@@ -1528,9 +1528,9 @@ function UpdateLeadTime() {
         return function ( item ) {
           var all_enabled = DisableDataCheck(item.disable_data);
           for (var mtid in item.modifiers) {
-            all_enabled = all_enabled && Math.min(1, Math.min.apply(null, DisableDataCheck(item.modifiers[mtid].map(function(x) {
+            all_enabled = all_enabled && Math.min(1, Math.min.apply(null, item.modifiers[mtid].map(function(x) {
               return DisableDataCheck(menu.modifiers[mtid].options[x[1]].disable_data);
-            }))));
+            })));
           }
           return all_enabled;
         }
