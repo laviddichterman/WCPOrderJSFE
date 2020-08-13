@@ -42,7 +42,7 @@
     <div class="customizer menu-list__items" ng-if="pmenuCtrl.selection">
       <h3 class="flush--top"><strong>Customize it!</strong></h3>
       <div class="menu-list__item">
-        <wcppizzacartitem prod="pmenuCtrl.selection" description="false" dots="true" price="true"></wcppizzacartitem>
+        <wcppizzacartitem prod="pmenuCtrl.selection" description="true" dots="true" price="true"></wcppizzacartitem>
       </div>
       <hr class="separator">
       <div wcpmodifierdir ng-repeat="mtid in pmenuCtrl.selection.PRODUCT_CLASS.modifiers"
@@ -701,13 +701,15 @@ var WCPOption = function (w_modifier, w_option, index, enable_function) {
     modifier_placement = modifier_placement === undefined ? TOPPING_NONE : modifier_placement[0];
     // TODO: bake and flavor stuff should move into the enable_filter itself, the option itself should just hold generalized metadata the enable filter function can use/reference
     var display_flags = product.PRODUCT_CLASS.display_flags;
+    var BAKE_MAX = display_flags ? display_flags.bake_max : 100;
+    var FLAVOR_MAX = display_flags ? display_flags.flavor_max : 100;
     var left_bake = product.bake_count[LEFT_SIDE];
     var right_bake = product.bake_count[RIGHT_SIDE];
     var left_flavor = product.flavor_count[LEFT_SIDE];
     var right_flavor = product.flavor_count[RIGHT_SIDE];
     // TODO: needs to take into account bake differential in the computation below
-    var has_room_on_left = left_bake + this.bake_factor <= display_flags.bake_max && left_flavor + this.flavor_factor <= display_flags.flavor_max;
-    var has_room_on_right = right_bake + this.bake_factor <= display_flags.bake_max && right_flavor + this.flavor_factor <= display_flags.flavor_max;
+    var has_room_on_left = left_bake + this.bake_factor <= BAKE_MAX && left_flavor + this.flavor_factor <= FLAVOR_MAX;
+    var has_room_on_right = right_bake + this.bake_factor <= BAKE_MAX && right_flavor + this.flavor_factor <= FLAVOR_MAX;
     switch (location) {
       case TOPPING_NONE: return base; //TODO, this case might need re-evaluation. is there a case when a generic modifier could NOT be removed? if so, maybe the other cases here need to be looked at as well.
       case TOPPING_LEFT: return base && this.can_split && (modifier_placement === TOPPING_WHOLE || modifier_placement === TOPPING_LEFT || has_room_on_left);
@@ -1062,7 +1064,7 @@ var WCPProduct = function (product_class, piid, name, description, ordinal, modi
         name_components_list = ComponentsList(additional_options.whole, function (x) { return x.name; });
         shortname_components_list = ComponentsList(additional_options.whole, function (x) { return x.shortname; });
         if (menu_match[LEFT_SIDE].piid === menu_match[RIGHT_SIDE].piid) {
-          if (!is_compare_to_base[LEFT_SIDE]) {
+          if (!is_compare_to_base[LEFT_SIDE] || PRODUCT_CLASS.display_flags.show_name_of_base_product) {
             name_components_list.unshift(menu_match[LEFT_SIDE].item.display_name);
             shortname_components_list.unshift(menu_match[LEFT_SIDE].item.display_name);
           }
@@ -1097,8 +1099,8 @@ var WCPProduct = function (product_class, piid, name, description, ordinal, modi
         name_components_list = ComponentsList(additional_options.whole, function (x) { return x.name; });
         shortname_components_list = ComponentsList(additional_options.whole, function (x) { return x.shortname; });
         // we're using the left side because we know left and right are the same
-        if (menu_match_compare[LEFT_SIDE] !== EXACT_MATCH || !is_compare_to_base[LEFT_SIDE]) {
-          // if exact match to base product, no need to show the name
+        // if exact match to base product, no need to show the name
+        if (!is_compare_to_base[LEFT_SIDE] || PRODUCT_CLASS.display_flags.show_name_of_base_product) {
           name_components_list.unshift(menu_match[LEFT_SIDE].name);
           shortname_components_list.unshift(menu_match[LEFT_SIDE].name);
         }
@@ -2342,10 +2344,10 @@ function UpdateLeadTime() {
     }
 
     this.EditCartEntry = function(cart_entry) {
-      this.selection = CopyWCPProduct(cart_entry.pi);
-      this.selection.Initialize(this.CONFIG.MENU);
+      var pi_copy = CopyWCPProduct(cart_entry.pi);
+      pi_copy.Initialize(this.CONFIG.MENU);
       this.cart_entry = cart_entry;
-      this.is_addition = false;
+      this.SetProduct(cart_entry.catid, pi_copy, false);
     }
 
     this.SetProduct = function (catid, product_instance, is_new) {
@@ -2391,7 +2393,11 @@ function UpdateLeadTime() {
         price: "=price",
         description: "=description"
       },
-      controller: function () { },
+      controller: function () { 
+        this.ShowOptionsSections = function () {
+          return !(this.prod.options_sections.length === 1 && this.prod.options_sections[0][1] === this.prod.name)
+        }
+      },
       controllerAs: "ctrl",
       bindToController: true,
       template: '<h4 class="menu-list__item-title"><span class="item_title">{{ctrl.prod.name}}</span><span ng-if="ctrl.dots" class="dots"></span></h4>' +
@@ -2400,7 +2406,7 @@ function UpdateLeadTime() {
         '<span>{{ctrl.prod.description}}</span>' +
         '</span>' +
         '</p>' +
-        '<p ng-if="ctrl.description" ng-repeat="option_section in ctrl.prod.options_sections" class="menu-list__item-desc">' +
+        '<p ng-if="ctrl.description && ctrl.ShowOptionsSections()" ng-repeat="option_section in ctrl.prod.options_sections" class="menu-list__item-desc">' +
         '<span class="desc__content">' +
         '<span ng-if="ctrl.prod.is_split"><strong>{{option_section[0]}}: </strong></span>' +
         '<span>{{option_section[1]}}</span>' +
