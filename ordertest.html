@@ -723,7 +723,6 @@ var WCPOption = function (w_modifier, w_option, index, enable_function) {
 function ExtractMatchForSide(side, matrix) {
   // we take the min of EXACT_MATCH and the thing we just computed because if there are no modifiers, then we'll get Infinity
   return Math.min(EXACT_MATCH, Math.min.apply(0, matrix.map(function (modcompare_arr) {
-    //TODO check that when there's a modifier without any options, that doesn't make this result in NaN
     return Math.min.apply(0, modcompare_arr.map(function (comp) {
       return comp[side];
     }));
@@ -989,8 +988,9 @@ var WCPProduct = function (product_class, piid, name, description, ordinal, modi
             if (found_selection >= 0) {
               name_components[mid_index][found_selection][side] = true;
             }
-            else {
+            else if (is_compare_to_base && !PRODUCT_CLASS.display_flags.show_name_of_base_product) {
               // whatever we have selected is the default option, use the BASE_PRODUCT_INSTANCE to grab that info
+              // since the display flag show_name_of_base_product is OFF
               name_components[mid_index][base_moidx][side] = true;
             }
             
@@ -1017,8 +1017,8 @@ var WCPProduct = function (product_class, piid, name, description, ordinal, modi
       // determine if we're comparing to the base product on the left and right sides
       var is_compare_to_base = [
         BASE_PRODUCT_INSTANCE.piid === menu_match[LEFT_SIDE].piid,
-        BASE_PRODUCT_INSTANCE.piid === menu_match[RIGHT_SIDE].piid];
-
+        BASE_PRODUCT_INSTANCE.piid === menu_match[RIGHT_SIDE].piid];  
+      
       // split out options beyond the base product into left additions, right additions, and whole additions
       // each entry in these arrays represents the modifier index on the product class and the option index in that particular modifier
       var additional_options = { left: [], right: [], whole: [] };
@@ -1044,8 +1044,6 @@ var WCPProduct = function (product_class, piid, name, description, ordinal, modi
           return getter(MENU.modifiers[PRODUCT_CLASS.modifiers[x[0]]].options_list[x[1]]);
         });
       }
-
-      console.log(additional_options);
 
       var split_options = ["∅", "∅"];
       var short_split_options = ["∅", "∅"];
