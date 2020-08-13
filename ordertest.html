@@ -5,7 +5,7 @@
       <h3 class="flush--top" ng-if="orderCtrl.s.num_pizza === 0"><strong>Click a pizza below to get started</strong></h3>
       <h3 class="flush--top" ng-if="orderCtrl.s.num_pizza > 0"><strong>Click a pizza below or next to continue</strong></h3>
       <ul class="flexitems menu-list__items">
-        <li class="flexitem menu-list__item" ng-repeat="pizza in pmenuCtrl.CONFIG.MENU.categories[pmenuCtrl.CONFIG.PIZZAS_CATID].menu">
+        <li class="flexitem menu-list__item" ng-repeat="pizza in pmenuCtrl.CONFIG.MENU.categories[pmenuCtrl.CONFIG.PIZZAS_CATID].menu | orderCtrl.FilterDisabledProducts(pmenuCtrl.CONFIG.MENU)">
           <div class="offer-link" ng-click="orderCtrl.ScrollTop(); orderCtrl.SelectProduct(pmenuCtrl.CONFIG.PIZZAS_CATID, pizza, pmenuCtrl)">
             <wcppizzacartitem prod="pizza" description="true" dots="true" price="true"></wcppizzacartitem>
           </div>
@@ -26,7 +26,7 @@
         </md-toolbar> 
         <ul ng-class="{dataContent:true, activeContent:orderCtrl.s.accordionstate[$index]}" class="menu-list__items">
           <li class="menu-list__item" ng-if="pmenuCtrl.CONFIG.MENU.categories[subcatid].subtitle"><strong><span ng-bind-html="pmenuCtrl.CONFIG.MENU.categories[subcatid].subtitle"></span></strong></li>
-          <li class="menu-list__item" ng-repeat="extra in pmenuCtrl.CONFIG.MENU.categories[subcatid].menu">
+          <li class="menu-list__item" ng-repeat="extra in pmenuCtrl.CONFIG.MENU.categories[subcatid].menu | orderCtrl.FilterDisabledProducts(pmenuCtrl.CONFIG.MENU)">
             <div class="offer-link" ng-click="orderCtrl.ScrollTop(); orderCtrl.SelectProduct(subcatid, extra, pmenuCtrl)">
               <h4 class="menu-list__item-title"><span class="item_title">{{extra.name}}</span><span class="dots"></span></h4>
               <p class="menu-list__item-desc">
@@ -627,6 +627,11 @@ function GetPlacementFromMIDOID(pi, mid, oid) {
   var option_placement = pi.modifiers.hasOwnProperty(mid) ?
     pi.modifiers[mid].find(function (x) { return x[1] === oid }) : null;
   return option_placement ? option_placement[0] : TOPPING_NONE;
+}
+
+function DisableDataCheck(disable_data) {
+  // TODO: this should not be the current time, but rather the time the order is FOR
+  return !disable_data || (!(disable_data.start > disable_data.end) && (disable_data.start > moment().valueOf() || disable_data.end < moment().valueOf()));
 }
 
 // TODO: refactor these! they need to use the product.modifiers list and use mtid, moid and basically be defined in WARIO itself
@@ -2143,6 +2148,18 @@ function UpdateLeadTime() {
         }
       }
 
+      this.FilterDisabledProducts = function(menu) {
+        return function ( item ) {
+          var all_enabled = DisableDataCheck(item.disable_data);
+          for (var mtid in item.modifiers) {
+            all_enabled = all_enabled && Math.min(1, Math.min.apply(null, DisableDataCheck(item.modifiers[mtid].map(function(x) {
+              return DisableDataCheck(menu.modifiers[mtid].options[x[1]].disable_data);
+            }))));
+          }
+          return all_enabled;
+        }
+      }
+
       this.AddToOrder = function (cid, pi) {
         if (!this.s.cart.hasOwnProperty(cid)) {
           this.s.cart[cid] = [];
@@ -2448,8 +2465,7 @@ function UpdateLeadTime() {
           var menu = this.config.MENU;
           // determine list of visible options
           var filtered_options = menu.modifiers[this.mtid].options_list.filter(function (x) {
-            // TODO: this should not be the current time, but rather the time the order is FOR
-            return !x.disable_data || (!(x.disable_data.start > x.disable_data.end) && (x.disable_data.start > moment().valueOf() || x.disable_data.end < moment().valueOf()));
+            return DisableDataCheck(x.disable_data);
           })
           if (menu.modifiers[this.mtid].modifier_type.display_flags && menu.modifiers[this.mtid].modifier_type.display_flags.omit_options_if_not_available) {
             var filterfxn = function (x) {

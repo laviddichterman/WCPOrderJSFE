@@ -5,6 +5,11 @@ function GetPlacementFromMIDOID(pi, mid, oid) {
   return option_placement ? option_placement[0] : TOPPING_NONE;
 }
 
+function DisableDataCheck(disable_data) {
+  // TODO: this should not be the current time, but rather the time the order is FOR
+  return !disable_data || (!(disable_data.start > disable_data.end) && (disable_data.start > moment().valueOf() || disable_data.end < moment().valueOf()));
+}
+
 // TODO: refactor these! they need to use the product.modifiers list and use mtid, moid and basically be defined in WARIO itself
 var ENABLE_FUNCTIONS = {
   never: function (pi, location, MENU) {
@@ -1519,6 +1524,18 @@ function UpdateLeadTime() {
         }
       }
 
+      this.FilterDisabledProducts = function(menu) {
+        return function ( item ) {
+          var all_enabled = DisableDataCheck(item.disable_data);
+          for (var mtid in item.modifiers) {
+            all_enabled = all_enabled && Math.min(1, Math.min.apply(null, DisableDataCheck(item.modifiers[mtid].map(function(x) {
+              return DisableDataCheck(menu.modifiers[mtid].options[x[1]].disable_data);
+            }))));
+          }
+          return all_enabled;
+        }
+      }
+
       this.AddToOrder = function (cid, pi) {
         if (!this.s.cart.hasOwnProperty(cid)) {
           this.s.cart[cid] = [];
@@ -1824,8 +1841,7 @@ function UpdateLeadTime() {
           var menu = this.config.MENU;
           // determine list of visible options
           var filtered_options = menu.modifiers[this.mtid].options_list.filter(function (x) {
-            // TODO: this should not be the current time, but rather the time the order is FOR
-            return !x.disable_data || (!(x.disable_data.start > x.disable_data.end) && (x.disable_data.start > moment().valueOf() || x.disable_data.end < moment().valueOf()));
+            return DisableDataCheck(x.disable_data);
           })
           if (menu.modifiers[this.mtid].modifier_type.display_flags && menu.modifiers[this.mtid].modifier_type.display_flags.omit_options_if_not_available) {
             var filterfxn = function (x) {
