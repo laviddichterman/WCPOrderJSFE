@@ -1,56 +1,33 @@
 <div ng-cloak class="orderform" ng-app="WCPOrder" ng-controller="OrderController as orderCtrl">
   <span id="ordertop"></span>
-  <div ng-show="orderCtrl.s.stage === 1 || orderCtrl.s.stage === 2" ng-controller="PizzaMenuController as pmenuCtrl">
+  <div ng-show="orderCtrl.s.stage === 1 || orderCtrl.s.stage === 2" ng-controller="ProductMenuController as pmenuCtrl">
     <div class="ordering-menu menu-list menu-list__dotted" ng-show="orderCtrl.s.stage === 1 && !pmenuCtrl.selection">
-      <h3 class="flush--top" ng-if="orderCtrl.s.cart.pizza.length === 0"><strong>Click a pizza below to get started</strong></h3>
-      <h3 class="flush--top" ng-if="orderCtrl.s.cart.pizza.length > 0"><strong>Click a pizza below or next to continue</strong></h3>
+      <h3 class="flush--top" ng-if="orderCtrl.s.num_pizza === 0"><strong>Click a pizza below to get started</strong></h3>
+      <h3 class="flush--top" ng-if="orderCtrl.s.num_pizza > 0"><strong>Click a pizza below or next to continue</strong></h3>
       <ul class="flexitems menu-list__items">
-        <li class="flexitem menu-list__item" ng-if="pmenuCtrl.CONFIG.MENU.pizzas.length === 0">Loading menu...</li>
-        <li class="flexitem menu-list__item" ng-repeat="pizza in pmenuCtrl.CONFIG.MENU.pizzas">
-          <div class="offer-link" ng-click="orderCtrl.ScrollTop(); pmenuCtrl.setPizza(pizza)">
-            <wcppizzacartitem pizza="pizza" description="true" dots="true" price="true"></wcppizzacartitem>
+        <li class="flexitem menu-list__item" ng-repeat="pizza in pmenuCtrl.CONFIG.MENU.categories[pmenuCtrl.CONFIG.PIZZAS_CATID].menu">
+          <div class="offer-link" ng-click="orderCtrl.ScrollTop(); orderCtrl.SelectProduct(pmenuCtrl.CONFIG.PIZZAS_CATID, pizza, pmenuCtrl)">
+            <wcppizzacartitem prod="pizza" description="true" dots="true" price="true"></wcppizzacartitem>
           </div>
         </li>
       </ul>
     </div>
-    <div class="customizer menu-list__items" ng-show="pmenuCtrl.selection">
-      <h3 class="flush--top"><strong>Customize your pizza</strong></h3>
-      <div class="menu-list__item">
-        <wcppizzacartitem pizza="pmenuCtrl.selection" description="false" dots="true" price="true"></wcppizzacartitem>
-      </div>
-      <hr class="separator">
-      <div ng-if="pmenuCtrl.selection" wcpmodifierdir ng-repeat="mtid in pmenuCtrl.selection.modifiers"
-      mtid="mtid" selection="pmenuCtrl.selection" pmenuctrl="pmenuCtrl" config="orderCtrl.CONFIG" allow_split="orderCtrl.s.enable_split_toppings"
-      >
-      </div>
-      <div ng-if="!pmenuCtrl.suppress_guide && pmenuCtrl.messages.length">
-        <div class="wpcf7-response-output wpcf7-validation-errors" ng-repeat="msg in pmenuCtrl.messages">{{msg}}</div>
-      </div>
-      <div class="order-nav">
-        <span class="one-fifth">
-          <button name="remove" class="btn button-remove scrolltotop" ng-click="pmenuCtrl.unsetPizza()">Cancel</button>
-        </span>
-        <span class="four-fifths">
-          <span class="order-nav-item float--right"><button name="add" class="btn scrolltotop" ng-click="orderCtrl.addPizzaToOrder(pmenuCtrl.quantity, pmenuCtrl.selection); pmenuCtrl.unsetPizza()">Add to order</button></span>
-        </span>
-      </div>
-    </div>
-    <md-content ng-show="orderCtrl.s.stage === 2">
+    <md-content ng-show="orderCtrl.s.stage === 2 && !pmenuCtrl.selection">
       <h3 class="flush--top"><strong>Add small plates or beverages to your order.</strong></h3>
-      <div class="ordering-menu menu-list menu-list__dotted md-accordion" ng-repeat="submenu in pmenuCtrl.CONFIG.MENU.extras">
+      <div class="ordering-menu menu-list menu-list__dotted md-accordion" ng-repeat="subcatid in pmenuCtrl.CONFIG.MENU.categories[pmenuCtrl.CONFIG.EXTRAS_CATID].children | filter:orderCtrl.FilterEmptyCategories(pmenuCtrl.CONFIG.MENU) ">
         <md-toolbar ng-click="orderCtrl.toggleAccordion($index); orderCtrl.ScrollTop()" role="button">
           <div class="md-toolbar-tools">
             <h2>
-              <span><strong><span ng-bind-html="submenu.menu_name"></span></strong></span>
+              <span><strong><span ng-bind-html="pmenuCtrl.CONFIG.MENU.categories[subcatid].menu_name"></span></strong></span>
             </h2>
             <span flex="" class="flex"></span>
             <span ng-class="{expandCollapse:true, active:orderCtrl.s.accordionstate[$index]}"></span> 
           </div>
         </md-toolbar> 
         <ul ng-class="{dataContent:true, activeContent:orderCtrl.s.accordionstate[$index]}" class="menu-list__items">
-          <li class="menu-list__item" ng-if="submenu.subtitle"><strong><span ng-bind-html="submenu.subtitle"></span></strong></li>
-          <li class="menu-list__item" ng-repeat="extra in submenu.menu">
-            <div class="offer-link" ng-click="orderCtrl.ScrollTop(); orderCtrl.addExtraToOrder(extra)">
+          <li class="menu-list__item" ng-if="pmenuCtrl.CONFIG.MENU.categories[subcatid].subtitle"><strong><span ng-bind-html="pmenuCtrl.CONFIG.MENU.categories[subcatid].subtitle"></span></strong></li>
+          <li class="menu-list__item" ng-repeat="extra in pmenuCtrl.CONFIG.MENU.categories[subcatid].menu">
+            <div class="offer-link" ng-click="orderCtrl.ScrollTop(); orderCtrl.SelectProduct(subcatid, extra, pmenuCtrl)">
               <h4 class="menu-list__item-title"><span class="item_title">{{extra.name}}</span><span class="dots"></span></h4>
               <p class="menu-list__item-desc">
                 <span class="desc__content">{{extra.description}}</span>
@@ -62,7 +39,32 @@
         </ul>
       </div>
     </md-content>
-    <div class="cart" ng-if="orderCtrl.s.cart.pizza.length > 0 || orderCtrl.s.cart.extras.length > 0">
+    <div class="customizer menu-list__items" ng-if="pmenuCtrl.selection">
+      <h3 class="flush--top"><strong>Customize it!</strong></h3>
+      <div class="menu-list__item">
+        <wcppizzacartitem prod="pmenuCtrl.selection" description="true" dots="true" price="true"></wcppizzacartitem>
+      </div>
+      <hr class="separator">
+      <div wcpmodifierdir ng-repeat="mtid in pmenuCtrl.selection.PRODUCT_CLASS.modifiers"
+      mtid="mtid" selection="pmenuCtrl.selection" pmenuctrl="pmenuCtrl" config="orderCtrl.CONFIG" allow_split="orderCtrl.s.enable_split_toppings"
+      >
+      </div>
+      <div ng-if="!pmenuCtrl.suppress_guide && pmenuCtrl.messages.length">
+        <div class="wpcf7-response-output wpcf7-validation-errors" ng-repeat="msg in pmenuCtrl.messages">{{msg}}</div>
+      </div>
+      <div class="order-nav">
+        <span class="one-fifth">
+          <button name="remove" class="btn button-remove scrolltotop" ng-click="pmenuCtrl.UnsetProduct()">Cancel</button>
+        </span>
+        <span class="four-fifths">
+          <span class="order-nav-item float--right">
+            <button ng-if="pmenuCtrl.is_addition" name="add" class="btn scrolltotop" ng-click="orderCtrl.AddToOrder(pmenuCtrl.catid, pmenuCtrl.selection); pmenuCtrl.UnsetProduct()">Add to order</button>
+            <button ng-if="!pmenuCtrl.is_addition" name="save" class="btn scrolltotop" ng-click="orderCtrl.UpdateOrderEntry(pmenuCtrl.cart_entry, pmenuCtrl.selection); pmenuCtrl.UnsetProduct()">Save Changes</button>
+          </span>
+        </span>
+      </div>
+    </div>
+    <div class="cart" ng-if="orderCtrl.s.linear_cart.length > 0">
       <hr class="separator">
       <h3 class="flush">Current Order</h3>
         <div class="content">
@@ -74,37 +76,22 @@
               </tr>
             </thead>
             <tbody>
-              <tr ng-repeat="item in orderCtrl.s.cart.pizza" class="cart-item">
+              <tr ng-repeat="cart_entry in orderCtrl.s.linear_cart" ng-class="{'cart-item':true, editible:cart_entry.can_edit}" >
                 <td>
                   <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
                     <div class="menu-list__item">
-                      <wcppizzacartitem pizza="item[1]" description="true" dots="false" price="false"></wcppizzacartitem>
+                      <wcppizzacartitem prod="cart_entry.pi" description="true" dots="false" price="false"></wcppizzacartitem>
                     </div>
                   </div>
                 </td>
                 <td>
                   <div class="grid-flex grid-valign-middle">
-                    <input type="number" class="quantity" min=1 max=99 ng-model="item[0]" ng-blur="orderCtrl.fixQuantities(true)" ng-change="orderCtrl.fixQuantities(false)">
+                    <input type="number" class="quantity" min=1 max=99 ng-model="cart_entry.quantity" ng-blur="orderCtrl.fixQuantities(true)" ng-change="orderCtrl.fixQuantities(false)">
                     <span class="cart-item-remove">
-                      <button name="remove" ng-click="orderCtrl.ScrollTop(); orderCtrl.removePizzaFromOrder($index)" class="button-remove">X</button>
+                      <button ng-disabled="!pmenuCtrl.is_addition" name="remove" ng-click="orderCtrl.ScrollTop(); orderCtrl.RemoveFromOrder(pmenuCtrl.CONFIG.PIZZAS_CATID, $index)" class="button-remove">X</button>
                     </span>
-                  </div>
-                </td>
-              </tr>
-              <tr ng-repeat="item in orderCtrl.s.cart.extras" class="cart-item">
-                <td>
-                  <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
-                    <div class="menu-list__item">
-                      <h4 class="menu-list__item-title"><span class="item_title">{{item[1].name}}</span></h4>
-                      <p class="menu-list__item-desc"><span class="desc__content">{{item[1].description}}</span></p>
-                    </div>
-                  </div>
-                </td>
-                <td>
-                  <div class="grid-flex grid-valign-middle">
-                    <input type="number" class="quantity" min=1 max=99 ng-model="item[0]" ng-blur="orderCtrl.fixQuantities(true)" ng-change="orderCtrl.fixQuantities(false)">
-                    <span class="cart-item-remove">
-                      <button name="remove" ng-click="orderCtrl.ScrollTop(); orderCtrl.removeExtraFromOrder($index)" class="button-remove">X</button>
+                    <span ng-if="cart_entry.can_edit" class="cart-item-remove">
+                      <button name="edit" ng-click="orderCtrl.ScrollTop(); pmenuCtrl.EditCartEntry(cart_entry)" class="button-remove"><div class="icon-gear"></div></button>
                     </span>
                   </div>
                 </td>
@@ -114,9 +101,9 @@
         </div>
     </div>
     <div class="order-nav" ng-hide="pmenuCtrl.selection">
-      <h5 class="order-nav-item float--right" ng-if="orderCtrl.s.cart.pizza.length < 1 && orderCtrl.s.stage === 1">First, click on an item above to add it to your order</h5>
+      <h5 class="order-nav-item float--right" ng-if="orderCtrl.s.num_pizza === 0 && orderCtrl.s.stage === 1">First, click on an item above to add it to your order</h5>
       <button type="submit" class="btn scrolltotop" ng-show="orderCtrl.HasPreviousStage()" ng-click="orderCtrl.PreviousStage()">Previous</button>
-      <button type="submit" class="btn scrolltotop" ng-disabled="orderCtrl.s.cart.pizza.length < 1" ng-show="orderCtrl.HasNextStage() && orderCtrl.s.cart.pizza.length >= 1" ng-click="pmenuCtrl.unsetPizza(); orderCtrl.NextStage()">Next</button>
+      <button type="submit" class="btn scrolltotop" ng-disabled="orderCtrl.s.num_pizza === 0" ng-show="orderCtrl.HasNextStage() && orderCtrl.s.num_pizza >= 1" ng-click="pmenuCtrl.UnsetProduct(); orderCtrl.NextStage()">Next</button>
     </div>
   </div>
   <div ng-show="orderCtrl.s.stage === 3">
@@ -295,40 +282,22 @@
               </tr>
             </thead>
             <tbody>
-              <tr ng-repeat="item in orderCtrl.s.cart.pizza" class="cart-item">
+              <tr ng-repeat="cart_item in orderCtrl.s.linear_cart" class="cart-item">
                 <td class="cart-item-description">
                   <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
                     <div class="menu-list__item">
-                      <wcppizzacartitem pizza="item[1]" description="true" dots="false" price="false"></wcppizzacartitem>
+                      <wcppizzacartitem prod="cart_item.pi" description="true" dots="false" price="false"></wcppizzacartitem>
                     </div>
                   </div>
                 </td>
                 <td class="cart-item-quantity-price no-wrap">
                   <div class="grid-flex grid-valign-middle">
-                    <span class="column no-shrink menu-list__item-price">{{item[0]}}</span>
+                    <span class="column no-shrink menu-list__item-price">{{cart_item.quantity}}</span>
                     <span class="column no-shrink">×</span>
-                    <span class="column no-shrink menu-list__item-price">{{item[1].price}}</span>
+                    <span class="column no-shrink menu-list__item-price">{{cart_item.pi.price}}</span>
                   </div>
                 </td>
-                <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{item[1].price * item[0] | number:2}}</span></td>
-              </tr>
-              <tr ng-repeat="item in orderCtrl.s.cart.extras" class="cart-item">
-                <td class="cart-item-description">
-                  <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
-                    <div class="menu-list__item">
-                      <h4 class="menu-list__item-title"><span class="item_title">{{item[1].name}}</span></h4>
-                      <p class="menu-list__item-desc"><span class="desc__content">{{item[1].description}}</span></p>
-                    </div>
-                  </div>
-                </td>
-                <td class="cart-item-quantity-price no-wrap">
-                  <div class="grid-flex grid-valign-middle">
-                    <span class="column no-shrink menu-list__item-price">{{item[0]}}</span>
-                    <span class="column no-shrink">×</span>
-                    <span class="column no-shrink menu-list__item-price">{{item[1].price}}</span>
-                  </div>
-                </td>
-                <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{item[1].price * item[0] | number:2}}</span></td>
+                <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{cart_item.pi.price * cart_item.quantity | number:2}}</span></td>
               </tr>
               <tr class="cart-item" ng-if="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY">
                 <td class="cart-item-description">
@@ -454,40 +423,22 @@
               </tr>
             </thead>
             <tbody>
-              <tr ng-repeat="item in orderCtrl.s.cart.pizza" class="cart-item">
+              <tr ng-repeat="cart_item in orderCtrl.s.linear_cart" class="cart-item">
                 <td class="cart-item-description">
                   <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
                     <div class="menu-list__item">
-                      <wcppizzacartitem pizza="item[1]" description="true" dots="false" price="false"></wcppizzacartitem>
+                      <wcppizzacartitem prod="cart_item.pi" description="true" dots="false" price="false"></wcppizzacartitem>
                     </div>
                   </div>
                 </td>
                 <td class="cart-item-quantity-price no-wrap">
                   <div class="grid-flex grid-valign-middle">
-                    <span class="column no-shrink menu-list__item-price">{{item[0]}}</span>
+                    <span class="column no-shrink menu-list__item-price">{{cart_item.quantity}}</span>
                     <span class="column no-shrink">×</span>
-                    <span class="column no-shrink menu-list__item-price">{{item[1].price}}</span>
+                    <span class="column no-shrink menu-list__item-price">{{cart_item.pi.price}}</span>
                   </div>
                 </td>
-                <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{item[1].price * item[0] | number:2}}</span></td>
-              </tr>
-              <tr ng-repeat="item in orderCtrl.s.cart.extras" class="cart-item">
-                <td class="cart-item-description">
-                  <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
-                    <div class="menu-list__item">
-                      <h4 class="menu-list__item-title"><span class="item_title">{{item[1].name}}</span></h4>
-                      <p class="menu-list__item-desc"><span class="desc__content">{{item[1].description}}</span></p>
-                    </div>
-                  </div>
-                </td>
-                <td class="cart-item-quantity-price no-wrap">
-                  <div class="grid-flex grid-valign-middle">
-                    <span class="column no-shrink menu-list__item-price">{{item[0]}}</span>
-                    <span class="column no-shrink">×</span>
-                    <span class="column no-shrink menu-list__item-price">{{item[1].price}}</span>
-                  </div>
-                </td>
-                <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{item[1].price * item[0] | number:2}}</span></td>
+                <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{cart_item.pi.price * cart_item.quantity | number:2}}</span></td>
               </tr>
               <tr class="cart-item" ng-if="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY">
                 <td class="cart-item-description">
@@ -630,14 +581,37 @@
 <script src="https://www.windycitypie.com/wp-includes/js/socket.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
 <script>
-var EXTRAS_CATID = "5ef6cf1a3991a469ceda2598";
-var PIZZAS_CATID = "5eb21d084f5f1946916c6baf";
+// prod
+// var WARIO_ENDPOINT = "https://wario.windycitypie.com/";
+// var EXTRAS_CATID = "5ef6cf1a3991a469ceda2598";
+// var PIZZAS_CATID = "5eb21d084f5f1946916c6baf";
+// var TOPPINGS_MTID = "5ef6cf743991a469ceda25aa";
+// var CHEESE_MTID = "5ef6cf603991a469ceda25a3";
+// var SAUCE_MTID = "5ef6cf6b3991a469ceda25a6";
+// var SAUCE_WHITE_OID = "";
+// var TOPPING_BLEU_OID = "";
+// var TOPPING_BRUSSELS_OID = "";
+// var TOPPING_MB_OID = "";
+// var TOPPING_SAUSAGE_OID = "";
+// var TOPPING_ITAL_OID = "";
+// var TOPPING_CHIX_OID = "";
+// var CHEESE_VEGAN_OID = "";
 
-var TOPPINGS_MTID = "5ef6cf743991a469ceda25aa";
-var CHEESE_MTID = "5ef6cf603991a469ceda25a3";
-var SAUCE_MTID = "5ef6cf6b3991a469ceda25a6";
-var WARIO_ENDPOINT = "https://wario.windycitypie.com/";
-//var WARIO_ENDPOINT = "http://localhost:4001/";
+//test
+var WARIO_ENDPOINT = "http://localhost:4001/";
+var EXTRAS_CATID = "5eb0978e79d728225917f427";
+var PIZZAS_CATID = "5ede2394ac3796224cbdb97a";
+var TOPPINGS_MTID = "5ef2653347a2f32de511166b";
+var CHEESE_MTID = "5edf0cad0952ead62fec20d4";
+var SAUCE_MTID = "5eedb659ec8b0813f66b78b3";
+var SAUCE_WHITE_OID = "5eedb6a0ec8b0813f66b78ca";
+var TOPPING_BLEU_OID = "5ef29a1ad90eef1ff23be17f";
+var TOPPING_BRUSSELS_OID = "5ef299f5d90eef1ff23be0ea";
+var TOPPING_MB_OID = "5ef299dcd90eef1ff23be0a4";
+var TOPPING_SAUSAGE_OID = "5ef29765d90eef1ff23be061";
+var TOPPING_ITAL_OID = "5ef29765d90eef1ff23be061";
+var TOPPING_CHIX_OID = "5ef29745d90eef1ff23be021";
+var CHEESE_VEGAN_OID = "";
 var WCP_BLOG_LOAD_TIME = moment(new Date([WCP_blog_epoch_time]));
 var CONFIG_ALLOW_SLICING = false;
 var ENABLE_DINE_IN = false;
@@ -648,7 +622,5 @@ var CONST_MESSAGE_REQUEST_HALF = "While half toppings are not on the menu, we ca
 var CONST_MESSAGE_REQUEST_SLICING = "In order to ensure the quality of our pizzas, we will not slice them. We'd recommend bringing anything from a bench scraper to a butter knife to slice the pizza. Slicing the whole pizza when it's hot inhibits the crust from properly setting, and can cause the crust to get soggy both during transit and as the pie is eaten. We want your pizza to be the best possible and bringing a tool with which to slice the pie will make a big difference. You will need to remove this request to continue with your order.";
 var CONST_MESSAGE_TIP_PREAMBLE = "The Windy City Pie family is working hard to serve you, safely. All gratuity is shared with the entire staff. Everyone, from our team that makes the house-made dough, to the staff that handles your order appreciates your support!";
 var DELIVERY_LINK = "http://bit.ly/2QsrfV8";
-var FLAVOR_MAX = 5;
-var BAKE_MAX = 5;
 </script>
 <script src="https://www.windycitypie.com/wp-includes/js/WCPJSFE12.js"></script>
