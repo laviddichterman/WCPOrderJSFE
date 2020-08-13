@@ -622,8 +622,6 @@ var CONST_MESSAGE_REQUEST_HALF = "While half toppings are not on the menu, we ca
 var CONST_MESSAGE_REQUEST_SLICING = "In order to ensure the quality of our pizzas, we will not slice them. We'd recommend bringing anything from a bench scraper to a butter knife to slice the pizza. Slicing the whole pizza when it's hot inhibits the crust from properly setting, and can cause the crust to get soggy both during transit and as the pie is eaten. We want your pizza to be the best possible and bringing a tool with which to slice the pie will make a big difference. You will need to remove this request to continue with your order.";
 var CONST_MESSAGE_TIP_PREAMBLE = "The Windy City Pie family is working hard to serve you, safely. All gratuity is shared with the entire staff. Everyone, from our team that makes the house-made dough, to the staff that handles your order appreciates your support!";
 var DELIVERY_LINK = "http://bit.ly/2QsrfV8";
-var FLAVOR_MAX = 5;
-var BAKE_MAX = 5;
 // TODO: must add polyfill JS
 function GetPlacementFromMIDOID(pi, mid, oid) {
   var option_placement = pi.modifiers.hasOwnProperty(mid) ?
@@ -702,12 +700,14 @@ var WCPOption = function (w_modifier, w_option, index, enable_function) {
     var modifier_placement = product.modifiers[this.modifier._id] ? product.modifiers[this.modifier._id].find(modifier_option_find_function) : undefined;
     modifier_placement = modifier_placement === undefined ? TOPPING_NONE : modifier_placement[0];
     // TODO: bake and flavor stuff should move into the enable_filter itself, the option itself should just hold generalized metadata the enable filter function can use/reference
+    var display_flags = product.PRODUCT_CLASS.display_flags;
     var left_bake = product.bake_count[LEFT_SIDE];
     var right_bake = product.bake_count[RIGHT_SIDE];
     var left_flavor = product.flavor_count[LEFT_SIDE];
     var right_flavor = product.flavor_count[RIGHT_SIDE];
-    var has_room_on_left = left_bake + this.bake_factor <= BAKE_MAX && left_flavor + this.flavor_factor <= FLAVOR_MAX;
-    var has_room_on_right = right_bake + this.bake_factor <= BAKE_MAX && right_flavor + this.flavor_factor <= FLAVOR_MAX;
+    // TODO: needs to take into account bake differential in the computation below
+    var has_room_on_left = left_bake + this.bake_factor <= display_flags.bake_max && left_flavor + this.flavor_factor <= display_flags.flavor_max;
+    var has_room_on_right = right_bake + this.bake_factor <= display_flags.bake_max && right_flavor + this.flavor_factor <= display_flags.flavor_max;
     switch (location) {
       case TOPPING_NONE: return base; //TODO, this case might need re-evaluation. is there a case when a generic modifier could NOT be removed? if so, maybe the other cases here need to be looked at as well.
       case TOPPING_LEFT: return base && this.can_split && (modifier_placement === TOPPING_WHOLE || modifier_placement === TOPPING_LEFT || has_room_on_left);
@@ -975,11 +975,25 @@ var WCPProduct = function (product_class, piid, name, description, ordinal, modi
             // if the comparison is to the base product instance, 
             // then single select options THAT ARE SELECTED need to be displayed even if they're exact matches
             //TODO: figure this one out
+            var found_selection = -1;
+            var base_moid = BASE_PRODUCT_INSTANCE.modifiers[mtid][0][1];
+            var base_moidx = -1;
             comparison.match_matrix[mid_index].forEach(function (option_match, oid_index) {
               if (option_match[side] === AT_LEAST) {
-                name_components[mid_index][oid_index][side] = true;
+                found_selection = oid_index;
+              }
+              if (MENU.modifiers[mtid].options_list[oid_index].moid === base_moid) {
+                base_moidx = oid_index;
               }
             });
+            if (found_selection >= 0) {
+              name_components[mid_index][found_selection][side] = true;
+            }
+            else {
+              // whatever we have selected is the default option, use the BASE_PRODUCT_INSTANCE to grab that info
+              name_components[mid_index][base_moidx][side] = true;
+            }
+            
           }
           else if (comparison.match[side] === AT_LEAST) {
             comparison.match_matrix[mid_index].forEach(function (option_match, oid_index) {
@@ -1092,6 +1106,8 @@ var WCPProduct = function (product_class, piid, name, description, ordinal, modi
         }
         if (menu_match_compare[LEFT_SIDE] === EXACT_MATCH) {
           // assign PIID
+          product.piid = menu_match[LEFT_SIDE].piid;
+          product.description = menu_match[LEFT_SIDE].description;
         }
       }
       product.name = name_components_list.join(" + ");
@@ -1264,7 +1280,8 @@ function GenerateCatalogMapFromCatalog(CONFIG, cat, $sce) {
 // handy class representing a line in the product cart
 // useful to allow modifications on the product by setting it to a new product instance
 // instead of modifying the product instance itself
-var CartEntry = function (product, quantity, can_edit) {
+var CartEntry = function (catid, product, quantity, can_edit) {
+  this.catid = catid;
   this.pi = product;
   this.quantity = quantity;
   this.can_edit = can_edit;
@@ -1380,8 +1397,6 @@ var WCPStoreConfig = function () {
   this.EXTRAS_CATID = EXTRAS_CATID;
 
   this.ALLOW_SLICING = CONFIG_ALLOW_SLICING;
-  this.FLAVOR_MAX = FLAVOR_MAX;
-  this.BAKE_MAX = BAKE_MAX;
   // END menu related
 
   // user messaging
@@ -1817,7 +1832,7 @@ function UpdateLeadTime() {
       state.isProcessing = true;
       http_provider({
         method: "POST",
-        url: `${WARIO_ENDPOINT}api/v1/order/new`,
+        url: `${WARIO_ENDPOINT}api/v1/order`,
         data: {
           nonce: nonce,
           service_option: state.service_type,
@@ -2141,22 +2156,19 @@ function UpdateLeadTime() {
         }
         // add new entry
         // TODO: the modifiers length check isn't actually exhaustive as some modifiers might be disabled for any reason
-        this.s.cart[cid].push(new CartEntry(pi, 1, pi.PRODUCT_CLASS.modifiers.length !== 0));
+        this.s.cart[cid].push(new CartEntry(cid, pi, 1, pi.PRODUCT_CLASS.modifiers.length !== 0));
         this.PostCartUpdate();
       }
 
       this.UpdateOrderEntry = function(cart_entry, new_pi) {
         cart_entry.pi = new_pi;
-        for (var i = 0; i < this.s.linear_cart.length; ++i) {
-          if (cart_entry !== this.s.linear_cart[i] && this.s.linear_cart[i].pi.Equals(new_pi, this.CONFIG.MENU)) {
-            console.log("Found a duplicate item! Merging");
-            this.s.linear_cart[i].quantity += cart_entry.quantity;
-            cart_entry.quantity = 0;
-            break;
+        for (var i = 0; i < this.s.cart[cart_entry.catid].length; ++i) {
+          if (cart_entry !== this.s.cart[cart_entry.catid][i] && this.s.cart[cart_entry.catid][i].pi.Equals(new_pi, this.CONFIG.MENU)) {
+            cart_entry.quantity += this.s.cart[cart_entry.catid][i].quantity;
+            return this.RemoveFromOrder(cart_entry.catid, i);
           }
         }
-        // TODO: RESUME HERE, need to just add CATID to the damn cart entry, fixQuantities isn't what we want to call here
-        this.fixQuantities();
+        this.PostCartUpdate();
       }
 
       this.RevalidateItems = function () {
