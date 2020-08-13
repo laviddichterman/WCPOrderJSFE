@@ -85,7 +85,7 @@
                       <button ng-disabled="!pmenuCtrl.is_addition" name="remove" ng-click="orderCtrl.ScrollTop(); orderCtrl.RemoveFromOrder(pmenuCtrl.CONFIG.PIZZAS_CATID, $index)" class="button-remove">X</button>
                     </span>
                     <span ng-if="cart_entry.can_edit" class="cart-item-remove">
-                      <button name="edit" ng-click="orderCtrl.ScrollTop(); pmenuCtrl.EditCartEntry(cart_entry)" class="button-remove"><div class="icon-gear"></div></button>
+                      <button name="edit" ng-disabled="pmenuCtrl.selection" ng-click="orderCtrl.ScrollTop(); pmenuCtrl.EditCartEntry(cart_entry)" class="button-sml"><div class="icon-pencil"></div></button>
                     </span>
                   </div>
                 </td>

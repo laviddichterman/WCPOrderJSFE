@@ -322,6 +322,22 @@ span.cf7bridge {
   font-size: 0;
   line-height: 0;
 }
+.cart .button-sml {
+  position: relative;
+  width: 19px;
+  height: 19px;
+  max-width: none;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+  vertical-align: middle;
+  background-color: white !important;
+  border: 1px solid #969799;
+  border-radius: 50%;
+  overflow: hidden;
+  line-height: 0;
+}
 .cart .button-remove:before,
 .cart .button-remove:after {
   content: "";
@@ -421,6 +437,7 @@ span.cf7bridge {
   -ms-flex-line-pack: center;
   align-content: center;
 }
+
 @media (min-width: 718px) {
   .cart-table tbody tr {
     display: table-row;
@@ -431,7 +448,7 @@ span.cf7bridge {
   position: static;
   top: auto;
   right: auto;
-  padding-left: 20px;
+  padding-left: 10px;
   padding-right: 10px;
   -webkit-transform: none;
   -ms-transform: none;

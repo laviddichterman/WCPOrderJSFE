@@ -1166,10 +1166,10 @@ function UpdateLeadTime() {
 
     this.CartToDTO = function () {
       // need: name, shortname, shortcode for each product, split into two sections
-      var dto = { pizzas: [], extras: [] };
-      this.linearcart.forEach(function(cart_entry) {
+      var dto = { pizza: [], extras: [] };
+      this.linear_cart.forEach(function(cart_entry) {
         var entrydto = [cart_entry.quantity, {name: cart_entry.pi.name, shortname: cart_entry.pi.shortname, shortcode: cart_entry.pi.shortcode }];
-        cart_entry.catid === PIZZAS_CATID ? dto.pizzas.push(entrydto) : dto.extras.push(entrydto);
+        cart_entry.catid === PIZZAS_CATID ? dto.pizza.push(entrydto) : dto.extras.push(entrydto);
       });
       return dto;
     }

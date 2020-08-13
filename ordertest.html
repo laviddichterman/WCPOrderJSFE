@@ -85,7 +85,7 @@
                       <button ng-disabled="!pmenuCtrl.is_addition" name="remove" ng-click="orderCtrl.ScrollTop(); orderCtrl.RemoveFromOrder(pmenuCtrl.CONFIG.PIZZAS_CATID, $index)" class="button-remove">X</button>
                     </span>
                     <span ng-if="cart_entry.can_edit" class="cart-item-remove">
-                      <button name="edit" ng-click="orderCtrl.ScrollTop(); pmenuCtrl.EditCartEntry(cart_entry)" class="button-remove"><div class="icon-gear"></div></button>
+                      <button name="edit" ng-disabled="pmenuCtrl.selection" ng-click="orderCtrl.ScrollTop(); pmenuCtrl.EditCartEntry(cart_entry)" class="button-sml"><div class="icon-pencil"></div></button>
                     </span>
                   </div>
                 </td>
@@ -1784,10 +1784,10 @@ function UpdateLeadTime() {
 
     this.CartToDTO = function () {
       // need: name, shortname, shortcode for each product, split into two sections
-      var dto = { pizzas: [], extras: [] };
-      this.linearcart.forEach(function(cart_entry) {
+      var dto = { pizza: [], extras: [] };
+      this.linear_cart.forEach(function(cart_entry) {
         var entrydto = [cart_entry.quantity, {name: cart_entry.pi.name, shortname: cart_entry.pi.shortname, shortcode: cart_entry.pi.shortcode }];
-        cart_entry.catid === PIZZAS_CATID ? dto.pizzas.push(entrydto) : dto.extras.push(entrydto);
+        cart_entry.catid === PIZZAS_CATID ? dto.pizza.push(entrydto) : dto.extras.push(entrydto);
       });
       return dto;
     }
