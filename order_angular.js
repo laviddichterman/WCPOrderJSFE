@@ -55,7 +55,6 @@ var LEFT_SIDE = 0;
 var RIGHT_SIDE = 1;
 
 // TODO: not addressed: disabling options and that entire dependency chain
-
 var WCPOption = function (w_modifier, w_option, index, enable_function) {
   this.modifier = w_modifier;
   this.moid = w_option._id
