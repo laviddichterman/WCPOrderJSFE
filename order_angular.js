@@ -1517,12 +1517,6 @@ function UpdateLeadTime() {
         }
       }
 
-      this.FilterEmptyCategories = function(menu) {
-        return function ( item ) {
-          return menu.categories[item].menu.length > 0;
-        }
-      }
-
       this.FilterDisabledProducts = function(menu) {
         return function ( item ) {
           var all_enabled = DisableDataCheck(item.disable_data);
@@ -1532,6 +1526,19 @@ function UpdateLeadTime() {
             })));
           }
           return all_enabled;
+        }
+      }
+
+      this.FilterEmptyCategories = function(menu) {
+        var filter_fxn = this.FilterDisabledProducts(menu);
+        return function ( item ) {
+          var cat_menu = menu.categories[item].menu;
+          for (var i = 0; i < cat_menu.length; ++i) {
+            if (filter_fxn(cat_menu[i])) {
+              return true;
+            }
+          }
+          return false;
         }
       }
 
