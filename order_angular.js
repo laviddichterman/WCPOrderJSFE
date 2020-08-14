@@ -443,8 +443,8 @@ var WCPProduct = function (product_class, piid, name, description, ordinal, modi
         shortname_components_list = ComponentsList(additional_options.whole, function (x) { return x.shortname; });
         if (menu_match[LEFT_SIDE].piid === menu_match[RIGHT_SIDE].piid) {
           if (!is_compare_to_base[LEFT_SIDE] || PRODUCT_CLASS.display_flags.show_name_of_base_product) {
-            name_components_list.unshift(menu_match[LEFT_SIDE].item.display_name);
-            shortname_components_list.unshift(menu_match[LEFT_SIDE].item.display_name);
+            name_components_list.unshift(menu_match[LEFT_SIDE].name);
+            shortname_components_list.unshift(menu_match[LEFT_SIDE].name);
           }
           name_components_list.push("(" + split_options.join(" | ") + ")");
           shortname_components_list.push("(" + short_split_options.join(" | ") + ")");
@@ -453,8 +453,8 @@ var WCPProduct = function (product_class, piid, name, description, ordinal, modi
           // split product, different product instance match on each side
           // logical assertion: if name_components for a given side are all false, then it's an exact match
           var names = [
-            (menu_match_compare[LEFT_SIDE] === AT_LEAST || !is_compare_to_base[LEFT_SIDE]) ? [menu_match[LEFT_SIDE].name] : [],
-            (menu_match_compare[RIGHT_SIDE] === AT_LEAST || !is_compare_to_base[RIGHT_SIDE]) ? [menu_match[RIGHT_SIDE].name] : []
+            (!is_compare_to_base[LEFT_SIDE] || PRODUCT_CLASS.display_flags.show_name_of_base_product) ? [menu_match[LEFT_SIDE].name] : [],
+            (!is_compare_to_base[RIGHT_SIDE] || PRODUCT_CLASS.display_flags.show_name_of_base_product) ? [menu_match[RIGHT_SIDE].name] : []
           ];
           var shortnames = names.slice();
           if (additional_options.left.length) {
@@ -508,26 +508,29 @@ var WCPProduct = function (product_class, piid, name, description, ordinal, modi
     }
   };
 
-  this.SplitOptionsList = function () {
+  this.SplitOptionsList = function (MENU) {
     // generates three lists ordered from top to bottom: whole, left only, right only
     // returns a list of <MTID, OID> tuples
     var ret = { left: [], right: [], whole: [] };
-    for (var mid in this.modifiers) {
-      this.modifiers[mid].forEach(function (option_placement) {
-        switch (option_placement[0]) {
-          case TOPPING_LEFT: ret.left.push([mid, option_placement[1]]); break;
-          case TOPPING_RIGHT: ret.right.push([mid, option_placement[1]]); break;
-          case TOPPING_WHOLE: ret.whole.push([mid, option_placement[1]]); break;
-          default: break;
-        }
-      });
+    for (var midx = 0; midx < this.PRODUCT_CLASS.modifiers.length; ++midx) {
+      var mid = this.PRODUCT_CLASS.modifiers[midx];
+      if (this.modifiers.hasOwnProperty(mid)) {
+        this.modifiers[mid].forEach(function (option_placement) {
+          switch (option_placement[0]) {
+            case TOPPING_LEFT: ret.left.push([mid, option_placement[1]]); break;
+            case TOPPING_RIGHT: ret.right.push([mid, option_placement[1]]); break;
+            case TOPPING_WHOLE: ret.whole.push([mid, option_placement[1]]); break;
+            default: break;
+          }
+        });
+      }
     };
     return ret;
   };
 
 
   this.DisplayOptions = function (MENU) {
-    var split_options = this.SplitOptionsList();
+    var split_options = this.SplitOptionsList(MENU);
     var options_sections = [];
 
     if (split_options.whole.length > 0) {
@@ -1246,7 +1249,7 @@ function UpdateLeadTime() {
           load_time: state.debug_info.load_time,
           time_selection_time: state.debug_info["time-selection-time"] ? state.debug_info["time-selection-time"].format("H:mm:ss") : "",
           submittime: moment().format("MM-DD-YYYY HH:mm:ss"),
-          useragent: navigator.userAgent + " FEV6",
+          useragent: navigator.userAgent + " FEV7",
         }
       }).then(onSuccess).catch(onFail);
     }
