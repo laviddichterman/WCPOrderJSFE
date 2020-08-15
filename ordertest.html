@@ -82,7 +82,7 @@
                   <div class="grid-flex grid-valign-middle">
                     <input type="number" class="quantity" min=1 max=99 ng-model="cart_entry.quantity" ng-blur="orderCtrl.fixQuantities(true)" ng-change="orderCtrl.fixQuantities(false)">
                     <span class="cart-item-remove">
-                      <button ng-disabled="!pmenuCtrl.is_addition" name="remove" ng-click="orderCtrl.ScrollTop(); orderCtrl.RemoveFromOrder(pmenuCtrl.CONFIG.PIZZAS_CATID, $index)" class="button-remove">X</button>
+                      <button ng-disabled="!pmenuCtrl.is_addition" name="remove" ng-click="orderCtrl.ScrollTop(); orderCtrl.RemoveFromOrder(cart_entry)" class="button-remove">X</button>
                     </span>
                     <span ng-if="cart_entry.can_edit" class="cart-item-remove">
                       <button name="edit" ng-disabled="pmenuCtrl.selection" ng-click="orderCtrl.ScrollTop(); pmenuCtrl.EditCartEntry(cart_entry)" class="button-sml"><div class="icon-pencil"></div></button>
@@ -574,6 +574,7 @@
 <script src="https://www.windycitypie.com/wp-includes/js/socket.io.js"></script>
 <script src="https://www.windycitypie.com/wp-includes/js/socket.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
+<script src="https://polyfill.io/v3/polyfill.min.js"></script>
 <script>
 var WARIO_ENDPOINT = "https://wario.windycitypie.com/";
 //var WARIO_ENDPOINT = "http://localhost:4001/";
@@ -719,7 +720,6 @@ function DeepCopyPlacedOptions(modifiers) {
   for (var mid in modifiers) {
     ret[mid] = modifiers[mid].map(function (x) { return [x[0], x[1]]; });
   }
-
   return ret;
 }
 
@@ -2172,10 +2172,11 @@ function UpdateLeadTime() {
         for (var i = 0; i < this.s.cart[cart_entry.catid].length; ++i) {
           if (cart_entry !== this.s.cart[cart_entry.catid][i] && this.s.cart[cart_entry.catid][i].pi.Equals(new_pi, this.CONFIG.MENU)) {
             cart_entry.quantity += this.s.cart[cart_entry.catid][i].quantity;
-            return this.RemoveFromOrder(cart_entry.catid, i);
+            this.s.cart[cart_entry.catid].splice(i, 1);
+            this.PostCartUpdate();
+            return;
           }
         }
-        this.PostCartUpdate();
       }
 
       this.RevalidateItems = function () {
@@ -2187,9 +2188,10 @@ function UpdateLeadTime() {
         return this.s.computed_subtotal;
       };
 
-      this.RemoveFromOrder = function (cid, idx) {
-          this.s.cart[cid].splice(idx, 1);
-          this.PostCartUpdate();
+      this.RemoveFromOrder = function (cart_entry) {
+        var cart_idx = this.s.cart[cart_entry.catid].indexOf(cart_entry);
+        this.s.cart[cart_entry.catid].splice(cart_idx, 1);
+        this.PostCartUpdate();
       };
 
       this.fixQuantities = function (clear_if_invalid) {
@@ -2567,7 +2569,7 @@ app.directive("wcpoptiondir", function () {
     controller: function () {
       this.Initialize = function () {
         this.MENU = this.config.MENU;
-        this.split =  this.option.can_split && this.modctrl.display_type === MODDISP_CHECKBOX;
+        this.split =  this.allow_split && this.option.can_split && this.modctrl.display_type === MODDISP_CHECKBOX;
         var placement = GetPlacementFromMIDOID(this.selection, this.option.modifier._id, this.option.moid);
         this.left = placement === TOPPING_LEFT;
         this.right = placement === TOPPING_RIGHT;

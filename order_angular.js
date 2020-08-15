@@ -55,7 +55,6 @@ var LEFT_SIDE = 0;
 var RIGHT_SIDE = 1;
 
 // TODO: not addressed: disabling options and that entire dependency chain
-
 var WCPOption = function (w_modifier, w_option, index, enable_function) {
   this.modifier = w_modifier;
   this.moid = w_option._id
@@ -621,7 +620,7 @@ function GenerateCatalogMapFromCatalog(CONFIG, cat, $sce) {
         modifiers,
         prod.item.shortcode,
         prod.item.price.amount / 100,
-        prod.item.disable,
+        prod.item.disabled,
         prod.is_base,
         prod.display_flags);
       product_entry.instances_list.push(product_instance);
@@ -1166,10 +1165,10 @@ function UpdateLeadTime() {
 
     this.CartToDTO = function () {
       // need: name, shortname, shortcode for each product, split into two sections
-      var dto = { pizzas: [], extras: [] };
-      this.linearcart.forEach(function(cart_entry) {
+      var dto = { pizza: [], extras: [] };
+      this.linear_cart.forEach(function(cart_entry) {
         var entrydto = [cart_entry.quantity, {name: cart_entry.pi.name, shortname: cart_entry.pi.shortname, shortcode: cart_entry.pi.shortcode }];
-        cart_entry.catid === PIZZAS_CATID ? dto.pizzas.push(entrydto) : dto.extras.push(entrydto);
+        cart_entry.catid === PIZZAS_CATID ? dto.pizza.push(entrydto) : dto.extras.push(entrydto);
       });
       return dto;
     }
@@ -1518,21 +1517,28 @@ function UpdateLeadTime() {
         }
       }
 
-      this.FilterEmptyCategories = function(menu) {
-        return function ( item ) {
-          return menu.categories[item].menu.length > 0;
-        }
-      }
-
       this.FilterDisabledProducts = function(menu) {
         return function ( item ) {
           var all_enabled = DisableDataCheck(item.disable_data);
           for (var mtid in item.modifiers) {
-            all_enabled = all_enabled && Math.min(1, Math.min.apply(null, DisableDataCheck(item.modifiers[mtid].map(function(x) {
+            all_enabled = all_enabled && Math.min(1, Math.min.apply(null, item.modifiers[mtid].map(function(x) {
               return DisableDataCheck(menu.modifiers[mtid].options[x[1]].disable_data);
-            }))));
+            })));
           }
           return all_enabled;
+        }
+      }
+
+      this.FilterEmptyCategories = function(menu) {
+        var filter_fxn = this.FilterDisabledProducts(menu);
+        return function ( item ) {
+          var cat_menu = menu.categories[item].menu;
+          for (var i = 0; i < cat_menu.length; ++i) {
+            if (filter_fxn(cat_menu[i])) {
+              return true;
+            }
+          }
+          return false;
         }
       }
 
@@ -1559,10 +1565,11 @@ function UpdateLeadTime() {
         for (var i = 0; i < this.s.cart[cart_entry.catid].length; ++i) {
           if (cart_entry !== this.s.cart[cart_entry.catid][i] && this.s.cart[cart_entry.catid][i].pi.Equals(new_pi, this.CONFIG.MENU)) {
             cart_entry.quantity += this.s.cart[cart_entry.catid][i].quantity;
-            return this.RemoveFromOrder(cart_entry.catid, i);
+            this.s.cart[cart_entry.catid].splice(i, 1);
+            this.PostCartUpdate();
+            return;
           }
         }
-        this.PostCartUpdate();
       }
 
       this.RevalidateItems = function () {
@@ -1574,9 +1581,10 @@ function UpdateLeadTime() {
         return this.s.computed_subtotal;
       };
 
-      this.RemoveFromOrder = function (cid, idx) {
-          this.s.cart[cid].splice(idx, 1);
-          this.PostCartUpdate();
+      this.RemoveFromOrder = function (cart_entry) {
+        var cart_idx = this.s.cart[cart_entry.catid].indexOf(cart_entry);
+        this.s.cart[cid].splice(cart_idx, 1);
+        this.PostCartUpdate();
       };
 
       this.fixQuantities = function (clear_if_invalid) {

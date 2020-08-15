@@ -82,7 +82,7 @@
                   <div class="grid-flex grid-valign-middle">
                     <input type="number" class="quantity" min=1 max=99 ng-model="cart_entry.quantity" ng-blur="orderCtrl.fixQuantities(true)" ng-change="orderCtrl.fixQuantities(false)">
                     <span class="cart-item-remove">
-                      <button ng-disabled="!pmenuCtrl.is_addition" name="remove" ng-click="orderCtrl.ScrollTop(); orderCtrl.RemoveFromOrder(pmenuCtrl.CONFIG.PIZZAS_CATID, $index)" class="button-remove">X</button>
+                      <button ng-disabled="!pmenuCtrl.is_addition" name="remove" ng-click="orderCtrl.ScrollTop(); orderCtrl.RemoveFromOrder(cart_entry)" class="button-remove">X</button>
                     </span>
                     <span ng-if="cart_entry.can_edit" class="cart-item-remove">
                       <button name="edit" ng-disabled="pmenuCtrl.selection" ng-click="orderCtrl.ScrollTop(); pmenuCtrl.EditCartEntry(cart_entry)" class="button-sml"><div class="icon-pencil"></div></button>
@@ -606,4 +606,4 @@
   var CONFIG_ALLOW_SLICING = false;
   var ENABLE_DINE_IN = false;
   </script>
-  <script src="https://www.breezytownpizza.com/wp-includes/js/BTPJSFE04.js"></script>
+  <script src="https://www.breezytownpizza.com/wp-includes/js/BTPJSFE05.js"></script>
