@@ -55,6 +55,7 @@ var LEFT_SIDE = 0;
 var RIGHT_SIDE = 1;
 
 // TODO: not addressed: disabling options and that entire dependency chain
+
 var WCPOption = function (w_modifier, w_option, index, enable_function) {
   this.modifier = w_modifier;
   this.moid = w_option._id
@@ -443,8 +444,8 @@ var WCPProduct = function (product_class, piid, name, description, ordinal, modi
         shortname_components_list = ComponentsList(additional_options.whole, function (x) { return x.shortname; });
         if (menu_match[LEFT_SIDE].piid === menu_match[RIGHT_SIDE].piid) {
           if (!is_compare_to_base[LEFT_SIDE] || PRODUCT_CLASS.display_flags.show_name_of_base_product) {
-            name_components_list.unshift(menu_match[LEFT_SIDE].name);
-            shortname_components_list.unshift(menu_match[LEFT_SIDE].name);
+            name_components_list.unshift(menu_match[LEFT_SIDE].item.display_name);
+            shortname_components_list.unshift(menu_match[LEFT_SIDE].item.display_name);
           }
           name_components_list.push("(" + split_options.join(" | ") + ")");
           shortname_components_list.push("(" + short_split_options.join(" | ") + ")");
@@ -453,8 +454,8 @@ var WCPProduct = function (product_class, piid, name, description, ordinal, modi
           // split product, different product instance match on each side
           // logical assertion: if name_components for a given side are all false, then it's an exact match
           var names = [
-            (!is_compare_to_base[LEFT_SIDE] || PRODUCT_CLASS.display_flags.show_name_of_base_product) ? [menu_match[LEFT_SIDE].name] : [],
-            (!is_compare_to_base[RIGHT_SIDE] || PRODUCT_CLASS.display_flags.show_name_of_base_product) ? [menu_match[RIGHT_SIDE].name] : []
+            (menu_match_compare[LEFT_SIDE] === AT_LEAST || !is_compare_to_base[LEFT_SIDE]) ? [menu_match[LEFT_SIDE].name] : [],
+            (menu_match_compare[RIGHT_SIDE] === AT_LEAST || !is_compare_to_base[RIGHT_SIDE]) ? [menu_match[RIGHT_SIDE].name] : []
           ];
           var shortnames = names.slice();
           if (additional_options.left.length) {
@@ -508,29 +509,26 @@ var WCPProduct = function (product_class, piid, name, description, ordinal, modi
     }
   };
 
-  this.SplitOptionsList = function (MENU) {
+  this.SplitOptionsList = function () {
     // generates three lists ordered from top to bottom: whole, left only, right only
     // returns a list of <MTID, OID> tuples
     var ret = { left: [], right: [], whole: [] };
-    for (var midx = 0; midx < this.PRODUCT_CLASS.modifiers.length; ++midx) {
-      var mid = this.PRODUCT_CLASS.modifiers[midx];
-      if (this.modifiers.hasOwnProperty(mid)) {
-        this.modifiers[mid].forEach(function (option_placement) {
-          switch (option_placement[0]) {
-            case TOPPING_LEFT: ret.left.push([mid, option_placement[1]]); break;
-            case TOPPING_RIGHT: ret.right.push([mid, option_placement[1]]); break;
-            case TOPPING_WHOLE: ret.whole.push([mid, option_placement[1]]); break;
-            default: break;
-          }
-        });
-      }
+    for (var mid in this.modifiers) {
+      this.modifiers[mid].forEach(function (option_placement) {
+        switch (option_placement[0]) {
+          case TOPPING_LEFT: ret.left.push([mid, option_placement[1]]); break;
+          case TOPPING_RIGHT: ret.right.push([mid, option_placement[1]]); break;
+          case TOPPING_WHOLE: ret.whole.push([mid, option_placement[1]]); break;
+          default: break;
+        }
+      });
     };
     return ret;
   };
 
 
   this.DisplayOptions = function (MENU) {
-    var split_options = this.SplitOptionsList(MENU);
+    var split_options = this.SplitOptionsList();
     var options_sections = [];
 
     if (split_options.whole.length > 0) {
@@ -623,7 +621,7 @@ function GenerateCatalogMapFromCatalog(CONFIG, cat, $sce) {
         modifiers,
         prod.item.shortcode,
         prod.item.price.amount / 100,
-        prod.item.disabled,
+        prod.item.disable,
         prod.is_base,
         prod.display_flags);
       product_entry.instances_list.push(product_instance);
@@ -1168,10 +1166,10 @@ function UpdateLeadTime() {
 
     this.CartToDTO = function () {
       // need: name, shortname, shortcode for each product, split into two sections
-      var dto = { pizza: [], extras: [] };
-      this.linear_cart.forEach(function(cart_entry) {
+      var dto = { pizzas: [], extras: [] };
+      this.linearcart.forEach(function(cart_entry) {
         var entrydto = [cart_entry.quantity, {name: cart_entry.pi.name, shortname: cart_entry.pi.shortname, shortcode: cart_entry.pi.shortcode }];
-        cart_entry.catid === PIZZAS_CATID ? dto.pizza.push(entrydto) : dto.extras.push(entrydto);
+        cart_entry.catid === PIZZAS_CATID ? dto.pizzas.push(entrydto) : dto.extras.push(entrydto);
       });
       return dto;
     }
@@ -1249,7 +1247,7 @@ function UpdateLeadTime() {
           load_time: state.debug_info.load_time,
           time_selection_time: state.debug_info["time-selection-time"] ? state.debug_info["time-selection-time"].format("H:mm:ss") : "",
           submittime: moment().format("MM-DD-YYYY HH:mm:ss"),
-          useragent: navigator.userAgent + " FEV7",
+          useragent: navigator.userAgent + " FEV6",
         }
       }).then(onSuccess).catch(onFail);
     }
@@ -1520,28 +1518,21 @@ function UpdateLeadTime() {
         }
       }
 
+      this.FilterEmptyCategories = function(menu) {
+        return function ( item ) {
+          return menu.categories[item].menu.length > 0;
+        }
+      }
+
       this.FilterDisabledProducts = function(menu) {
         return function ( item ) {
           var all_enabled = DisableDataCheck(item.disable_data);
           for (var mtid in item.modifiers) {
-            all_enabled = all_enabled && Math.min(1, Math.min.apply(null, item.modifiers[mtid].map(function(x) {
+            all_enabled = all_enabled && Math.min(1, Math.min.apply(null, DisableDataCheck(item.modifiers[mtid].map(function(x) {
               return DisableDataCheck(menu.modifiers[mtid].options[x[1]].disable_data);
-            })));
+            }))));
           }
           return all_enabled;
-        }
-      }
-
-      this.FilterEmptyCategories = function(menu) {
-        var filter_fxn = this.FilterDisabledProducts(menu);
-        return function ( item ) {
-          var cat_menu = menu.categories[item].menu;
-          for (var i = 0; i < cat_menu.length; ++i) {
-            if (filter_fxn(cat_menu[i])) {
-              return true;
-            }
-          }
-          return false;
         }
       }
 
