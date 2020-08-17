@@ -508,23 +508,25 @@ var WCPProduct = function (product_class, piid, name, description, ordinal, modi
     }
   };
 
-  this.SplitOptionsList = function () {
+  this.SplitOptionsList = function (MENU) {
     // generates three lists ordered from top to bottom: whole, left only, right only
     // returns a list of <MTID, OID> tuples
     var ret = { left: [], right: [], whole: [] };
-    for (var mid in this.modifiers) {
-      this.modifiers[mid].forEach(function (option_placement) {
-        switch (option_placement[0]) {
-          case TOPPING_LEFT: ret.left.push([mid, option_placement[1]]); break;
-          case TOPPING_RIGHT: ret.right.push([mid, option_placement[1]]); break;
-          case TOPPING_WHOLE: ret.whole.push([mid, option_placement[1]]); break;
-          default: break;
-        }
-      });
+    for (var midx = 0; midx < this.PRODUCT_CLASS.modifiers.length; ++midx) {
+      var mid = this.PRODUCT_CLASS.modifiers[midx];
+      if (this.modifiers.hasOwnProperty(mid)) {
+        this.modifiers[mid].forEach(function (option_placement) {
+          switch (option_placement[0]) {
+            case TOPPING_LEFT: ret.left.push([mid, option_placement[1]]); break;
+            case TOPPING_RIGHT: ret.right.push([mid, option_placement[1]]); break;
+            case TOPPING_WHOLE: ret.whole.push([mid, option_placement[1]]); break;
+            default: break;
+          }
+        });
+      }
     };
     return ret;
   };
-
 
   this.DisplayOptions = function (MENU) {
     var split_options = this.SplitOptionsList();
@@ -1583,7 +1585,7 @@ function UpdateLeadTime() {
 
       this.RemoveFromOrder = function (cart_entry) {
         var cart_idx = this.s.cart[cart_entry.catid].indexOf(cart_entry);
-        this.s.cart[cid].splice(cart_idx, 1);
+        this.s.cart[cart_entry.catid].splice(cart_idx, 1);
         this.PostCartUpdate();
       };
 
