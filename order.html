@@ -40,7 +40,7 @@
       </div>
       <hr class="separator">
       <div wcpmodifierdir ng-repeat="mtid in pmenuCtrl.selection.PRODUCT_CLASS.modifiers"
-      mtid="mtid" selection="pmenuCtrl.selection" pmenuctrl="pmenuCtrl" config="orderCtrl.CONFIG" allow_split="orderCtrl.s.enable_split_toppings"
+      mtid="mtid" selection="pmenuCtrl.selection" pmenuctrl="pmenuCtrl" config="orderCtrl.CONFIG" allowsplit="orderCtrl.s.enable_split_toppings"
       >
       </div>
       <div ng-if="!pmenuCtrl.suppress_guide && pmenuCtrl.messages.length">
@@ -576,8 +576,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
 <script src="https://polyfill.io/v3/polyfill.min.js"></script>
 <script>
-// var WARIO_ENDPOINT = "https://wario.windycitypie.com/";
-var WARIO_ENDPOINT = "http://localhost:4001/";
+var WARIO_ENDPOINT = "https://wario.windycitypie.com/";
+//var WARIO_ENDPOINT = "http://localhost:4001/";
 var EXTRAS_CATID = "5ef6cf1a3991a469ceda2598";
 var PIZZAS_CATID = "5eb21d084f5f1946916c6baf";
 var TOPPINGS_MTID = "5ef6cf743991a469ceda25aa";
@@ -603,4 +603,4 @@ var CONST_MESSAGE_REQUEST_SLICING = "In order to ensure the quality of our pizza
 var CONST_MESSAGE_TIP_PREAMBLE = "The Windy City Pie family is working hard to serve you, safely. All gratuity is shared with the entire staff. Everyone, from our team that makes the house-made dough, to the staff that handles your order appreciates your support!";
 var DELIVERY_LINK = "http://bit.ly/2QsrfV8";
 </script>
-<script src="https://www.windycitypie.com/wp-includes/js/WCPJSFE18.js"></script>
+<script src="https://www.windycitypie.com/wp-includes/js/WCPJSFE19.js"></script>

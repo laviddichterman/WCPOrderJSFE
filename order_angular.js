@@ -68,7 +68,7 @@ var WCPOption = function (w_modifier, w_option, index, enable_function) {
   this.bake_factor = w_option.metadata.bake_factor;
   this.can_split = w_option.metadata.can_split;
   this.disable_data = w_option.item.disabled;
-  this.ShowOption = function (product, location, MENU) {
+  this.IsEnabled = function (product, location, MENU) {
     // TODO: needs to factor in disable data for time based disable
     // TODO: needs to return false if we would exceed the limit for this modifier, IF that limit is > 1, because if it's === 1
     // we would handle the limitation by using smarts at the wcpmodifierdir level
@@ -76,28 +76,58 @@ var WCPOption = function (w_modifier, w_option, index, enable_function) {
       return val[1] === this.moid;
     };
     modifier_option_find_function = modifier_option_find_function.bind(this);
-    var base = product && this.enable_filter(product, location, MENU);
     var modifier_placement = product.modifiers[this.modifier._id] ? product.modifiers[this.modifier._id].find(modifier_option_find_function) : undefined;
     modifier_placement = modifier_placement === undefined ? TOPPING_NONE : modifier_placement[0];
     // TODO: bake and flavor stuff should move into the enable_filter itself, the option itself should just hold generalized metadata the enable filter function can use/reference
     var display_flags = product.PRODUCT_CLASS.display_flags;
     var BAKE_MAX = display_flags ? display_flags.bake_max : 100;
     var FLAVOR_MAX = display_flags ? display_flags.flavor_max : 100;
-    var left_bake = product.bake_count[LEFT_SIDE];
-    var right_bake = product.bake_count[RIGHT_SIDE];
-    var left_flavor = product.flavor_count[LEFT_SIDE];
-    var right_flavor = product.flavor_count[RIGHT_SIDE];
-    // TODO: needs to take into account bake differential in the computation below
-    var has_room_on_left = left_bake + this.bake_factor <= BAKE_MAX && left_flavor + this.flavor_factor <= FLAVOR_MAX;
-    var has_room_on_right = right_bake + this.bake_factor <= BAKE_MAX && right_flavor + this.flavor_factor <= FLAVOR_MAX;
+    var BAKE_DIFF_MAX = display_flags ? display_flags.bake_differential : 100;
+    var proposed_delta = [0, 0];
     switch (location) {
-      case TOPPING_NONE: return base; //TODO, this case might need re-evaluation. is there a case when a generic modifier could NOT be removed? if so, maybe the other cases here need to be looked at as well.
-      case TOPPING_LEFT: return base && this.can_split && (modifier_placement === TOPPING_WHOLE || modifier_placement === TOPPING_LEFT || has_room_on_left);
-      case TOPPING_RIGHT: return base && this.can_split && (modifier_placement === TOPPING_WHOLE || modifier_placement === TOPPING_RIGHT || has_room_on_right);
-      case TOPPING_WHOLE: return base && (modifier_placement === TOPPING_WHOLE || (has_room_on_left && modifier_placement === TOPPING_RIGHT) || (has_room_on_right && modifier_placement === TOPPING_LEFT) || (has_room_on_left && has_room_on_right));
+      case TOPPING_LEFT: 
+        switch (modifier_placement) {
+          case TOPPING_NONE: proposed_delta = [+1, +0]; break;  // +1, +0
+          case TOPPING_LEFT: proposed_delta = [-1, +0]; break;  // -1, +0
+          case TOPPING_RIGHT: proposed_delta = [+1, -1]; break; // +1, -1
+          case TOPPING_WHOLE: proposed_delta = [+0, -1]; break; // +0, -1
+        }
+        break;
+      case TOPPING_RIGHT: 
+        switch (modifier_placement) {
+          case TOPPING_NONE: proposed_delta = [+0, +1]; break;  // +0, +1
+          case TOPPING_LEFT: proposed_delta = [-1, +1]; break;  // -1, +1
+          case TOPPING_RIGHT: proposed_delta = [+0, -1]; break; // +0, -1
+          case TOPPING_WHOLE: proposed_delta = [-1, +0]; break; // -1, +0
+        }
+        break;
+      case TOPPING_WHOLE: 
+        switch (modifier_placement) {
+          case TOPPING_NONE: proposed_delta = [+1, +1]; break;  // +1, +1
+          case TOPPING_LEFT: proposed_delta = [+0, +1]; break;  // +0, +1
+          case TOPPING_RIGHT: proposed_delta = [+1, +0]; break; // +1, +0
+          case TOPPING_WHOLE: proposed_delta = [-1, -1]; break; // -1, -1
+        }
+        break;
+      default: console.assert(false, "case not expected"); break;
     }
-    console.assert(false, "invariant");
-    return false; // error?
+
+    var bake_after = [product.bake_count[LEFT_SIDE] + (this.bake_factor * proposed_delta[LEFT_SIDE]), product.bake_count[RIGHT_SIDE] + (this.bake_factor * proposed_delta[1])];
+    var flavor_after = [product.flavor_count[LEFT_SIDE] + (this.flavor_factor * proposed_delta[LEFT_SIDE]), product.flavor_count[RIGHT_SIDE] + (this.flavor_factor * proposed_delta[1])];
+    var passes_bake_diff_test = BAKE_DIFF_MAX >= Math.abs(bake_after[LEFT_SIDE]-bake_after[RIGHT_SIDE]);
+    var has_room_on_left = bake_after[LEFT_SIDE] <= BAKE_MAX && flavor_after[LEFT_SIDE] <= FLAVOR_MAX;
+    var has_room_on_right = bake_after[RIGHT_SIDE] <= BAKE_MAX && flavor_after[RIGHT_SIDE] <= FLAVOR_MAX;
+
+    return this.enable_filter(product, location, MENU) && has_room_on_left && has_room_on_right && passes_bake_diff_test;
+
+    // // TODO: pickup here RESUME1 note: IsEnabled should be renamed: button_enable or something since enabling is going to be different from it being selected (can't allow someone to violate the max bake difference)
+    // switch (location) {
+    //   case TOPPING_LEFT: return base && (modifier_placement === TOPPING_WHOLE || modifier_placement === TOPPING_LEFT || has_room_on_left);
+    //   case TOPPING_RIGHT: return base && (modifier_placement === TOPPING_WHOLE || modifier_placement === TOPPING_RIGHT || has_room_on_right);
+    //   case TOPPING_WHOLE: return base && (modifier_placement === TOPPING_WHOLE || (has_room_on_left && modifier_placement === TOPPING_RIGHT) || (has_room_on_right && modifier_placement === TOPPING_LEFT) || (has_room_on_left && has_room_on_right));
+    // }
+    // console.assert(false, "invariant");
+    // return false; // error?
   };
 };
 
@@ -443,8 +473,8 @@ var WCPProduct = function (product_class, piid, name, description, ordinal, modi
         shortname_components_list = ComponentsList(additional_options.whole, function (x) { return x.shortname; });
         if (menu_match[LEFT_SIDE].piid === menu_match[RIGHT_SIDE].piid) {
           if (!is_compare_to_base[LEFT_SIDE] || PRODUCT_CLASS.display_flags.show_name_of_base_product) {
-            name_components_list.unshift(menu_match[LEFT_SIDE].item.display_name);
-            shortname_components_list.unshift(menu_match[LEFT_SIDE].item.display_name);
+            name_components_list.unshift(menu_match[LEFT_SIDE].name);
+            shortname_components_list.unshift(menu_match[LEFT_SIDE].name);
           }
           name_components_list.push("(" + split_options.join(" | ") + ")");
           shortname_components_list.push("(" + short_split_options.join(" | ") + ")");
@@ -453,8 +483,8 @@ var WCPProduct = function (product_class, piid, name, description, ordinal, modi
           // split product, different product instance match on each side
           // logical assertion: if name_components for a given side are all false, then it's an exact match
           var names = [
-            (menu_match_compare[LEFT_SIDE] === AT_LEAST || !is_compare_to_base[LEFT_SIDE]) ? [menu_match[LEFT_SIDE].name] : [],
-            (menu_match_compare[RIGHT_SIDE] === AT_LEAST || !is_compare_to_base[RIGHT_SIDE]) ? [menu_match[RIGHT_SIDE].name] : []
+            (!is_compare_to_base[LEFT_SIDE] || PRODUCT_CLASS.display_flags.show_name_of_base_product) ? [menu_match[LEFT_SIDE].name] : [],
+            (!is_compare_to_base[RIGHT_SIDE] || PRODUCT_CLASS.display_flags.show_name_of_base_product) ? [menu_match[RIGHT_SIDE].name] : []
           ];
           var shortnames = names.slice();
           if (additional_options.left.length) {
@@ -1840,7 +1870,7 @@ function UpdateLeadTime() {
         mtid: "=mtid",
         selection: "=selection",
         config: "=config",
-        allow_split: "=allow_split",
+        allowsplit: "=allowsplit",
         pmenuctrl: "=pmenuctrl",
       },
       controllerAs: "ctrl",
@@ -1855,10 +1885,10 @@ function UpdateLeadTime() {
           })
           if (menu.modifiers[this.mtid].modifier_type.display_flags && menu.modifiers[this.mtid].modifier_type.display_flags.omit_options_if_not_available) {
             var filterfxn = function (x) {
-              return x.ShowOption(this.selection, this.config.WHOLE, menu) ||
-                (x.can_split && this.allow_split && (
-                  x.ShowOption(this.selection, this.config.LEFT, menu) ||
-                  x.ShowOption(this.selection, this.config.RIGHT, menu)
+              return x.IsEnabled(this.selection, this.config.WHOLE, menu) ||
+                (x.can_split && this.allowsplit && (
+                  x.IsEnabled(this.selection, this.config.LEFT, menu) ||
+                  x.IsEnabled(this.selection, this.config.RIGHT, menu)
                 ));
             };
             filterfxn = filterfxn.bind(this);
@@ -1935,11 +1965,11 @@ function UpdateLeadTime() {
       <div>{{ctrl.config.MENU.modifiers[ctrl.mtid].modifier_type.name}}:</div> \
       <div class="flexitems"> \
         <div ng-if="ctrl.display_type !== 1" class="flexitem" ng-repeat="option in ctrl.visible_options" wcpoptiondir \
-          selection="ctrl.selection" modctrl="ctrl" option="option" config="ctrl.config" allow_split="ctrl.allow_split"> \
+          selection="ctrl.selection" modctrl="ctrl" option="option" config="ctrl.config" allowsplit="ctrl.allowsplit"> \
         </div> \
         <div class="flexitem" ng-if="ctrl.display_type === 1"> \
           <input type="checkbox" id="{{ctrl.toggle_values[1].shortname}}_whole" class="input-whole" \
-            ng-disabled="!ctrl.toggle_values[1].ShowOption(ctrl.selection, ctrl.config.WHOLE, ctrl.config.MENU)" \
+            ng-disabled="!ctrl.toggle_values[1].IsEnabled(ctrl.selection, ctrl.config.WHOLE, ctrl.config.MENU)" \
             ng-model="ctrl.current_single_value" ng-true-value="1" \
             ng-false-value="0" ng-change="ctrl.PostModifyCallback()"> \
           <span class="option-circle-container"> \
@@ -1958,13 +1988,13 @@ app.directive("wcpoptiondir", function () {
       option: "=option",
       selection: "=selection",
       config: "=config",
-      allow_split: "=allow_split",
+      allowsplit: "=allowsplit",
       modctrl: "=modctrl",
     },
     controller: function () {
       this.Initialize = function () {
         this.MENU = this.config.MENU;
-        this.split =  this.allow_split && this.option.can_split && this.modctrl.display_type === MODDISP_CHECKBOX;
+        this.split =  this.option.can_split && this.modctrl.display_type === MODDISP_CHECKBOX;
         var placement = GetPlacementFromMIDOID(this.selection, this.option.modifier._id, this.option.moid);
         this.left = placement === TOPPING_LEFT;
         this.right = placement === TOPPING_RIGHT;
@@ -1996,16 +2026,16 @@ app.directive("wcpoptiondir", function () {
     },
     controllerAs: 'ctrl',
     bindToController: true,
-    template: '<input ng-if="ctrl.modctrl.display_type === 0" id="{{ctrl.option.shortname}}_whole" class="input-whole" ng-model="ctrl.modctrl.current_single_value" ng-value="ctrl.option.moid" ng-disabled="!ctrl.option.ShowOption(ctrl.selection, ctrl.config.WHOLE, ctrl.MENU)" type="radio" ng-change="ctrl.UpdateOption()"> \
-      <input ng-if="ctrl.modctrl.display_type === 2" id="{{ctrl.option.shortname}}_whole" class="input-whole" ng-model="ctrl.whole" ng-disabled="!ctrl.option.ShowOption(ctrl.selection, ctrl.config.WHOLE, ctrl.MENU)" type="checkbox" ng-change="ctrl.ToggleWhole()"> \
-        <input ng-if="ctrl.modctrl.display_type === 2" ng-show="ctrl.split" id="{{ctrl.option.shortname}}_left" class="input-left" ng-model="ctrl.left" ng-disabled="!ctrl.option.ShowOption(ctrl.selection, ctrl.config.LEFT, ctrl.MENU)" type="checkbox" ng-change="ctrl.ToggleHalf()"> \
-        <input ng-if="ctrl.modctrl.display_type === 2" ng-show="ctrl.split" id="{{ctrl.option.shortname}}_right" class="input-right" ng-model="ctrl.right" ng-disabled="!ctrl.option.ShowOption(ctrl.selection, ctrl.config.RIGHT, ctrl.MENU)" type="checkbox" ng-change="ctrl.ToggleHalf()"> \
+    template: '<input ng-if="ctrl.modctrl.display_type === 0" id="{{ctrl.option.shortname}}_whole" class="input-whole" ng-model="ctrl.modctrl.current_single_value" ng-value="ctrl.option.moid" ng-disabled="!ctrl.option.IsEnabled(ctrl.selection, ctrl.config.WHOLE, ctrl.MENU)" type="radio" ng-change="ctrl.UpdateOption()"> \
+      <input ng-if="ctrl.modctrl.display_type === 2" id="{{ctrl.option.shortname}}_whole" class="input-whole" ng-model="ctrl.whole" ng-disabled="!ctrl.option.IsEnabled(ctrl.selection, ctrl.config.WHOLE, ctrl.MENU)" type="checkbox" ng-change="ctrl.ToggleWhole()"> \
+        <input ng-if="ctrl.modctrl.display_type === 2" ng-show="ctrl.split" id="{{ctrl.option.shortname}}_left" class="input-left" ng-model="ctrl.left" ng-disabled="!ctrl.option.IsEnabled(ctrl.selection, ctrl.config.LEFT, ctrl.MENU)" type="checkbox" ng-change="ctrl.ToggleHalf()"> \
+        <input ng-if="ctrl.modctrl.display_type === 2" ng-show="ctrl.split" id="{{ctrl.option.shortname}}_right" class="input-right" ng-model="ctrl.right" ng-disabled="!ctrl.option.IsEnabled(ctrl.selection, ctrl.config.RIGHT, ctrl.MENU)" type="checkbox" ng-change="ctrl.ToggleHalf()"> \
         <span class="option-circle-container"> \
         <label for="{{ctrl.option.shortname}}_whole" class="option-whole option-circle"></label> \
         <label ng-if="ctrl.modctrl.display_type === 2" ng-show="ctrl.split" for="{{ctrl.option.shortname}}_left" class="option-left option-circle"></label> \
         <label ng-if="ctrl.modctrl.display_type === 2" ng-show="ctrl.split" for="{{ctrl.option.shortname}}_right" class="option-right option-circle"></label> \
         </span> \
-        <label class="topping_text" for="{{ctrl.option.shortname}}_whole" ng-disabled="!ctrl.option.ShowOption(ctrl.selection, ctrl.config.WHOLE, ctrl.pmenuctrl.CONFIG.MENU)">{{ctrl.option.name}}</label>'
+        <label class="topping_text" for="{{ctrl.option.shortname}}_whole" ng-disabled="!ctrl.option.IsEnabled(ctrl.selection, ctrl.config.WHOLE, ctrl.pmenuctrl.CONFIG.MENU)">{{ctrl.option.name}}</label>'
   };
 });
 
