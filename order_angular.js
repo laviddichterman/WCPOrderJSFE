@@ -1278,7 +1278,7 @@ function UpdateLeadTime() {
           load_time: state.debug_info.load_time,
           time_selection_time: state.debug_info["time-selection-time"] ? state.debug_info["time-selection-time"].format("H:mm:ss") : "",
           submittime: moment().format("MM-DD-YYYY HH:mm:ss"),
-          useragent: navigator.userAgent + " FEV6",
+          useragent: navigator.userAgent + " FEV8",
         }
       }).then(onSuccess).catch(onFail);
     }
@@ -1412,7 +1412,7 @@ function UpdateLeadTime() {
     function (OrderHelper, $http, $location, $rootScope, $sce, $socket) {
       this.ORDER_HELPER = OrderHelper;
       this.CONFIG = $rootScope.CONFIG = OrderHelper.cfg;
-      var split_toppings = true;//$location.search().split === true;
+      var split_toppings = $location.search().split === true;
       var enable_delivery = true;
       this.ScrollTop = ScrollTopJQ;
       this.s = $rootScope.state = new WCPOrderState(this.CONFIG, enable_delivery, split_toppings);
@@ -1738,21 +1738,19 @@ function UpdateLeadTime() {
     this.messages = [];
     this.modifier_map = {};
 
-    // leaving this for now...
     this.PopulateOrderGuide = function () {
-      // var addon_chz = this.selection.cheese_option != this.CONFIG.MENU.cheeses.regular.shortname ? 1 : 0;
-      // this.messages = [];
-      // if (this.selection) {
-      //   if (this.selection.flavor_count[0] + addon_chz < ADD_SOMETHING_THRESHOLD || this.selection.flavor_count[1] + addon_chz < ADD_SOMETHING_THRESHOLD) {
-      //     this.messages.push(CONST_MESSAGE_ADD_MORE_TO_PIZZA);
-      //   }
-      //   if (this.selection.flavor_count[0] > 5 || this.selection.flavor_count[1] > 5) {
-      //     this.messages.push("We love our toppings too, but adding this many flavors can end up detracting from the overall enjoyment. We'd suggest scaling this pizza back a bit. If this is your first time dining with us, we'd suggest ordering a menu pizza without modifications.");
-      //   }
-      //   if (this.selection.sauce == this.CONFIG.MENU.sauces.white && this.selection.toppings_tracker[this.CONFIG.MENU.toppings_dict.bleu.index] != TOPPING_NONE) {
-      //     this.messages.push("Our white sauce really lets the bleu cheese flavor come through. If you haven't had this pairing before, we'd suggest asking for light bleu cheese or switching back to red sauce.");
-      //   }
-      // }
+      this.messages = [];
+      if (this.selection && this.selection.PRODUCT_CLASS._id === PIZZA_PCID) {
+        if (this.selection.bake_count[0] < ADD_SOMETHING_THRESHOLD || this.selection.bake_count[0] < ADD_SOMETHING_THRESHOLD) {
+          this.messages.push(CONST_MESSAGE_ADD_MORE_TO_PIZZA);
+        }
+        if (this.selection.flavor_count[0] > 5 || this.selection.flavor_count[1] > 5) {
+          this.messages.push("We love our toppings too, but adding this many flavors can end up detracting from the overall enjoyment. We'd suggest scaling this pizza back a bit. If this is your first time dining with us, we'd suggest ordering a menu pizza without modifications.");
+        }
+        if (GetPlacementFromMIDOID(this.selection, SAUCE_MTID, SAUCE_WHITE_OID) === TOPPING_WHOLE && GetPlacementFromMIDOID(this.selection, TOPPINGS_MTID, TOPPING_BLEU_OID) !== TOPPING_NONE) {
+          this.messages.push("Our white sauce really lets the bleu cheese flavor come through. If you haven't had this pairing before, we'd suggest asking for light bleu cheese or switching back to red sauce.");
+        }
+      }
     };
 
     this.PostModifierChangeCallback = function (mid, oid, placement) {
@@ -1994,7 +1992,7 @@ app.directive("wcpoptiondir", function () {
     controller: function () {
       this.Initialize = function () {
         this.MENU = this.config.MENU;
-        this.split =  this.option.can_split && this.modctrl.display_type === MODDISP_CHECKBOX;
+        this.split = this.allowsplit && this.option.can_split && this.modctrl.display_type === MODDISP_CHECKBOX;
         var placement = GetPlacementFromMIDOID(this.selection, this.option.modifier._id, this.option.moid);
         this.left = placement === TOPPING_LEFT;
         this.right = placement === TOPPING_RIGHT;
