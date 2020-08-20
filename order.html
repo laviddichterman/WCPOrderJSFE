@@ -540,6 +540,7 @@
           </div>
           <div ng-repeat="e in orderCtrl.s.card_errors" class="wpcf7-response-output wpcf7-mail-sent-ng">{{e.message}}</div>
         </div>
+        <div>Note: Once orders are submitted, they are non-refundable. We will attempt to make any changes requested, but please do your due diligence to check the order for correctness!</div>
         <div class="order-nav" ng-show="orderCtrl.s.stage === 6">
           <button type="submit" class="btn scrolltotop" ng-disabled="orderCtrl.s.isProcessing" ng-show="orderCtrl.HasPreviousStage()" ng-click="orderCtrl.PreviousStage()">Previous</button>
           <button ng-show="orderCtrl.s.balance > 0" id="sq-creditcard" class="btn scrolltotop" ng-click="submitForm()" ng-disabled="orderCtrl.s.isProcessing">Pay and submit order!</button>
@@ -573,6 +574,7 @@
 <script src="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.12/angular-material.min.js"></script>
 <script src="https://www.windycitypie.com/wp-includes/js/socket.io.js"></script>
 <script src="https://www.windycitypie.com/wp-includes/js/socket.min.js"></script>
+<script src="https://www.windycitypie.com/wp-includes/js/wcpshared_rls.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
 <script src="https://polyfill.io/v3/polyfill.min.js"></script>
 <script>
@@ -604,4 +606,4 @@ var CONST_MESSAGE_REQUEST_SLICING = "In order to ensure the quality of our pizza
 var CONST_MESSAGE_TIP_PREAMBLE = "The Windy City Pie family is working hard to serve you, safely. All gratuity is shared with the entire staff. Everyone, from our team that makes the house-made dough, to the staff that handles your order appreciates your support!";
 var DELIVERY_LINK = "http://bit.ly/2QsrfV8";
 </script>
-<script src="https://www.windycitypie.com/wp-includes/js/WCPJSFE20.js"></script>
+<script src="https://www.windycitypie.com/wp-includes/js/WCPJSFE21.js"></script>
