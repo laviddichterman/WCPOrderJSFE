@@ -18,14 +18,14 @@
         <md-toolbar ng-click="orderCtrl.toggleAccordion($index); orderCtrl.ScrollTop()" role="button">
           <div class="md-toolbar-tools">
             <h2>
-              <span><strong><span ng-bind-html="pmenuCtrl.CONFIG.MENU.categories[subcatid].menu_name"></span></strong></span>
+              <span><strong><span ng-bind-html="pmenuCtrl.CONFIG.MENU.categories[subcatid].menu_name | TrustAsHTML"></span></strong></span>
             </h2>
             <span flex="" class="flex"></span>
             <span ng-class="{expandCollapse:true, active:orderCtrl.s.accordionstate[$index]}"></span> 
           </div>
         </md-toolbar> 
         <ul ng-class="{dataContent:true, activeContent:orderCtrl.s.accordionstate[$index]}" class="menu-list__items">
-          <li class="menu-list__item" ng-if="pmenuCtrl.CONFIG.MENU.categories[subcatid].subtitle"><strong><span ng-bind-html="pmenuCtrl.CONFIG.MENU.categories[subcatid].subtitle"></span></strong></li>
+          <li class="menu-list__item" ng-if="pmenuCtrl.CONFIG.MENU.categories[subcatid].subtitle"><strong><span ng-bind-html="pmenuCtrl.CONFIG.MENU.categories[subcatid].subtitle | TrustAsHTML"></span></strong></li>
           <li class="menu-list__item" ng-repeat="extra in pmenuCtrl.CONFIG.MENU.categories[subcatid].menu | filter:orderCtrl.FilterDisabledProducts(pmenuCtrl.CONFIG.MENU)">
             <div class="offer-link" ng-click="orderCtrl.ScrollTop(); orderCtrl.SelectProduct(subcatid, extra, pmenuCtrl)">
               <wcppizzacartitem prod="extra" description="true" dots="true" price="true"></wcppizzacartitem>
@@ -574,7 +574,7 @@
 <script src="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.12/angular-material.min.js"></script>
 <script src="https://www.windycitypie.com/wp-includes/js/socket.io.js"></script>
 <script src="https://www.windycitypie.com/wp-includes/js/socket.min.js"></script>
-<script src="https://www.windycitypie.com/wp-includes/js/wcpshared_rls.js"></script>
+<script src="https://www.windycitypie.com/wp-includes/js/wcpshared_rls1.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
 <script src="https://polyfill.io/v3/polyfill.min.js"></script>
 <script>
@@ -606,4 +606,4 @@ var CONST_MESSAGE_REQUEST_SLICING = "In order to ensure the quality of our pizza
 var CONST_MESSAGE_TIP_PREAMBLE = "The Windy City Pie family is working hard to serve you, safely. All gratuity is shared with the entire staff. Everyone, from our team that makes the house-made dough, to the staff that handles your order appreciates your support!";
 var DELIVERY_LINK = "http://bit.ly/2QsrfV8";
 </script>
-<script src="https://www.windycitypie.com/wp-includes/js/WCPJSFE21.js"></script>
+<script src="https://www.windycitypie.com/wp-includes/js/WCPJSFE22.js"></script>

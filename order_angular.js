@@ -11,16 +11,9 @@ var RIGHT_SIDE = WCPShared.RIGHT_SIDE;
 var WCPOption = WCPShared.WCPOption;
 var WCPProduct = WCPShared.WCPProduct;
 
-function GetPlacementFromMIDOID(pi, mid, oid) {
-  var option_placement = pi.modifiers.hasOwnProperty(mid) ?
-    pi.modifiers[mid].find(function (x) { return x[1] === oid }) : null;
-  return option_placement ? option_placement[0] : TOPPING_NONE;
-}
-
-function DisableDataCheck(disable_data) {
-  // TODO: this should not be the current time, but rather the time the order is FOR
-  return !disable_data || (!(disable_data.start > disable_data.end) && (disable_data.start > moment().valueOf() || disable_data.end < moment().valueOf()));
-}
+var GetPlacementFromMIDOID = WCPShared.GetPlacementFromMIDOID;
+var DisableDataCheck = WCPShared.DisableDataCheck;
+var DATE_STRING_INTERNAL_FORMAT = WCPShared.WDateUtils.DATE_STRING_INTERNAL_FORMAT;
 
 // TODO: refactor these! they need to use the product.modifiers list and use mtid, moid and basically be defined in WARIO itself
 var ENABLE_FUNCTIONS = {
@@ -56,10 +49,6 @@ var ENABLE_FUNCTIONS = {
   }
 };
 
-function GetModifierOptionFromMIDOID(menu, mid, oid) {
-  return menu.modifiers[mid].options[oid];
-}
-
 function CopyWCPProduct(pi) {
   return new WCPProduct(pi.PRODUCT_CLASS, pi.piid, pi.name, pi.description, pi.ordinal, pi.modifiers, pi.shortcode, pi.base_price, pi.disable_data, pi.is_base, pi.display_flags);
 }
@@ -67,7 +56,7 @@ function WCPProductFromDTO(dto, MENU) {
   return new WCPProduct(MENU.product_classes[dto.pid].product, "", "", "", 0, dto.modifiers, "", dto.base_price, null, false, {});
 }
 
-function GenerateCatalogMapFromCatalog(CONFIG, cat, $sce) {
+function GenerateCatalogMapFromCatalog(CONFIG, cat) {
   function WARIOPlacementToLocalPlacementEnum(w_placement) {
     switch (w_placement) {
       case "WHOLE": return TOPPING_WHOLE; break;
@@ -139,13 +128,12 @@ function GenerateCatalogMapFromCatalog(CONFIG, cat, $sce) {
     })
   };
 
-  console.log(menu);
   for (var catid in cat.categories) {
     var category_entry = {
       menu: [],
       children: cat.categories[catid].children.sort(function (a, b) { return cat.categories[a].category.ordinal - cat.categories[b].category.ordinal; }),
-      menu_name: cat.categories[catid].category.description ? $sce.trustAsHtml(cat.categories[catid].category.description) : cat.categories[catid].category.name,
-      subtitle: cat.categories[catid].category.subheading ? $sce.trustAsHtml(cat.categories[catid].category.subheading) : null,
+      menu_name: cat.categories[catid].category.description ? cat.categories[catid].category.description : cat.categories[catid].category.name,
+      subtitle: cat.categories[catid].category.subheading ? cat.categories[catid].category.subheading : null,
     }
     cat.categories[catid].products.forEach(function (product_class) {
       category_entry.menu = category_entry.menu.concat(menu.product_classes[product_class].instances_list);
@@ -173,7 +161,6 @@ var $j = jQuery.noConflict();
 var EMAIL_REGEX = new RegExp("^[_A-Za-z0-9\-]+(\\.[_A-Za-z0-9\-]+)*@[A-Za-z0-9\-]+(\\.[A-Za-z0-9\-]+)*(\\.[A-Za-z]{2,})$");
 
 var CREDIT_REGEX = new RegExp("[A-Za-z0-9]{3}-[A-Za-z0-9]{2}-[A-Za-z0-9]{3}-[A-Z0-9]{8}$");
-var DATE_STRING_INTERNAL_FORMAT = "YYYYMMDD";
 
 var DELIVERY_INTERVAL_TIME = 30;
 
@@ -310,8 +297,8 @@ var WCPStoreConfig = function () {
     }
   }
 
-  this.UpdateCatalog = function (cat, $sce) {
-    var catalog_map = GenerateCatalogMapFromCatalog(this, cat, $sce);
+  this.UpdateCatalog = function (cat) {
+    var catalog_map = GenerateCatalogMapFromCatalog(this, cat);
     Object.assign(this.MENU, catalog_map);
   }
   //END WCP store config
@@ -485,6 +472,12 @@ function UpdateLeadTime() {
 
 (function () {
   var app = angular.module("WCPOrder", ['ngSanitize', 'btford.socket-io']);
+
+  app.filter('TrustAsHTML', ['$sce', function ($sce) {
+    return function (val) {
+      return $sce.trustAsHtml(val);
+    };
+  }]);
 
   app.filter("MinutesToPrintTime", function () {
     return wcporderhelper.MinutesToPrintTime;
@@ -879,8 +872,8 @@ function UpdateLeadTime() {
     this.selected_time_timeout = false;
   };
 
-  app.controller("OrderController", ["OrderHelper", "$http", "$location", "$rootScope", "$sce", "socket",
-    function (OrderHelper, $http, $location, $rootScope, $sce, $socket) {
+  app.controller("OrderController", ["OrderHelper", "$http", "$location", "$rootScope", "socket",
+    function (OrderHelper, $http, $location, $rootScope, $socket) {
       this.ORDER_HELPER = OrderHelper;
       this.CONFIG = $rootScope.CONFIG = OrderHelper.cfg;
       var split_toppings = $location.search().split === true;
@@ -1021,11 +1014,12 @@ function UpdateLeadTime() {
       }
 
       this.FilterDisabledProducts = function(menu) {
+        var current_time = moment();
         return function ( item ) {
-          var all_enabled = DisableDataCheck(item.disable_data);
+          var all_enabled = DisableDataCheck(item.disable_data, current_time);
           for (var mtid in item.modifiers) {
             all_enabled = all_enabled && Math.min(1, Math.min.apply(null, item.modifiers[mtid].map(function(x) {
-              return DisableDataCheck(menu.modifiers[mtid].options[x[1]].disable_data);
+              return DisableDataCheck(menu.modifiers[mtid].options[x[1]].disable_data, current_time);
             })));
           }
           return all_enabled;
@@ -1189,7 +1183,7 @@ function UpdateLeadTime() {
       const BoundUpdateLeadTimeFxn = UpdateLeadTimeFxn.bind(this);
       $socket.on("WCP_LEAD_TIMES", BoundUpdateLeadTimeFxn);
       var UpdateCatalogFxn = function (message) {
-        this.CONFIG.UpdateCatalog(message, $sce);
+        this.CONFIG.UpdateCatalog(message);
         this.s.ReinitializeAccordion();
         this.RevalidateItems();
 
@@ -1346,11 +1340,11 @@ function UpdateLeadTime() {
       bindToController: true,
       controller: function () {
         this.Initialize = function () {
-          
+          var current_time = moment();
           var menu = this.config.MENU;
           // determine list of visible options
           var filtered_options = menu.modifiers[this.mtid].options_list.filter(function (x) {
-            return DisableDataCheck(x.disable_data);
+            return DisableDataCheck(x.disable_data, current_time);
           })
           if (menu.modifiers[this.mtid].modifier_type.display_flags && menu.modifiers[this.mtid].modifier_type.display_flags.omit_options_if_not_available) {
             var filterfxn = function (x) {
