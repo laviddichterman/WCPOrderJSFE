@@ -1067,6 +1067,7 @@ function UpdateLeadTime() {
             return;
           }
         }
+        this.PostCartUpdate();
       }
 
       this.RevalidateItems = function () {
