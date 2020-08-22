@@ -18,34 +18,56 @@ var DATE_STRING_INTERNAL_FORMAT = WCPShared.WDateUtils.DATE_STRING_INTERNAL_FORM
 // TODO: refactor these! they need to use the product.modifiers list and use mtid, moid and basically be defined in WARIO itself
 var ENABLE_FUNCTIONS = {
   never: function (pi, location, MENU) {
-    return false;
+    return WCPShared.WFunctional.ProcessProductInstanceFunction(pi, { expression: { discriminator: "ConstLiteral", const_literal: { value: false }}});
   },
   always: function (pi, location, MENU) {
-    return true;
+    return WCPShared.WFunctional.ProcessProductInstanceFunction(pi, { expression: { discriminator: "ConstLiteral", const_literal: { value: true } } });
   },
   enable_on_white: function (pi, location, MENU) {
-    return GetPlacementFromMIDOID(pi, SAUCE_MTID, SAUCE_WHITE_OID) != TOPPING_NONE;
+    var expTOPPING_NONE = { discriminator: "ConstLiteral", const_literal: { value: TOPPING_NONE } }
+    var expPlacement = { discriminator: "ModifierPlacement", modifier_placement: { mtid: SAUCE_MTID, moid: SAUCE_WHITE_OID} };
+    return WCPShared.WFunctional.ProcessProductInstanceFunction(pi, { expression: { discriminator: "Logical", logical: { operator: "NE", operandA: expPlacement, operandB: expTOPPING_NONE } } });
   },
   disable_on_brussels_sprout: function (pi, location, MENU) {
-    return GetPlacementFromMIDOID(pi, TOPPINGS_MTID, TOPPING_BRUSSELS_OID) === TOPPING_NONE;
+    var expTOPPING_NONE = { discriminator: "ConstLiteral", const_literal: { value: TOPPING_NONE } }
+    var expPlacement = { discriminator: "ModifierPlacement", modifier_placement: { mtid: TOPPINGS_MTID, moid: TOPPING_BRUSSELS_OID } };
+    return WCPShared.WFunctional.ProcessProductInstanceFunction(pi, { expression: { discriminator: "Logical", logical: { operator: "EQ", operandA: expPlacement, operandB: expTOPPING_NONE } } });
   },
   disable_on_meatball: function (pi, location, MENU) {
-    return GetPlacementFromMIDOID(pi, TOPPINGS_MTID, TOPPING_MB_OID) === TOPPING_NONE;
+    var expTOPPING_NONE = { discriminator: "ConstLiteral", const_literal: { value: TOPPING_NONE } }
+    var expPlacement = { discriminator: "ModifierPlacement", modifier_placement: { mtid: TOPPINGS_MTID, moid: TOPPING_MB_OID } };
+    return WCPShared.WFunctional.ProcessProductInstanceFunction(pi, { expression: { discriminator: "Logical", logical: { operator: "EQ", operandA: expPlacement, operandB: expTOPPING_NONE } } });
   },
   disable_on_chicken_sausage: function (pi, location, MENU) {
-    return GetPlacementFromMIDOID(pi, TOPPINGS_MTID, TOPPING_CHIX_OID) === TOPPING_NONE;
+    var expTOPPING_NONE = { discriminator: "ConstLiteral", const_literal: { value: TOPPING_NONE } }
+    var expPlacement = { discriminator: "ModifierPlacement", modifier_placement: { mtid: TOPPINGS_MTID, moid: TOPPING_CHIX_OID } };
+    return WCPShared.WFunctional.ProcessProductInstanceFunction(pi, { expression: { discriminator: "Logical", logical: { operator: "EQ", operandA: expPlacement, operandB: expTOPPING_NONE } } });
   },
   disable_on_pork_sausage: function (pi, location, MENU) {
-    return GetPlacementFromMIDOID(pi, TOPPINGS_MTID, TOPPING_SAUSAGE_OID) === TOPPING_NONE;
+    var expTOPPING_NONE = { discriminator: "ConstLiteral", const_literal: { value: TOPPING_NONE } }
+    var expPlacement = { discriminator: "ModifierPlacement", modifier_placement: { mtid: TOPPINGS_MTID, moid: TOPPING_SAUSAGE_OID } };
+    return WCPShared.WFunctional.ProcessProductInstanceFunction(pi, { expression: { discriminator: "Logical", logical: { operator: "EQ", operandA: expPlacement, operandB: expTOPPING_NONE } } });
   },
   disable_on_ital: function (pi, location, MENU) {
-    return GetPlacementFromMIDOID(pi, TOPPINGS_MTID, TOPPING_ITAL_OID) === TOPPING_NONE;
+    var expTOPPING_NONE = { discriminator: "ConstLiteral", const_literal: { value: TOPPING_NONE } }
+    var expPlacement = { discriminator: "ModifierPlacement", modifier_placement: { mtid: TOPPINGS_MTID, moid: TOPPING_ITAL_OID } };
+    return WCPShared.WFunctional.ProcessProductInstanceFunction(pi, { expression: { discriminator: "Logical", logical: { operator: "EQ", operandA: expPlacement, operandB: expTOPPING_NONE } } });
   },
   disable_on_dairy: function (pi, location, MENU) {
-    return GetPlacementFromMIDOID(pi, TOPPINGS_MTID, TOPPING_MB_OID) === TOPPING_NONE && GetPlacementFromMIDOID(pi, SAUCE_MTID, SAUCE_WHITE_OID) === TOPPING_NONE && GetPlacementFromMIDOID(pi, TOPPINGS_MTID, TOPPING_BLEU_OID) === TOPPING_NONE;
+    var expTOPPING_NONE = { discriminator: "ConstLiteral", const_literal: { value: TOPPING_NONE } }
+    var expPlacementMB = { discriminator: "ModifierPlacement", modifier_placement: { mtid: TOPPINGS_MTID, moid: TOPPING_MB_OID } };
+    var expNoMB = { discriminator: "Logical", logical: { operator: "EQ", operandA: expPlacementMB, operandB: expTOPPING_NONE } };
+    var expPlacementWhite = { discriminator: "ModifierPlacement", modifier_placement: { mtid: SAUCE_MTID, moid: SAUCE_WHITE_OID } };
+    var expNoWhiteSauce = { discriminator: "Logical", logical: { operator: "EQ", operandA: expPlacementWhite, operandB: expTOPPING_NONE } };
+    var expPlacementBleu = { discriminator: "ModifierPlacement", modifier_placement: { mtid: TOPPINGS_MTID, moid: TOPPING_BLEU_OID } };
+    var expNoBleu = { discriminator: "Logical", logical: { operator: "EQ", operandA: expPlacementBleu, operandB: expTOPPING_NONE } };
+    var expNoBleuNoWhite = { discriminator: "Logical", logical: { operator: "AND", operandA: expNoBleu, operandB: expNoWhiteSauce } };
+    return WCPShared.WFunctional.ProcessProductInstanceFunction(pi, { expression: { discriminator: "Logical", logical: { operator: "AND", operandA: expNoMB, operandB: expNoBleuNoWhite } } });
   },
   disable_on_vegan: function (pi, location, MENU) {
-    return GetPlacementFromMIDOID(pi, CHEESE_MTID, CHEESE_VEGAN_OID) === TOPPING_NONE;
+    var expTOPPING_NONE = { discriminator: "ConstLiteral", const_literal: { value: TOPPING_NONE } }
+    var expPlacement = { discriminator: "ModifierPlacement", modifier_placement: { mtid: CHEESE_MTID, moid: CHEESE_VEGAN_OID } };
+    return WCPShared.WFunctional.ProcessProductInstanceFunction(pi, { expression: { discriminator: "Logical", logical: { operator: "EQ", operandA: expPlacement, operandB: expTOPPING_NONE } } });
   }
 };
 

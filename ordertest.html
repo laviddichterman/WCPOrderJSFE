@@ -709,7 +709,7 @@
 <script src="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.12/angular-material.min.js"></script>
 <script src="https://www.windycitypie.com/wp-includes/js/socket.io.js"></script>
 <script src="https://www.windycitypie.com/wp-includes/js/socket.min.js"></script>
-<script src="https://www.windycitypie.com/wp-includes/js/wcpshared_rls0.js"></script>
+<script src="https://www.windycitypie.com/wp-includes/js/wcpshared_rls2.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
 <script src="https://polyfill.io/v3/polyfill.min.js"></script>
 <script>
@@ -740,7 +740,6 @@
   var CONST_MESSAGE_REQUEST_SLICING = "In order to ensure the quality of our pizzas, we will not slice them. We'd recommend bringing anything from a bench scraper to a butter knife to slice the pizza. Slicing the whole pizza when it's hot inhibits the crust from properly setting, and can cause the crust to get soggy both during transit and as the pie is eaten. We want your pizza to be the best possible and bringing a tool with which to slice the pie will make a big difference. You will need to remove this request to continue with your order.";
   var CONST_MESSAGE_TIP_PREAMBLE = "The Windy City Pie family is working hard to serve you, safely. All gratuity is shared with the entire staff. Everyone, from our team that makes the house-made dough, to the staff that handles your order appreciates your support!";
   var DELIVERY_LINK = "http://bit.ly/2QsrfV8";
-
   var TOPPING_NONE = WCPShared.TOPPING_NONE;
   var TOPPING_LEFT = WCPShared.TOPPING_LEFT;
   var TOPPING_RIGHT = WCPShared.TOPPING_RIGHT;
@@ -761,34 +760,56 @@
   // TODO: refactor these! they need to use the product.modifiers list and use mtid, moid and basically be defined in WARIO itself
   var ENABLE_FUNCTIONS = {
     never: function (pi, location, MENU) {
-      return false;
+      return WCPShared.WFunctional.ProcessProductInstanceFunction(pi, { expression: { discriminator: "ConstLiteral", const_literal: { value: false } } });
     },
     always: function (pi, location, MENU) {
-      return true;
+      return WCPShared.WFunctional.ProcessProductInstanceFunction(pi, { expression: { discriminator: "ConstLiteral", const_literal: { value: true } } });
     },
     enable_on_white: function (pi, location, MENU) {
-      return GetPlacementFromMIDOID(pi, SAUCE_MTID, SAUCE_WHITE_OID) != TOPPING_NONE;
+      var expTOPPING_NONE = { discriminator: "ConstLiteral", const_literal: { value: TOPPING_NONE } }
+      var expPlacement = { discriminator: "ModifierPlacement", modifier_placement: { mtid: SAUCE_MTID, moid: SAUCE_WHITE_OID } };
+      return WCPShared.WFunctional.ProcessProductInstanceFunction(pi, { expression: { discriminator: "Logical", logical: { operator: "NE", operandA: expPlacement, operandB: expTOPPING_NONE } } });
     },
     disable_on_brussels_sprout: function (pi, location, MENU) {
-      return GetPlacementFromMIDOID(pi, TOPPINGS_MTID, TOPPING_BRUSSELS_OID) === TOPPING_NONE;
+      var expTOPPING_NONE = { discriminator: "ConstLiteral", const_literal: { value: TOPPING_NONE } }
+      var expPlacement = { discriminator: "ModifierPlacement", modifier_placement: { mtid: TOPPINGS_MTID, moid: TOPPING_BRUSSELS_OID } };
+      return WCPShared.WFunctional.ProcessProductInstanceFunction(pi, { expression: { discriminator: "Logical", logical: { operator: "EQ", operandA: expPlacement, operandB: expTOPPING_NONE } } });
     },
     disable_on_meatball: function (pi, location, MENU) {
-      return GetPlacementFromMIDOID(pi, TOPPINGS_MTID, TOPPING_MB_OID) === TOPPING_NONE;
+      var expTOPPING_NONE = { discriminator: "ConstLiteral", const_literal: { value: TOPPING_NONE } }
+      var expPlacement = { discriminator: "ModifierPlacement", modifier_placement: { mtid: TOPPINGS_MTID, moid: TOPPING_MB_OID } };
+      return WCPShared.WFunctional.ProcessProductInstanceFunction(pi, { expression: { discriminator: "Logical", logical: { operator: "EQ", operandA: expPlacement, operandB: expTOPPING_NONE } } });
     },
     disable_on_chicken_sausage: function (pi, location, MENU) {
-      return GetPlacementFromMIDOID(pi, TOPPINGS_MTID, TOPPING_CHIX_OID) === TOPPING_NONE;
+      var expTOPPING_NONE = { discriminator: "ConstLiteral", const_literal: { value: TOPPING_NONE } }
+      var expPlacement = { discriminator: "ModifierPlacement", modifier_placement: { mtid: TOPPINGS_MTID, moid: TOPPING_CHIX_OID } };
+      return WCPShared.WFunctional.ProcessProductInstanceFunction(pi, { expression: { discriminator: "Logical", logical: { operator: "EQ", operandA: expPlacement, operandB: expTOPPING_NONE } } });
     },
     disable_on_pork_sausage: function (pi, location, MENU) {
-      return GetPlacementFromMIDOID(pi, TOPPINGS_MTID, TOPPING_SAUSAGE_OID) === TOPPING_NONE;
+      var expTOPPING_NONE = { discriminator: "ConstLiteral", const_literal: { value: TOPPING_NONE } }
+      var expPlacement = { discriminator: "ModifierPlacement", modifier_placement: { mtid: TOPPINGS_MTID, moid: TOPPING_SAUSAGE_OID } };
+      return WCPShared.WFunctional.ProcessProductInstanceFunction(pi, { expression: { discriminator: "Logical", logical: { operator: "EQ", operandA: expPlacement, operandB: expTOPPING_NONE } } });
     },
     disable_on_ital: function (pi, location, MENU) {
-      return GetPlacementFromMIDOID(pi, TOPPINGS_MTID, TOPPING_ITAL_OID) === TOPPING_NONE;
+      var expTOPPING_NONE = { discriminator: "ConstLiteral", const_literal: { value: TOPPING_NONE } }
+      var expPlacement = { discriminator: "ModifierPlacement", modifier_placement: { mtid: TOPPINGS_MTID, moid: TOPPING_ITAL_OID } };
+      return WCPShared.WFunctional.ProcessProductInstanceFunction(pi, { expression: { discriminator: "Logical", logical: { operator: "EQ", operandA: expPlacement, operandB: expTOPPING_NONE } } });
     },
     disable_on_dairy: function (pi, location, MENU) {
-      return GetPlacementFromMIDOID(pi, TOPPINGS_MTID, TOPPING_MB_OID) === TOPPING_NONE && GetPlacementFromMIDOID(pi, SAUCE_MTID, SAUCE_WHITE_OID) === TOPPING_NONE && GetPlacementFromMIDOID(pi, TOPPINGS_MTID, TOPPING_BLEU_OID) === TOPPING_NONE;
+      var expTOPPING_NONE = { discriminator: "ConstLiteral", const_literal: { value: TOPPING_NONE } }
+      var expPlacementMB = { discriminator: "ModifierPlacement", modifier_placement: { mtid: TOPPINGS_MTID, moid: TOPPING_MB_OID } };
+      var expNoMB = { discriminator: "Logical", logical: { operator: "EQ", operandA: expPlacementMB, operandB: expTOPPING_NONE } };
+      var expPlacementWhite = { discriminator: "ModifierPlacement", modifier_placement: { mtid: SAUCE_MTID, moid: SAUCE_WHITE_OID } };
+      var expNoWhiteSauce = { discriminator: "Logical", logical: { operator: "EQ", operandA: expPlacementWhite, operandB: expTOPPING_NONE } };
+      var expPlacementBleu = { discriminator: "ModifierPlacement", modifier_placement: { mtid: TOPPINGS_MTID, moid: TOPPING_BLEU_OID } };
+      var expNoBleu = { discriminator: "Logical", logical: { operator: "EQ", operandA: expPlacementBleu, operandB: expTOPPING_NONE } };
+      var expNoBleuNoWhite = { discriminator: "Logical", logical: { operator: "AND", operandA: expNoBleu, operandB: expNoWhiteSauce } };
+      return WCPShared.WFunctional.ProcessProductInstanceFunction(pi, { expression: { discriminator: "Logical", logical: { operator: "AND", operandA: expNoMB, operandB: expNoBleuNoWhite } } });
     },
     disable_on_vegan: function (pi, location, MENU) {
-      return GetPlacementFromMIDOID(pi, CHEESE_MTID, CHEESE_VEGAN_OID) === TOPPING_NONE;
+      var expTOPPING_NONE = { discriminator: "ConstLiteral", const_literal: { value: TOPPING_NONE } }
+      var expPlacement = { discriminator: "ModifierPlacement", modifier_placement: { mtid: CHEESE_MTID, moid: CHEESE_VEGAN_OID } };
+      return WCPShared.WFunctional.ProcessProductInstanceFunction(pi, { expression: { discriminator: "Logical", logical: { operator: "EQ", operandA: expPlacement, operandB: expTOPPING_NONE } } });
     }
   };
 
@@ -799,7 +820,7 @@
     return new WCPProduct(MENU.product_classes[dto.pid].product, "", "", "", 0, dto.modifiers, "", dto.base_price, null, false, {});
   }
 
-  function GenerateCatalogMapFromCatalog(CONFIG, cat, $sce) {
+  function GenerateCatalogMapFromCatalog(CONFIG, cat) {
     function WARIOPlacementToLocalPlacementEnum(w_placement) {
       switch (w_placement) {
         case "WHOLE": return TOPPING_WHOLE; break;
@@ -1040,8 +1061,8 @@
       }
     }
 
-    this.UpdateCatalog = function (cat, $sce) {
-      var catalog_map = GenerateCatalogMapFromCatalog(this, cat, $sce);
+    this.UpdateCatalog = function (cat) {
+      var catalog_map = GenerateCatalogMapFromCatalog(this, cat);
       Object.assign(this.MENU, catalog_map);
     }
     //END WCP store config
@@ -1615,8 +1636,8 @@
       this.selected_time_timeout = false;
     };
 
-    app.controller("OrderController", ["OrderHelper", "$http", "$location", "$rootScope", "$sce", "socket",
-      function (OrderHelper, $http, $location, $rootScope, $sce, $socket) {
+    app.controller("OrderController", ["OrderHelper", "$http", "$location", "$rootScope", "socket",
+      function (OrderHelper, $http, $location, $rootScope, $socket) {
         this.ORDER_HELPER = OrderHelper;
         this.CONFIG = $rootScope.CONFIG = OrderHelper.cfg;
         var split_toppings = $location.search().split === true;
@@ -1927,7 +1948,7 @@
         const BoundUpdateLeadTimeFxn = UpdateLeadTimeFxn.bind(this);
         $socket.on("WCP_LEAD_TIMES", BoundUpdateLeadTimeFxn);
         var UpdateCatalogFxn = function (message) {
-          this.CONFIG.UpdateCatalog(message, $sce);
+          this.CONFIG.UpdateCatalog(message);
           this.s.ReinitializeAccordion();
           this.RevalidateItems();
 
