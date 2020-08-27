@@ -7,7 +7,8 @@ var AT_LEAST = WCPShared.AT_LEAST;
 var EXACT_MATCH = WCPShared.EXACT_MATCH;
 var LEFT_SIDE = WCPShared.LEFT_SIDE;
 var RIGHT_SIDE = WCPShared.RIGHT_SIDE;
-
+var EMAIL_REGEX = WCPShared.EMAIL_REGEX;
+var CREDIT_REGEX = WCPShared.CREDIT_REGEX;
 var WCPOption = WCPShared.WCPOption;
 var WCPProduct = WCPShared.WCPProduct;
 
@@ -15,158 +16,12 @@ var GetPlacementFromMIDOID = WCPShared.GetPlacementFromMIDOID;
 var DisableDataCheck = WCPShared.DisableDataCheck;
 var DATE_STRING_INTERNAL_FORMAT = WCPShared.WDateUtils.DATE_STRING_INTERNAL_FORMAT;
 
-// TODO: refactor these! they need to use the product.modifiers list and use mtid, moid and basically be defined in WARIO itself
-var ENABLE_FUNCTIONS = {
-  never: function (pi, location, MENU) {
-    return WCPShared.WFunctional.ProcessProductInstanceFunction(pi, { expression: { discriminator: "ConstLiteral", const_literal: { value: false }}});
-  },
-  always: function (pi, location, MENU) {
-    return WCPShared.WFunctional.ProcessProductInstanceFunction(pi, { expression: { discriminator: "ConstLiteral", const_literal: { value: true } } });
-  },
-  enable_on_white: function (pi, location, MENU) {
-    var expTOPPING_NONE = { discriminator: "ConstLiteral", const_literal: { value: TOPPING_NONE } }
-    var expPlacement = { discriminator: "ModifierPlacement", modifier_placement: { mtid: SAUCE_MTID, moid: SAUCE_WHITE_OID} };
-    return WCPShared.WFunctional.ProcessProductInstanceFunction(pi, { expression: { discriminator: "Logical", logical: { operator: "NE", operandA: expPlacement, operandB: expTOPPING_NONE } } });
-  },
-  disable_on_brussels_sprout: function (pi, location, MENU) {
-    var expTOPPING_NONE = { discriminator: "ConstLiteral", const_literal: { value: TOPPING_NONE } }
-    var expPlacement = { discriminator: "ModifierPlacement", modifier_placement: { mtid: TOPPINGS_MTID, moid: TOPPING_BRUSSELS_OID } };
-    return WCPShared.WFunctional.ProcessProductInstanceFunction(pi, { expression: { discriminator: "Logical", logical: { operator: "EQ", operandA: expPlacement, operandB: expTOPPING_NONE } } });
-  },
-  disable_on_meatball: function (pi, location, MENU) {
-    var expTOPPING_NONE = { discriminator: "ConstLiteral", const_literal: { value: TOPPING_NONE } }
-    var expPlacement = { discriminator: "ModifierPlacement", modifier_placement: { mtid: TOPPINGS_MTID, moid: TOPPING_MB_OID } };
-    return WCPShared.WFunctional.ProcessProductInstanceFunction(pi, { expression: { discriminator: "Logical", logical: { operator: "EQ", operandA: expPlacement, operandB: expTOPPING_NONE } } });
-  },
-  disable_on_chicken_sausage: function (pi, location, MENU) {
-    var expTOPPING_NONE = { discriminator: "ConstLiteral", const_literal: { value: TOPPING_NONE } }
-    var expPlacement = { discriminator: "ModifierPlacement", modifier_placement: { mtid: TOPPINGS_MTID, moid: TOPPING_CHIX_OID } };
-    return WCPShared.WFunctional.ProcessProductInstanceFunction(pi, { expression: { discriminator: "Logical", logical: { operator: "EQ", operandA: expPlacement, operandB: expTOPPING_NONE } } });
-  },
-  disable_on_pork_sausage: function (pi, location, MENU) {
-    var expTOPPING_NONE = { discriminator: "ConstLiteral", const_literal: { value: TOPPING_NONE } }
-    var expPlacement = { discriminator: "ModifierPlacement", modifier_placement: { mtid: TOPPINGS_MTID, moid: TOPPING_SAUSAGE_OID } };
-    return WCPShared.WFunctional.ProcessProductInstanceFunction(pi, { expression: { discriminator: "Logical", logical: { operator: "EQ", operandA: expPlacement, operandB: expTOPPING_NONE } } });
-  },
-  disable_on_ital: function (pi, location, MENU) {
-    var expTOPPING_NONE = { discriminator: "ConstLiteral", const_literal: { value: TOPPING_NONE } }
-    var expPlacement = { discriminator: "ModifierPlacement", modifier_placement: { mtid: TOPPINGS_MTID, moid: TOPPING_ITAL_OID } };
-    return WCPShared.WFunctional.ProcessProductInstanceFunction(pi, { expression: { discriminator: "Logical", logical: { operator: "EQ", operandA: expPlacement, operandB: expTOPPING_NONE } } });
-  },
-  disable_on_dairy: function (pi, location, MENU) {
-    var expTOPPING_NONE = { discriminator: "ConstLiteral", const_literal: { value: TOPPING_NONE } }
-    var expPlacementMB = { discriminator: "ModifierPlacement", modifier_placement: { mtid: TOPPINGS_MTID, moid: TOPPING_MB_OID } };
-    var expNoMB = { discriminator: "Logical", logical: { operator: "EQ", operandA: expPlacementMB, operandB: expTOPPING_NONE } };
-    var expPlacementWhite = { discriminator: "ModifierPlacement", modifier_placement: { mtid: SAUCE_MTID, moid: SAUCE_WHITE_OID } };
-    var expNoWhiteSauce = { discriminator: "Logical", logical: { operator: "EQ", operandA: expPlacementWhite, operandB: expTOPPING_NONE } };
-    var expPlacementBleu = { discriminator: "ModifierPlacement", modifier_placement: { mtid: TOPPINGS_MTID, moid: TOPPING_BLEU_OID } };
-    var expNoBleu = { discriminator: "Logical", logical: { operator: "EQ", operandA: expPlacementBleu, operandB: expTOPPING_NONE } };
-    var expNoBleuNoWhite = { discriminator: "Logical", logical: { operator: "AND", operandA: expNoBleu, operandB: expNoWhiteSauce } };
-    return WCPShared.WFunctional.ProcessProductInstanceFunction(pi, { expression: { discriminator: "Logical", logical: { operator: "AND", operandA: expNoMB, operandB: expNoBleuNoWhite } } });
-  },
-  disable_on_vegan: function (pi, location, MENU) {
-    var expTOPPING_NONE = { discriminator: "ConstLiteral", const_literal: { value: TOPPING_NONE } }
-    var expPlacement = { discriminator: "ModifierPlacement", modifier_placement: { mtid: CHEESE_MTID, moid: CHEESE_VEGAN_OID } };
-    return WCPShared.WFunctional.ProcessProductInstanceFunction(pi, { expression: { discriminator: "Logical", logical: { operator: "EQ", operandA: expPlacement, operandB: expTOPPING_NONE } } });
-  }
-};
-
 function CopyWCPProduct(pi) {
   return new WCPProduct(pi.PRODUCT_CLASS, pi.piid, pi.name, pi.description, pi.ordinal, pi.modifiers, pi.shortcode, pi.base_price, pi.disable_data, pi.is_base, pi.display_flags);
 }
 function WCPProductFromDTO(dto, MENU) {
   return new WCPProduct(MENU.product_classes[dto.pid].product, "", "", "", 0, dto.modifiers, "", dto.base_price, null, false, {});
 }
-
-function GenerateCatalogMapFromCatalog(CONFIG, cat) {
-  function WARIOPlacementToLocalPlacementEnum(w_placement) {
-    switch (w_placement) {
-      case "WHOLE": return TOPPING_WHOLE; break;
-      case "LEFT": return TOPPING_LEFT; break;
-      case "RIGHT": return TOPPING_RIGHT; break;
-      default: break;
-    };
-    return TOPPING_NONE;
-  }
-  console.log(cat);
-  if (cat.version === CONFIG.MENU.version) {
-    return CONFIG.MENU;
-  }
-  var menu = {
-    // modifiers are { MID: { modifier_type: WARIO modifier type JSON, options_list: [WCPOption], options: {OID: WCPOption} } }
-    modifiers: {},
-    // product_classes are { PID: { product: WARIO product class, instances_list: [WCPProduct], instances: {PIID: WCPProduct} } }
-    product_classes: {},
-    // categories are {CID: { menu: [WCPProducts], children: [CID], menu_name: HTML, subtitle: HTML } }
-    categories: {},
-    version: cat.version
-  };
-
-  for (var mtid in cat.modifiers) {
-    var mod = cat.modifiers[mtid].modifier_type;
-    var opt_index = 0;
-    var modifier_entry = { modifier_type: mod, options_list: [], options: {} };
-    cat.modifiers[mtid].options.sort(function (a, b) { return a.ordinal - b.ordinal }).forEach(function (opt) {
-      var enable_function = ENABLE_FUNCTIONS[opt.enable_function_name];
-      var option = new WCPOption(mod, opt, opt_index, enable_function);
-      modifier_entry.options_list.push(option);
-      modifier_entry.options[option.moid] = option;
-      ++opt_index;
-    });
-    menu.modifiers[mtid] = modifier_entry;
-  }
-
-  for (var pid in cat.products) {
-    var product_class = cat.products[pid].product;
-    //var prod_index = 0;
-    var product_entry = { product: product_class, instances_list: [], instances: {} };
-    cat.products[pid].instances.sort(function (a, b) { return a.ordinal - b.ordinal }).forEach(function (prod) {
-      var modifiers = {};
-      prod.modifiers.forEach(function(mod) {
-        modifiers[mod.modifier_type_id] = mod.options.map(function (option_placement) { return [WARIOPlacementToLocalPlacementEnum(option_placement.placement), option_placement.option_id] });
-      });
-      var product_instance = new WCPProduct(
-        product_class,
-        prod._id,
-        prod.item.display_name,
-        prod.item.description,
-        prod.ordinal, // this might need to be prod_index, not sure if that is even needed anymore 
-        modifiers,
-        prod.item.shortcode,
-        prod.item.price.amount / 100,
-        prod.item.disabled,
-        prod.is_base,
-        prod.display_flags);
-      product_entry.instances_list.push(product_instance);
-      product_entry.instances[product_instance.piid] = product_instance;
-      //++prod_index;
-    });
-    menu.product_classes[pid] = product_entry;
-  }
-
-  for (var pid in cat.products) {
-    menu.product_classes[pid].instances_list.forEach(function (pi) { 
-      pi.Initialize(menu);
-    })
-  };
-
-  for (var catid in cat.categories) {
-    var category_entry = {
-      menu: [],
-      children: cat.categories[catid].children.sort(function (a, b) { return cat.categories[a].category.ordinal - cat.categories[b].category.ordinal; }),
-      menu_name: cat.categories[catid].category.description ? cat.categories[catid].category.description : cat.categories[catid].category.name,
-      subtitle: cat.categories[catid].category.subheading ? cat.categories[catid].category.subheading : null,
-    }
-    cat.categories[catid].products.forEach(function (product_class) {
-      category_entry.menu = category_entry.menu.concat(menu.product_classes[product_class].instances_list);
-    })
-    category_entry.menu.sort(function (a, b) { return a.ordinal - b.ordinal; });
-    menu.categories[catid] = category_entry;
-  }
-
-  return menu;
-}
-
 
 // handy class representing a line in the product cart
 // useful to allow modifications on the product by setting it to a new product instance
@@ -179,10 +34,6 @@ var CartEntry = function (catid, product, quantity, can_edit) {
 };
 
 var $j = jQuery.noConflict();
-
-var EMAIL_REGEX = new RegExp("^[_A-Za-z0-9\-]+(\\.[_A-Za-z0-9\-]+)*@[A-Za-z0-9\-]+(\\.[A-Za-z0-9\-]+)*(\\.[A-Za-z]{2,})$");
-
-var CREDIT_REGEX = new RegExp("[A-Za-z0-9]{3}-[A-Za-z0-9]{2}-[A-Za-z0-9]{3}-[A-Z0-9]{8}$");
 
 var DELIVERY_INTERVAL_TIME = 30;
 
@@ -320,7 +171,11 @@ var WCPStoreConfig = function () {
   }
 
   this.UpdateCatalog = function (cat) {
-    var catalog_map = GenerateCatalogMapFromCatalog(this, cat);
+    console.log(cat);
+    if (cat.version === this.MENU.version) {
+      return;
+    }
+    var catalog_map = new WCPShared.WMenu(cat);
     Object.assign(this.MENU, catalog_map);
   }
   //END WCP store config
@@ -764,7 +619,7 @@ function UpdateLeadTime() {
           load_time: state.debug_info.load_time,
           time_selection_time: state.debug_info["time-selection-time"] ? state.debug_info["time-selection-time"].format("H:mm:ss") : "",
           submittime: moment().format("MM-DD-YYYY HH:mm:ss"),
-          useragent: navigator.userAgent + " FEV9",
+          useragent: navigator.userAgent + " FEV10",
         }
       }).then(onSuccess).catch(onFail);
     }
