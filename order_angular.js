@@ -16,12 +16,8 @@ var GetPlacementFromMIDOID = WCPShared.GetPlacementFromMIDOID;
 var DisableDataCheck = WCPShared.DisableDataCheck;
 var DATE_STRING_INTERNAL_FORMAT = WCPShared.WDateUtils.DATE_STRING_INTERNAL_FORMAT;
 
-function CopyWCPProduct(pi) {
-  return new WCPProduct(pi.PRODUCT_CLASS, pi.piid, pi.name, pi.description, pi.ordinal, pi.modifiers, pi.shortcode, pi.base_price, pi.disable_data, pi.is_base, pi.display_flags);
-}
-function WCPProductFromDTO(dto, MENU) {
-  return new WCPProduct(MENU.product_classes[dto.pid].product, "", "", "", 0, dto.modifiers, "", dto.base_price, null, false, {});
-}
+var CopyWCPProduct = WCPShared.CopyWCPProduct;
+var WCPProductFromDTO = WCPShared.WCPProductFromDTO;
 
 // handy class representing a line in the product cart
 // useful to allow modifications on the product by setting it to a new product instance
