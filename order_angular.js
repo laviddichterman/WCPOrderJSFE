@@ -533,12 +533,10 @@ function UpdateLeadTime() {
     }
 
     this.CartToDTO = function () {
-      // need: name, shortname, shortcode for each product, split into two sections
-      var dto = { pizza: [], extras: [] };
-      this.linear_cart.forEach(function(cart_entry) {
-        var entrydto = [cart_entry.quantity, {name: cart_entry.pi.name, shortname: cart_entry.pi.shortname, shortcode: cart_entry.pi.shortcode }];
-        cart_entry.catid === PIZZAS_CATID ? dto.pizza.push(entrydto) : dto.extras.push(entrydto);
-      });
+      const dto = {};
+      for (var cid in this.cart) {
+        dto[cid] = this.cart[cid].map(function (x) { return [x[0], x[1].ToDTO(cfg.MENU)] });
+      }
       return dto;
     }
 
@@ -615,7 +613,7 @@ function UpdateLeadTime() {
           load_time: state.debug_info.load_time,
           time_selection_time: state.debug_info["time-selection-time"] ? state.debug_info["time-selection-time"].format("H:mm:ss") : "",
           submittime: moment().format("MM-DD-YYYY HH:mm:ss"),
-          useragent: navigator.userAgent + " FEV10",
+          useragent: navigator.userAgent + " FEV11",
         }
       }).then(onSuccess).catch(onFail);
     }
