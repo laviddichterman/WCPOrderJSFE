@@ -535,7 +535,7 @@ function UpdateLeadTime() {
     this.CartToDTO = function () {
       const dto = {};
       for (var cid in this.cart) {
-        dto[cid] = this.cart[cid].map(function (x) { return [x[0], x[1].ToDTO(cfg.MENU)] });
+        dto[cid] = this.cart[cid].map(function (x) { return [x.quantity, x.pi.ToDTO(cfg.MENU)] });
       }
       return dto;
     }
@@ -579,7 +579,7 @@ function UpdateLeadTime() {
       state.isProcessing = true;
       http_provider({
         method: "POST",
-        url: `${WARIO_ENDPOINT}api/v1/order/new`,
+        url: `${WARIO_ENDPOINT}api/v1/order`,
         data: {
           nonce: nonce,
           service_option: state.service_type,

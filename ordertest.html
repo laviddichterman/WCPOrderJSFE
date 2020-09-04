@@ -2,15 +2,11 @@
   <span id="ordertop"></span>
   <div ng-show="orderCtrl.s.stage === 1 || orderCtrl.s.stage === 2" ng-controller="ProductMenuController as pmenuCtrl">
     <div class="ordering-menu menu-list menu-list__dotted" ng-show="orderCtrl.s.stage === 1 && !pmenuCtrl.selection">
-      <h3 class="flush--top" ng-if="orderCtrl.s.num_pizza === 0"><strong>Click a pizza below to get started</strong>
-      </h3>
-      <h3 class="flush--top" ng-if="orderCtrl.s.num_pizza > 0"><strong>Click a pizza below or next to continue</strong>
-      </h3>
+      <h3 class="flush--top" ng-if="orderCtrl.s.num_pizza === 0"><strong>Click a pizza below to get started</strong></h3>
+      <h3 class="flush--top" ng-if="orderCtrl.s.num_pizza > 0"><strong>Click a pizza below or next to continue</strong></h3>
       <ul class="flexitems menu-list__items">
-        <li class="flexitem menu-list__item"
-          ng-repeat="pizza in pmenuCtrl.CONFIG.MENU.categories[pmenuCtrl.CONFIG.PIZZAS_CATID].menu | filter:orderCtrl.FilterDisabledProducts(pmenuCtrl.CONFIG.MENU)">
-          <div class="offer-link"
-            ng-click="orderCtrl.ScrollTop(); orderCtrl.SelectProduct(pmenuCtrl.CONFIG.PIZZAS_CATID, pizza, pmenuCtrl)">
+        <li class="flexitem menu-list__item" ng-repeat="pizza in pmenuCtrl.CONFIG.MENU.categories[pmenuCtrl.CONFIG.PIZZAS_CATID].menu | filter:orderCtrl.FilterDisabledProducts(pmenuCtrl.CONFIG.MENU)">
+          <div class="offer-link" ng-click="orderCtrl.ScrollTop(); orderCtrl.SelectProduct(pmenuCtrl.CONFIG.PIZZAS_CATID, pizza, pmenuCtrl)">
             <wcppizzacartitem prod="pizza" description="true" dots="true" price="true"></wcppizzacartitem>
           </div>
         </li>
@@ -18,25 +14,20 @@
     </div>
     <md-content ng-show="orderCtrl.s.stage === 2 && !pmenuCtrl.selection">
       <h3 class="flush--top"><strong>Add small plates or beverages to your order.</strong></h3>
-      <div class="ordering-menu menu-list menu-list__dotted md-accordion"
-        ng-repeat="subcatid in pmenuCtrl.CONFIG.MENU.categories[pmenuCtrl.CONFIG.EXTRAS_CATID].children | filter:orderCtrl.FilterEmptyCategories(pmenuCtrl.CONFIG.MENU) ">
+      <div class="ordering-menu menu-list menu-list__dotted md-accordion" ng-repeat="subcatid in pmenuCtrl.CONFIG.MENU.categories[pmenuCtrl.CONFIG.EXTRAS_CATID].children | filter:orderCtrl.FilterEmptyCategories(pmenuCtrl.CONFIG.MENU) ">
         <md-toolbar ng-click="orderCtrl.toggleAccordion($index); orderCtrl.ScrollTop()" role="button">
           <div class="md-toolbar-tools">
             <h2>
-              <span><strong><span
-                    ng-bind-html="pmenuCtrl.CONFIG.MENU.categories[subcatid].menu_name | TrustAsHTML"></span></strong></span>
+              <span><strong><span ng-bind-html="pmenuCtrl.CONFIG.MENU.categories[subcatid].menu_name | TrustAsHTML"></span></strong></span>
             </h2>
             <span flex="" class="flex"></span>
-            <span ng-class="{expandCollapse:true, active:orderCtrl.s.accordionstate[$index]}"></span>
+            <span ng-class="{expandCollapse:true, active:orderCtrl.s.accordionstate[$index]}"></span> 
           </div>
-        </md-toolbar>
+        </md-toolbar> 
         <ul ng-class="{dataContent:true, activeContent:orderCtrl.s.accordionstate[$index]}" class="menu-list__items">
-          <li class="menu-list__item" ng-if="pmenuCtrl.CONFIG.MENU.categories[subcatid].subtitle"><strong><span
-                ng-bind-html="pmenuCtrl.CONFIG.MENU.categories[subcatid].subtitle | TrustAsHTML"></span></strong></li>
-          <li class="menu-list__item"
-            ng-repeat="extra in pmenuCtrl.CONFIG.MENU.categories[subcatid].menu | filter:orderCtrl.FilterDisabledProducts(pmenuCtrl.CONFIG.MENU)">
-            <div class="offer-link"
-              ng-click="orderCtrl.ScrollTop(); orderCtrl.SelectProduct(subcatid, extra, pmenuCtrl)">
+          <li class="menu-list__item" ng-if="pmenuCtrl.CONFIG.MENU.categories[subcatid].subtitle"><strong><span ng-bind-html="pmenuCtrl.CONFIG.MENU.categories[subcatid].subtitle | TrustAsHTML"></span></strong></li>
+          <li class="menu-list__item" ng-repeat="extra in pmenuCtrl.CONFIG.MENU.categories[subcatid].menu | filter:orderCtrl.FilterDisabledProducts(pmenuCtrl.CONFIG.MENU)">
+            <div class="offer-link" ng-click="orderCtrl.ScrollTop(); orderCtrl.SelectProduct(subcatid, extra, pmenuCtrl)">
               <wcppizzacartitem prod="extra" description="true" dots="true" price="true"></wcppizzacartitem>
           </li>
         </ul>
@@ -48,26 +39,21 @@
         <wcppizzacartitem prod="pmenuCtrl.selection" description="true" dots="true" price="true"></wcppizzacartitem>
       </div>
       <hr class="separator">
-      <div wcpmodifierdir ng-repeat="mtid in pmenuCtrl.selection.PRODUCT_CLASS.modifiers" mtid="mtid"
-        selection="pmenuCtrl.selection" pmenuctrl="pmenuCtrl" config="orderCtrl.CONFIG"
-        allowsplit="orderCtrl.s.enable_split_toppings">
+      <div wcpmodifierdir ng-repeat="mtid in pmenuCtrl.selection.PRODUCT_CLASS.modifiers"
+      mtid="mtid" selection="pmenuCtrl.selection" pmenuctrl="pmenuCtrl" config="orderCtrl.CONFIG" allowsplit="orderCtrl.s.enable_split_toppings"
+      >
       </div>
       <div ng-if="!pmenuCtrl.suppress_guide && pmenuCtrl.messages.length">
         <div class="wpcf7-response-output wpcf7-validation-errors" ng-repeat="msg in pmenuCtrl.messages">{{msg}}</div>
       </div>
       <div class="order-nav">
         <span class="one-fifth">
-          <button name="remove" class="btn button-remove scrolltotop"
-            ng-click="pmenuCtrl.UnsetProduct()">Cancel</button>
+          <button name="remove" class="btn button-remove scrolltotop" ng-click="pmenuCtrl.UnsetProduct()">Cancel</button>
         </span>
         <span class="four-fifths">
           <span class="order-nav-item float--right">
-            <button ng-if="pmenuCtrl.is_addition" name="add" class="btn scrolltotop"
-              ng-click="orderCtrl.AddToOrder(pmenuCtrl.catid, pmenuCtrl.selection); pmenuCtrl.UnsetProduct()">Add to
-              order</button>
-            <button ng-if="!pmenuCtrl.is_addition" name="save" class="btn scrolltotop"
-              ng-click="orderCtrl.UpdateOrderEntry(pmenuCtrl.cart_entry, pmenuCtrl.selection); pmenuCtrl.UnsetProduct()">Save
-              Changes</button>
+            <button ng-if="pmenuCtrl.is_addition" name="add" class="btn scrolltotop" ng-click="orderCtrl.AddToOrder(pmenuCtrl.catid, pmenuCtrl.selection); pmenuCtrl.UnsetProduct()">Add to order</button>
+            <button ng-if="!pmenuCtrl.is_addition" name="save" class="btn scrolltotop" ng-click="orderCtrl.UpdateOrderEntry(pmenuCtrl.cart_entry, pmenuCtrl.selection); pmenuCtrl.UnsetProduct()">Save Changes</button>
           </span>
         </span>
       </div>
@@ -75,436 +61,207 @@
     <div class="cart" ng-if="orderCtrl.s.linear_cart.length > 0">
       <hr class="separator">
       <h3 class="flush">Current Order</h3>
-      <div class="content">
-        <table>
-          <thead>
-            <tr>
-              <th>Item</th>
-              <th>Quantity</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr ng-repeat="cart_entry in orderCtrl.s.linear_cart"
-              ng-class="{'cart-item':true, editible:cart_entry.can_edit}">
-              <td>
-                <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
-                  <div class="menu-list__item">
-                    <wcppizzacartitem prod="cart_entry.pi" description="true" dots="false" price="false">
-                    </wcppizzacartitem>
+        <div class="content">
+          <table>
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Quantity</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-repeat="cart_entry in orderCtrl.s.linear_cart" ng-class="{'cart-item':true, editible:cart_entry.can_edit}" >
+                <td>
+                  <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
+                    <div class="menu-list__item">
+                      <wcppizzacartitem prod="cart_entry.pi" description="true" dots="false" price="false"></wcppizzacartitem>
+                    </div>
                   </div>
-                </div>
-              </td>
-              <td>
-                <div class="grid-flex grid-valign-middle">
-                  <input type="number" class="quantity" min=1 max=99 ng-model="cart_entry.quantity"
-                    ng-blur="orderCtrl.fixQuantities(true)" ng-change="orderCtrl.fixQuantities(false)">
-                  <span class="cart-item-remove">
-                    <button ng-disabled="!pmenuCtrl.is_addition" name="remove"
-                      ng-click="orderCtrl.ScrollTop(); orderCtrl.RemoveFromOrder(cart_entry)"
-                      class="button-remove">X</button>
-                  </span>
-                  <span ng-if="cart_entry.can_edit" class="cart-item-remove">
-                    <button name="edit" ng-disabled="pmenuCtrl.selection"
-                      ng-click="orderCtrl.ScrollTop(); pmenuCtrl.EditCartEntry(cart_entry)" class="button-sml">
-                      <div class="icon-pencil"></div>
-                    </button>
-                  </span>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+                </td>
+                <td>
+                  <div class="grid-flex grid-valign-middle">
+                    <input type="number" class="quantity" min=1 max=99 ng-model="cart_entry.quantity" ng-blur="orderCtrl.fixQuantities(true)" ng-change="orderCtrl.fixQuantities(false)">
+                    <span class="cart-item-remove">
+                      <button ng-disabled="!pmenuCtrl.is_addition" name="remove" ng-click="orderCtrl.ScrollTop(); orderCtrl.RemoveFromOrder(cart_entry)" class="button-remove">X</button>
+                    </span>
+                    <span ng-if="cart_entry.can_edit" class="cart-item-remove">
+                      <button name="edit" ng-disabled="pmenuCtrl.selection" ng-click="orderCtrl.ScrollTop(); pmenuCtrl.EditCartEntry(cart_entry)" class="button-sml"><div class="icon-pencil"></div></button>
+                    </span>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
     </div>
     <div class="order-nav" ng-hide="pmenuCtrl.selection">
-      <h5 class="order-nav-item float--right" ng-if="orderCtrl.s.num_pizza === 0 && orderCtrl.s.stage === 1">First,
-        click on an item above to add it to your order</h5>
-      <button type="submit" class="btn scrolltotop" ng-show="orderCtrl.HasPreviousStage()"
-        ng-click="orderCtrl.PreviousStage()">Previous</button>
-      <button type="submit" class="btn scrolltotop" ng-disabled="orderCtrl.s.num_pizza === 0"
-        ng-show="orderCtrl.HasNextStage() && orderCtrl.s.num_pizza >= 1"
-        ng-click="pmenuCtrl.UnsetProduct(); orderCtrl.NextStage()">Next</button>
+      <h5 class="order-nav-item float--right" ng-if="orderCtrl.s.num_pizza === 0 && orderCtrl.s.stage === 1">First, click on an item above to add it to your order</h5>
+      <button type="submit" class="btn scrolltotop" ng-show="orderCtrl.HasPreviousStage()" ng-click="orderCtrl.PreviousStage()">Previous</button>
+      <button type="submit" class="btn scrolltotop" ng-disabled="orderCtrl.s.num_pizza === 0" ng-show="orderCtrl.HasNextStage() && orderCtrl.s.num_pizza >= 1" ng-click="pmenuCtrl.UnsetProduct(); orderCtrl.NextStage()">Next</button>
     </div>
   </div>
   <div ng-show="orderCtrl.s.stage === 3">
     <h3 class="flush--top">Tell us a little about you.</h3>
-    All information is used solely to facilitate the getting of your pizza to you. We don't sell or share customer
-    information, ever.
-    <div class="wpcf7-response-output wpcf7-mail-sent-ng" ng-if="orderCtrl.s.submit_failed">There was an error
-      submitting your order. This is generally caused by a bad email address. Please check your information and try
-      again.</div>
+    All information is used solely to facilitate the getting of your pizza to you. We don't sell or share customer information, ever.
+    <div class="wpcf7-response-output wpcf7-mail-sent-ng" ng-if="orderCtrl.s.submit_failed">There was an error submitting your order. This is generally caused by a bad email address. Please check your information and try again.</div>
     <form novalidate name="stage3">
       <span class="flexbox">
         <span class="flexbox__item one-half">
           <label for="customer_name_first">
             <span class="customer-name-text">First Name:</span>
           </label>
-          <input type="text" name="fname" id="customer_name_first" size="40" ng-model="orderCtrl.s.customer_name_first"
-            ng-change="orderCtrl.ChangedContactInfo()" autocomplete="given-name" required>
+          <input type="text" name="fname" id="customer_name_first" size="40" ng-model="orderCtrl.s.customer_name_first" ng-change="orderCtrl.ChangedContactInfo()" autocomplete="given-name" required>
         </span>
         <span class="flexbox__item one-half soft-half--left">
           <label for="customer_name_last">
             <span class="customer-name-text">Family Name:</span>
           </label>
-          <input type="text" name="lname" id="customer_name_last" size="40" ng-model="orderCtrl.s.customer_name_last"
-            ng-change="orderCtrl.ChangedContactInfo()" autocomplete="family-name" required>
+          <input type="text" name="lname" id="customer_name_last" size="40" ng-model="orderCtrl.s.customer_name_last" ng-change="orderCtrl.ChangedContactInfo()" autocomplete="family-name" required>
         </span>
       </span>
       <label for="mobilenum">
         <span class="phone-number-text">Mobile Phone Number:</span>
       </label>
       <span class="phonenum">
-        <input jqmaskedphone type="tel" id="mobilenum" name="phone_number" value="" size="40"
-          ng-model="orderCtrl.s.phone_number" ng-change="orderCtrl.ChangedContactInfo()" autocomplete="tel" required>
+        <input jqmaskedphone type="tel" id="mobilenum" name="phone_number" value="" size="40" ng-model="orderCtrl.s.phone_number" ng-change="orderCtrl.ChangedContactInfo()" autocomplete="tel" required>
       </span>
       <label for="user_email">
         <span class="user-email-text">E-mail Address:</span>
-      </label>
+      </label>        
       <span class="user-email">
-        <input type="email" name="user_email" id="user_email" value="" size="40" ng-model="orderCtrl.s.email_address"
-          ng-change="orderCtrl.ChangedContactInfo()" ng-pattern="orderCtrl.s.EMAIL_REGEX" autocomplete="email" required>
+        <input type="email" name="user_email" id="user_email" value="" size="40" ng-model="orderCtrl.s.email_address" ng-change="orderCtrl.ChangedContactInfo()" ng-pattern="orderCtrl.s.EMAIL_REGEX" autocomplete="email" required>
       </span>
       <div class="user-email-tip"></div>
       <label for="referral_info">
         <span class="referral-text">Referral information:</span>
       </label>
       <span class="referral-info">
-        <input type="text" name="referral_info" id="referral_info" value="" size="40" ng-model="orderCtrl.s.referral"
-          ng-change="orderCtrl.ChangedEscapableInfo()">
+        <input type="text" name="referral_info" id="referral_info" value="" size="40" ng-model="orderCtrl.s.referral" ng-change="orderCtrl.ChangedEscapableInfo()">
       </span>
     </form>
     <div class="order-nav">
-      <button type="submit" class="btn scrolltotop" ng-show="orderCtrl.HasPreviousStage()"
-        ng-click="orderCtrl.PreviousStage()">Previous</button>
-      <button type="submit" class="btn scrolltotop" ng-disabled="!stage3.$valid || orderCtrl.s.submit_failed"
-        ng-show="orderCtrl.HasNextStage()"
-        ng-click="orderCtrl.NextStage()">{{(!stage3.$valid || orderCtrl.s.submit_failed) ? "Fill out above" : "Next"}}</button>
+      <button type="submit" class="btn scrolltotop" ng-show="orderCtrl.HasPreviousStage()" ng-click="orderCtrl.PreviousStage()">Previous</button>
+      <button type="submit" class="btn scrolltotop" ng-disabled="!stage3.$valid || orderCtrl.s.submit_failed" ng-show="orderCtrl.HasNextStage()" ng-click="orderCtrl.NextStage()">{{(!stage3.$valid || orderCtrl.s.submit_failed) ? "Fill out above" : "Next"}}</button>
     </div>
   </div>
   <div ng-show="orderCtrl.s.stage === 4">
     <h3 class="flush--top">How and when would you like your order?</h3>
     <span>Requested Service:</span>
     <form novalidate name="stage4">
-      <div class="flexitems">
-        <div class="flexitem" ng-repeat="service in orderCtrl.CONFIG.SERVICE_TYPES track by $index">
-          <div ng-if="orderCtrl.s.service_type_functors[$index](orderCtrl.s)">
-            <label><input type="radio"
-                ng-change="orderCtrl.ValidateDate(); orderCtrl.ClearAddress(); orderCtrl.ClearSlicing();"
-                ng-model="orderCtrl.s.service_type" ng-value="service[1]">
-              {{service[0]}}</label>
-          </div>
+    <div class="flexitems">
+      <div class="flexitem" ng-repeat="service in orderCtrl.CONFIG.SERVICE_TYPES track by $index">
+        <div ng-if="orderCtrl.s.service_type_functors[$index](orderCtrl.s)">
+          <label><input type="radio" ng-change="orderCtrl.ValidateDate(); orderCtrl.ClearAddress(); orderCtrl.ClearSlicing();" ng-model="orderCtrl.s.service_type" ng-value="service[1]">
+          {{service[0]}}</label>
         </div>
       </div>
-      <span ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DINEIN">
-        <br /><label><input type="checkbox" ng-model="orderCtrl.s.acknowledge_dine_in_terms">
-          REQUIRED: For the health and safety of our staff and fellow guests, you and all members of your party
-          understand and agree to:
-          <ul>
-            <li>Have been following good social distancing practices.</li>
-            <li>Are actively monitoring for any possible COVID-19 symptoms and have not had any.</li>
-            <li>Are NOT knowlingly sick or contagious.</li>
-            <li>Will wear a mask whilst on premise, excepting whilst eating/drinking.</li>
-            <li>Will maintain a safe distance from our crew.</li>
-            <li>Parties are limited to 5 persons.</li>
-            <li>Table reservations last 60 minutes.</li>
-          </ul></label>
+    </div>
+    <span ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DINEIN">
+      <br /><label><input type="checkbox" ng-model="orderCtrl.s.acknowledge_dine_in_terms">
+      REQUIRED: For the health and safety of our staff and fellow guests, you and all members of your party understand and agree to:
+    <ul><li>Have been following good social distancing practices.</li>
+      <li>Are actively monitoring for any possible COVID-19 symptoms and have not had any.</li>
+      <li>Are NOT knowingly sick or contagious.</li>
+      <li>Will wear a mask whilst on premise, excepting whilst eating/drinking.</li>
+      <li>Will maintain a safe distance from our crew.</li>
+      <li>Parties are limited to 5 persons.</li>
+      <li>Table reservations last 60 minutes.</li>
+      </ul></label>
+    </span>
+    <label for="service-date">
+      <span class="service-date-text">Date</span>
+    </label>
+    <span class="service-date">
+      <input type="text" name="service-date" id="service-date" value="" size="40" ng-model="orderCtrl.s.date_string" ng-change="orderCtrl.ValidateDate()" jqdatepicker orderinfo="orderCtrl" required autocomplete="off">
+    </span>
+    <label for="service-time">
+      <span class="service-time-text">Time</span>
+    </label>
+    <span class="service-time">
+      <select ng-disabled="!orderCtrl.s.date_valid" id="service-time" name="service-time" ng-model="orderCtrl.s.service_time" ng-options="servicetime | MinutesToPrintTime:orderCtrl.s.service_type for servicetime in orderCtrl.s.service_times" ng-change="orderCtrl.ServiceTimeChanged()">
+      </select>
+    </span>
+    <div class="wpcf7-response-output wpcf7-mail-sent-ng" ng-if="orderCtrl.s.selected_time_timeout">The previously selected service time has expired.</div>
+    <span class="flexbox" ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && !orderCtrl.s.is_address_validated">
+      <span class="flexbox__item one-whole">Delivery Information:</span>
+    </span>
+    <span class="flexbox" ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && !orderCtrl.s.is_address_validated">
+      <span class="flexbox__item one-half">
+        <label for="address-line1">
+          <span class="delivery-address-text">Address:</span>
+        </label>
+        <input type="text" name="address" id="address-line1" size="40" ng-model="orderCtrl.s.delivery_address" autocomplete="shipping address-line1" address>
       </span>
-      <label for="service-date">
-        <span class="service-date-text">Date</span>
-      </label>
-      <span class="service-date">
-        <input type="text" name="service-date" id="service-date" value="" size="40" ng-model="orderCtrl.s.date_string"
-          ng-change="orderCtrl.ValidateDate()" jqdatepicker orderinfo="orderCtrl" required autocomplete="off">
+      <span class="flexbox__item one-quarter soft-half--sides">
+        <label for="address-line2">
+          <span class="delivery-address-text">Apt/Unit:</span>
+        </label>
+        <input type="text" name="address-line2" size="10" id="address-line2" ng-model="orderCtrl.s.delivery_address_2" autocomplete="shipping address-line2">
       </span>
-      <label for="service-time">
-        <span class="service-time-text">Time</span>
-      </label>
-      <span class="service-time">
-        <select ng-disabled="!orderCtrl.s.date_valid" id="service-time" name="service-time"
-          ng-model="orderCtrl.s.service_time"
-          ng-options="servicetime | MinutesToPrintTime:orderCtrl.s.service_type for servicetime in orderCtrl.s.service_times"
-          ng-change="orderCtrl.ServiceTimeChanged()">
-        </select>
-      </span>
-      <div class="wpcf7-response-output wpcf7-mail-sent-ng" ng-if="orderCtrl.s.selected_time_timeout">The previously
-        selected service time has expired.</div>
-      <span class="flexbox"
-        ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && !orderCtrl.s.is_address_validated">
-        <span class="flexbox__item one-whole">Delivery Information:</span>
-      </span>
-      <span class="flexbox"
-        ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && !orderCtrl.s.is_address_validated">
-        <span class="flexbox__item one-half">
-          <label for="address-line1">
-            <span class="delivery-address-text">Address:</span>
-          </label>
-          <input type="text" name="address" id="address-line1" size="40" ng-model="orderCtrl.s.delivery_address"
-            autocomplete="shipping address-line1" address>
-        </span>
-        <span class="flexbox__item one-quarter soft-half--sides">
-          <label for="address-line2">
-            <span class="delivery-address-text">Apt/Unit:</span>
-          </label>
-          <input type="text" name="address-line2" size="10" id="address-line2" ng-model="orderCtrl.s.delivery_address_2"
-            autocomplete="shipping address-line2">
-        </span>
-        <span class="flexbox__item one-quarter">
-          <label for="zipcode">
-            <span class="delivery-zipcode-text">Zip Code:</span>
-          </label>
-          <span class="zipcode">
-            <input type="text" name="zipcode" id="zipcode" size="10" ng-model="orderCtrl.s.delivery_zipcode"
-              autocomplete="postal-code" zipcode>
-          </span>
+      <span class="flexbox__item one-quarter">
+        <label for="zipcode" >
+          <span class="delivery-zipcode-text">Zip Code:</span>
+        </label>
+        <span class="zipcode">
+          <input type="text" name="zipcode" id="zipcode" size="10" ng-model="orderCtrl.s.delivery_zipcode" autocomplete="postal-code" zipcode>
         </span>
       </span>
-      <span class="flexbox" ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY">
-        <span class="flexbox__item one-whole">
-          <label for="delivery-instructions-text">
-            <span class="delivery-instructions-text">Delivery Instructions (optional):</span>
-          </label>
-          <input type="text" id="delivery-instructions-text" name="delivery_instructions" size="40"
-            ng-model="orderCtrl.s.delivery_instructions" ng-change="orderCtrl.ChangedEscapableInfo()">
-        </span>
+    </span>
+    <span class="flexbox" ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY">
+      <span class="flexbox__item one-whole">
+        <label for="delivery-instructions-text">
+          <span class="delivery-instructions-text">Delivery Instructions (optional):</span>
+        </label>
+        <input type="text" id="delivery-instructions-text" name="delivery_instructions" size="40" ng-model="orderCtrl.s.delivery_instructions" ng-change="orderCtrl.ChangedEscapableInfo()">
       </span>
-      <button type="submit" class="btn"
-        ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && !(stage4.address.$error.address || stage4.zipcode.$error.zipcode) && !orderCtrl.s.is_address_validated"
-        ng-click="orderCtrl.ValidateDeliveryAddress()">Validate Delivery Address</button>
-      <span ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && orderCtrl.s.validated_delivery_address"
-        class="">
-        <div class="wpcf7-response-output wpcf7-mail-sent-ok" ng-show="orderCtrl.s.is_address_validated">
-          Found an address in our delivery area: <br />
-          <span class="title cart">{{orderCtrl.s.validated_delivery_address}} <button name="remove"
-              ng-click="orderCtrl.ClearAddress()" class="button-remove">X</button></span>
-        </div>
-        <div class="wpcf7-response-output wpcf7-mail-sent-ng" ng-show="!orderCtrl.s.is_address_validated">The address
-          {{orderCtrl.s.validated_delivery_address}} isn't in our <a target="_blank"
-            ng-href="{{orderCtrl.CONFIG.DELIVERY_LINK}}">delivery area</a></div>
-      </span>
-      <div class="wpcf7-response-output wpcf7-mail-sent-ng" ng-show="orderCtrl.s.address_invalid">Unable to determine
-        the specified address. Send us a text or email if you continue having issues.</div>
+    </span>
+    <button type="submit" class="btn" ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && !(stage4.address.$error.address || stage4.zipcode.$error.zipcode) && !orderCtrl.s.is_address_validated" ng-click="orderCtrl.ValidateDeliveryAddress()">Validate Delivery Address</button>
+    <span ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && orderCtrl.s.validated_delivery_address" class="">
+      <div class="wpcf7-response-output wpcf7-mail-sent-ok" ng-show="orderCtrl.s.is_address_validated">
+        Found an address in our delivery area: <br />
+        <span class="title cart">{{orderCtrl.s.validated_delivery_address}} <button name="remove" ng-click="orderCtrl.ClearAddress()" class="button-remove">X</button></span>
+      </div>
+      <div class="wpcf7-response-output wpcf7-mail-sent-ng" ng-show="!orderCtrl.s.is_address_validated">The address {{orderCtrl.s.validated_delivery_address}} isn't in our <a target="_blank" ng-href="{{orderCtrl.CONFIG.DELIVERY_LINK}}">delivery area</a></div>
+    </span>
+    <div class="wpcf7-response-output wpcf7-mail-sent-ng" ng-show="orderCtrl.s.address_invalid">Unable to determine the specified address. Send us a text or email if you continue having issues.</div>
     </form>
     <span ng-show="orderCtrl.s.service_type === orderCtrl.CONFIG.PICKUP && orderCtrl.CONFIG.ALLOW_SLICING">
       <br /><label><input type="checkbox" ng-model="orderCtrl.s.slice_pizzas">
-        Please slice my pizzas (not recommended)</label>
-      <span ng-show="orderCtrl.s.slice_pizzas">Crust, like any good bread, should be given time to rest after baking.
-        Slicing your pizzas as they come out of the oven also causes the trapped moisture at the top of the pizza to
-        permiate the crust itself. If you do stick with this option, we'd recommend crisping up your slice on a hot
-        skillet, as needed.</span>
+      Please slice my pizzas (not recommended)</label>
+      <span ng-show="orderCtrl.s.slice_pizzas">Crust, like any good bread, should be given time to rest after baking. Slicing your pizzas as they come out of the oven also causes the trapped moisture at the top of the pizza to permiate the crust itself. If you do stick with this option, we'd recommend crisping up your slice on a hot skillet, as needed.</span>
     </span>
     <div class="order-nav">
-      <button type="submit" class="btn scrolltotop" ng-show="orderCtrl.HasPreviousStage()"
-        ng-click="orderCtrl.PreviousStage()">Previous</button>
-      <button type="submit" class="btn scrolltotop"
-        ng-disabled="!orderCtrl.s.date_valid || (orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && (!orderCtrl.s.is_address_validated)) || (orderCtrl.s.service_type == orderCtrl.CONFIG.DINEIN && !orderCtrl.s.acknowledge_dine_in_terms)"
-        ng-show="orderCtrl.HasNextStage()"
-        ng-click="orderCtrl.NextStage(); orderCtrl.ClearTimeoutFlag();">{{(!orderCtrl.s.date_valid || (orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && (!orderCtrl.s.is_address_validated))) ? "Pick a date & time" : "Next"}}</button>
+      <button type="submit" class="btn scrolltotop" ng-show="orderCtrl.HasPreviousStage()" ng-click="orderCtrl.PreviousStage()">Previous</button>
+      <button type="submit" class="btn scrolltotop" ng-disabled="!orderCtrl.s.date_valid || (orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && (!orderCtrl.s.is_address_validated)) || (orderCtrl.s.service_type == orderCtrl.CONFIG.DINEIN && !orderCtrl.s.acknowledge_dine_in_terms)" ng-show="orderCtrl.HasNextStage()" ng-click="orderCtrl.NextStage(); orderCtrl.ClearTimeoutFlag();">{{(!orderCtrl.s.date_valid || (orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && (!orderCtrl.s.is_address_validated))) ? "Pick a date & time" : "Next"}}</button>
     </div>
   </div>
   <div ng-show="orderCtrl.s.stage === 5 && !orderCtrl.s.isProcessing">
-    <h3 class="flush--top">Everything look right?</h3>
-    <table>
-      <tr>
-        <td>Name</td>
-        <td>{{orderCtrl.s.customer_name_first}} {{orderCtrl.s.customer_name_last}}</td>
-      </tr>
-      <tr>
-        <td>Mobile Number</td>
-        <td>{{orderCtrl.s.phone_number}}</td>
-      </tr>
-      <tr>
-        <td>E-Mail</td>
-        <td>{{orderCtrl.s.email_address}}</td>
-      </tr>
-      <tr>
-        <td>Service</td>
-        <td>{{orderCtrl.CONFIG.SERVICE_TYPES[orderCtrl.s.service_type][0]}} on {{orderCtrl.s.date_string}} at
-          {{orderCtrl.s.service_time | MinutesToPrintTime : orderCtrl.s.service_type}}</td>
-      </tr>
-      <tr ng-if="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY">
-        <td>Address</td>
-        <td>
-          {{orderCtrl.s.validated_delivery_address}}{{orderCtrl.s.delivery_address_2 ? ", " + orderCtrl.s.delivery_address_2 : ""}}
-        </td>
-      </tr>
-    </table>
-    <div class="cart">
-      <div class="content border-bottom border-none-at-medium">
-        <table
-          class="cart-table table-collapse-until-medium table-border-rows table-pad-line valign-middle header-color">
-          <thead>
-            <tr>
-              <th>Item</th>
-              <th class="hide-until-medium">
-                <div class="grid-flex grid-valign-middle">
-                  <span class="column no-shrink">Quantity</span>
-                  <span class="column no-shrink">×</span>
-                  <span class="column no-shrink">Price</span>
-                </div>
-              </th>
-              <th class="align-right">Subtotal</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr ng-repeat="cart_item in orderCtrl.s.linear_cart" class="cart-item">
-              <td class="cart-item-description">
-                <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
-                  <div class="menu-list__item">
-                    <wcppizzacartitem prod="cart_item.pi" description="true" dots="false" price="false">
-                    </wcppizzacartitem>
-                  </div>
-                </div>
-              </td>
-              <td class="cart-item-quantity-price no-wrap">
-                <div class="grid-flex grid-valign-middle">
-                  <span class="column no-shrink menu-list__item-price">{{cart_item.quantity}}</span>
-                  <span class="column no-shrink">×</span>
-                  <span class="column no-shrink menu-list__item-price">{{cart_item.pi.price}}</span>
-                </div>
-              </td>
-              <td class="cart-item-subtotal no-wrap"><span
-                  class="menu-list__item-price">{{cart_item.pi.price * cart_item.quantity | number:2}}</span></td>
-            </tr>
-            <tr class="cart-item" ng-if="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY">
-              <td class="cart-item-description">
-                <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
-                  <div class="cart-item-title-subtitle column menu-list__item">
-                    <h4 class="menu-list__item-title"><span class="item_title">Delivery Fee<span
-                          ng-show="orderCtrl.s.delivery_fee === 0"> (waived)</span></span></h4>
-                  </div>
-                </div>
-              </td>
-              <td class="cart-item-quantity-price no-wrap"></td>
-              <td class="cart-item-subtotal no-wrap">
-                <span ng-show="orderCtrl.s.delivery_fee === 0"
-                  class="menu-list__item-price"><strike>{{5 | number:2}}</strike></span>
-                <span ng-show="orderCtrl.s.delivery_fee !== 0"
-                  class="menu-list__item-price">{{orderCtrl.s.delivery_fee | number:2}}</span>
-              </td>
-            </tr>
-            <tr ng-if="orderCtrl.s.credit.validation_successful && orderCtrl.s.credit.type == 'DISCOUNT'"
-              class="cart-item">
-              <td class="cart-item-description">
-                <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
-                  <div class="cart-item-title-subtitle column menu-list__item">
-                    <h4 class="menu-list__item-title"><span class="item_title">Discount Code Applied
-                        ({{orderCtrl.s.credit.code}})</span></h4>
-                  </div>
-                </div>
-              </td>
-              <td class="cart-item-quantity-price no-wrap"></td>
-              <td class="cart-item-subtotal no-wrap"><span
-                  class="menu-list__item-price">-{{orderCtrl.s.credit.amount_used | number: 2}}</span></td>
-            </tr>
-            <tr class="cart-item">
-              <td class="cart-item-description">
-                <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
-                  <div class="cart-item-title-subtitle column menu-list__item">
-                    <h4 class="menu-list__item-title"><span class="item_title">Sales Tax
-                        ({{orderCtrl.CONFIG.TAX_RATE * 100 | number:1}}%)</span></h4>
-                  </div>
-                </div>
-              </td>
-              <td class="cart-item-quantity-price no-wrap"></td>
-              <td class="cart-item-subtotal no-wrap"><span
-                  class="menu-list__item-price">{{orderCtrl.s.computed_tax | number:2}}</span></td>
-            </tr>
-            <tr class="cart-item" ng-hide="orderCtrl.s.tip_value === 0">
-              <td class="cart-item-description">
-                <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
-                  <div class="cart-item-title-subtitle column menu-list__item">
-                    <h4 class="menu-list__item-title"><span class="item_title">Gratuity*</span></h4>
-                  </div>
-                </div>
-              </td>
-              <td class="cart-item-quantity-price no-wrap"></td>
-              <td class="cart-item-subtotal no-wrap"><span
-                  class="menu-list__item-price">{{orderCtrl.s.tip_value | number:2}}</span></td>
-            </tr>
-            <tr ng-if="orderCtrl.s.credit.validation_successful && orderCtrl.s.credit.type == 'MONEY'"
-              class="cart-item">
-              <td class="cart-item-description">
-                <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
-                  <div class="cart-item-title-subtitle column menu-list__item">
-                    <h4 class="menu-list__item-title"><span class="item_title">Digital Gift Applied
-                        ({{orderCtrl.s.credit.code}})</span></h4>
-                  </div>
-                </div>
-              </td>
-              <td class="cart-item-quantity-price no-wrap"></td>
-              <td class="cart-item-subtotal no-wrap"><span
-                  class="menu-list__item-price">-{{orderCtrl.s.credit.amount_used | number: 2}}</span></td>
-            </tr>
-            <tr class="cart-item">
-              <td class="cart-item-description">
-                <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
-                  <div class="cart-item-title-subtitle column menu-list__item">
-                    <h4 class="menu-list__item-title"><span class="item_title">Total</span></h4>
-                  </div>
-                </div>
-              </td>
-              <td class="cart-item-quantity-price no-wrap"></td>
-              <td class="cart-item-subtotal no-wrap"><span
-                  class="menu-list__item-price">{{orderCtrl.s.balance | number: 2}}</span></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-    <div ng-show="orderCtrl.s.service_type !== orderCtrl.CONFIG.DELIVERY && !orderCtrl.s.credit.validation_successful">
-      <label><input type="checkbox" ng-model="orderCtrl.s.acknowledge_instructions_dialogue"
-          ng-change="orderCtrl.ClearSpecialInstructions()">
-        I need to specify some special instructions (which may delay my order or change its cost) or wish to pay
-        later.</label>
-      <textarea ng-show="orderCtrl.s.acknowledge_instructions_dialogue" ng-model="orderCtrl.s.special_instructions"
-        ng-change="orderCtrl.ChangedEscapableInfo()"></textarea>
-    </div>
-    <div ng-repeat="res in orderCtrl.s.special_instructions_responses"
-      class="wpcf7-response-output wpcf7-validation-errors">{{res}}</div>
-    <div class="order-nav">
-      <span ng-show="false" cf7bridge class="cf7bridge scrolltotop" orderinfo="orderCtrl"></span>
-      <button type="submit" class="btn scrolltotop" ng-show="orderCtrl.HasPreviousStage()"
-        ng-click="orderCtrl.PreviousStage()">Previous</button>
-      <button type="submit" class="btn scrolltotop"
-        ng-show="orderCtrl.HasNextStage() && !orderCtrl.s.acknowledge_instructions_dialogue"
-        ng-click="orderCtrl.NextStage();">Next</button>
-      <button type="submit" class="btn scrolltotop" ng-disabled="orderCtrl.s.disableorder"
-        ng-show="orderCtrl.s.acknowledge_instructions_dialogue" ng-click="orderCtrl.SubmitToWario()">Submit
-        Order</button>
-    </div>
-    <div ng-hide="orderCtrl.s.tip_value === 0">* Gratuity is shared among the entire team.</div>
-  </div>
-  <div ng-if="orderCtrl.s.stage === 6">
-    <div ng-hide="orderCtrl.s.isProcessing">
-      <h3 ng-show="orderCtrl.computeDefaultTipIfClean()" class="flush--top">Add gratuity to your order and settle up!
-      </h3>
-      <h5>{{orderCtrl.CONFIG.TIP_PREAMBLE}}</h5>
-      <div class="flexbox">
-        <div ng-hide="(orderCtrl.s.autograt === 0 && $index === 3) || (orderCtrl.s.autograt !== 0 && $index === 0)"
-          class="flexbox__item one-third soft-quarter" ng-repeat="tip in orderCtrl.s.tip_options">
-          <button ng-click="orderCtrl.s.selectPercentageTip($index)"
-            ng-class="{btn:true, tipbtn:true, 'flexbox__item':true, 'one-whole':true, 'selected':orderCtrl.s.selected_tip==$index}">
-            <h3 class="flush--bottom">{{tip * 100| number:0}}&#37;</h3>
-            <h5 class="flush--top">
-              {{(orderCtrl.s.computed_subtotal + orderCtrl.s.delivery_fee  + orderCtrl.s.computed_tax) * tip | number: 2}}
-            </h5>
-          </button>
-        </div>
-      </div>
-      <div class="flexbox">
-        <div class="flexbox__item one-third soft-quarter">
-          <button ng-click="orderCtrl.s.selectCustomTip()"
-            ng-class="{btn:true, tipbtn:true, 'flexbox__item':true, 'one-whole':true, 'selected':orderCtrl.s.show_custom_tip_input}">
-            <h3 class="flush">Custom Tip Amount</h3>
-            <input ng-show="orderCtrl.s.show_custom_tip_input" type="number" class="quantity" min=0
-              ng-model="orderCtrl.s.custom_tip_value" ng-blur="orderCtrl.updateCustomTip()">
-          </button>
-        </div>
-      </div>
+      <h3 class="flush--top">Everything look right?</h3>
+      <table>
+        <tr>
+          <td>Name</td>
+          <td>{{orderCtrl.s.customer_name_first}} {{orderCtrl.s.customer_name_last}}</td>
+        </tr>
+        <tr>
+          <td>Mobile Number</td>
+          <td>{{orderCtrl.s.phone_number}}</td>
+        </tr>
+        <tr>
+          <td>E-Mail</td>
+          <td>{{orderCtrl.s.email_address}}</td>
+        </tr>
+        <tr>
+          <td>Service</td>
+          <td>{{orderCtrl.CONFIG.SERVICE_TYPES[orderCtrl.s.service_type][0]}} on {{orderCtrl.s.date_string}} at {{orderCtrl.s.service_time | MinutesToPrintTime : orderCtrl.s.service_type}}</td>
+        </tr>
+        <tr ng-if="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY">
+          <td>Address</td>
+          <td>{{orderCtrl.s.validated_delivery_address}}{{orderCtrl.s.delivery_address_2 ? ", " + orderCtrl.s.delivery_address_2 : ""}}</td>
+        </tr>
+      </table>
       <div class="cart">
         <div class="content border-bottom border-none-at-medium">
-          <table
-            class="cart-table table-collapse-until-medium table-border-rows table-pad-line valign-middle header-color">
+          <table class="cart-table table-collapse-until-medium table-border-rows table-pad-line valign-middle header-color">
             <thead>
               <tr>
                 <th>Item</th>
@@ -523,8 +280,7 @@
                 <td class="cart-item-description">
                   <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
                     <div class="menu-list__item">
-                      <wcppizzacartitem prod="cart_item.pi" description="true" dots="false" price="false">
-                      </wcppizzacartitem>
+                      <wcppizzacartitem prod="cart_item.pi" description="true" dots="false" price="false"></wcppizzacartitem>
                     </div>
                   </div>
                 </td>
@@ -535,52 +291,43 @@
                     <span class="column no-shrink menu-list__item-price">{{cart_item.pi.price}}</span>
                   </div>
                 </td>
-                <td class="cart-item-subtotal no-wrap"><span
-                    class="menu-list__item-price">{{cart_item.pi.price * cart_item.quantity | number:2}}</span></td>
+                <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{cart_item.pi.price * cart_item.quantity | number:2}}</span></td>
               </tr>
               <tr class="cart-item" ng-if="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY">
                 <td class="cart-item-description">
                   <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
                     <div class="cart-item-title-subtitle column menu-list__item">
-                      <h4 class="menu-list__item-title"><span class="item_title">Delivery Fee<span
-                            ng-show="orderCtrl.s.delivery_fee === 0"> (waived)</span></span></h4>
+                      <h4 class="menu-list__item-title"><span class="item_title">Delivery Fee<span ng-show="orderCtrl.s.delivery_fee === 0"> (waived)</span></span></h4>
                     </div>
                   </div>
                 </td>
                 <td class="cart-item-quantity-price no-wrap"></td>
                 <td class="cart-item-subtotal no-wrap">
-                  <span ng-show="orderCtrl.s.delivery_fee === 0"
-                    class="menu-list__item-price"><strike>{{5 | number:2}}</strike></span>
-                  <span ng-show="orderCtrl.s.delivery_fee !== 0"
-                    class="menu-list__item-price">{{orderCtrl.s.delivery_fee | number:2}}</span>
+                  <span ng-show="orderCtrl.s.delivery_fee === 0" class="menu-list__item-price"><strike>{{5 | number:2}}</strike></span>
+                  <span ng-show="orderCtrl.s.delivery_fee !== 0" class="menu-list__item-price">{{orderCtrl.s.delivery_fee | number:2}}</span>
                 </td>
               </tr>
-              <tr ng-if="orderCtrl.s.credit.validation_successful && orderCtrl.s.credit.type == 'DISCOUNT'"
-                class="cart-item">
+              <tr ng-if="orderCtrl.s.credit.validation_successful && orderCtrl.s.credit.type == 'DISCOUNT'" class="cart-item">
                 <td class="cart-item-description">
                   <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
                     <div class="cart-item-title-subtitle column menu-list__item">
-                      <h4 class="menu-list__item-title"><span class="item_title">Discount Code Applied
-                          ({{orderCtrl.s.credit.code}})</span></h4>
+                      <h4 class="menu-list__item-title"><span class="item_title">Discount Code Applied ({{orderCtrl.s.credit.code}})</span></h4>
                     </div>
                   </div>
                 </td>
                 <td class="cart-item-quantity-price no-wrap"></td>
-                <td class="cart-item-subtotal no-wrap"><span
-                    class="menu-list__item-price">-{{orderCtrl.s.credit.amount_used | number: 2}}</span></td>
+                <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">-{{orderCtrl.s.credit.amount_used | number: 2}}</span></td>
               </tr>
               <tr class="cart-item">
                 <td class="cart-item-description">
                   <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
                     <div class="cart-item-title-subtitle column menu-list__item">
-                      <h4 class="menu-list__item-title"><span class="item_title">Sales Tax
-                          ({{orderCtrl.CONFIG.TAX_RATE * 100 | number:1}}%)</span></h4>
+                      <h4 class="menu-list__item-title"><span class="item_title">Sales Tax ({{orderCtrl.CONFIG.TAX_RATE * 100 | number:1}}%)</span></h4>
                     </div>
                   </div>
                 </td>
                 <td class="cart-item-quantity-price no-wrap"></td>
-                <td class="cart-item-subtotal no-wrap"><span
-                    class="menu-list__item-price">{{orderCtrl.s.computed_tax | number:2}}</span></td>
+                <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{orderCtrl.s.computed_tax | number:2}}</span></td>
               </tr>
               <tr class="cart-item" ng-hide="orderCtrl.s.tip_value === 0">
                 <td class="cart-item-description">
@@ -591,22 +338,18 @@
                   </div>
                 </td>
                 <td class="cart-item-quantity-price no-wrap"></td>
-                <td class="cart-item-subtotal no-wrap"><span
-                    class="menu-list__item-price">{{orderCtrl.s.tip_value | number:2}}</span></td>
+                <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{orderCtrl.s.tip_value | number:2}}</span></td>
               </tr>
-              <tr ng-if="orderCtrl.s.credit.validation_successful && orderCtrl.s.credit.type == 'MONEY'"
-                class="cart-item">
+              <tr ng-if="orderCtrl.s.credit.validation_successful && orderCtrl.s.credit.type == 'MONEY'" class="cart-item">
                 <td class="cart-item-description">
                   <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
                     <div class="cart-item-title-subtitle column menu-list__item">
-                      <h4 class="menu-list__item-title"><span class="item_title">Digital Gift Applied
-                          ({{orderCtrl.s.credit.code}})</span></h4>
+                      <h4 class="menu-list__item-title"><span class="item_title">Digital Gift Applied ({{orderCtrl.s.credit.code}})</span></h4>
                     </div>
                   </div>
                 </td>
                 <td class="cart-item-quantity-price no-wrap"></td>
-                <td class="cart-item-subtotal no-wrap"><span
-                    class="menu-list__item-price">-{{orderCtrl.s.credit.amount_used | number: 2}}</span></td>
+                <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">-{{orderCtrl.s.credit.amount_used | number: 2}}</span></td>
               </tr>
               <tr class="cart-item">
                 <td class="cart-item-description">
@@ -617,36 +360,168 @@
                   </div>
                 </td>
                 <td class="cart-item-quantity-price no-wrap"></td>
-                <td class="cart-item-subtotal no-wrap"><span
-                    class="menu-list__item-price">{{orderCtrl.s.balance | number: 2}}</span></td>
+                <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{orderCtrl.s.balance | number: 2}}</span></td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
-      <div class="wpcf7-response-output wpcf7-mail-sent-ng" ng-if="orderCtrl.s.selected_time_timeout">The previously
-        selected service time has expired. We've updated your service time to
-        {{orderCtrl.s.service_time | MinutesToPrintTime : orderCtrl.s.service_type}}.</div>
-      <div class="wpcf7-response-output wpcf7-mail-sent-ng" ng-if="orderCtrl.s.credit.validation_fail">Code entered
-        looks to be invalid. Please check your input and try again. Credit codes are case sensitive.</div>
+    <div ng-show="orderCtrl.s.service_type !== orderCtrl.CONFIG.DELIVERY && !orderCtrl.s.credit.validation_successful">
+      <label><input type="checkbox" ng-model="orderCtrl.s.acknowledge_instructions_dialogue" ng-change="orderCtrl.ClearSpecialInstructions()">
+      I need to specify some special instructions (which may delay my order or change its cost) or wish to pay later.</label>
+      <textarea ng-show="orderCtrl.s.acknowledge_instructions_dialogue" ng-model="orderCtrl.s.special_instructions" ng-change="orderCtrl.ChangedEscapableInfo()"></textarea>
+    </div>
+    <div ng-repeat="res in orderCtrl.s.special_instructions_responses" class="wpcf7-response-output wpcf7-validation-errors">{{res}}</div>
+    <div class="order-nav">
+      <span ng-show="false" cf7bridge class="cf7bridge scrolltotop" orderinfo="orderCtrl"></span>
+      <button type="submit" class="btn scrolltotop" ng-show="orderCtrl.HasPreviousStage()" ng-click="orderCtrl.PreviousStage()">Previous</button>
+      <button type="submit" class="btn scrolltotop" ng-show="orderCtrl.HasNextStage() && !orderCtrl.s.acknowledge_instructions_dialogue" ng-click="orderCtrl.NextStage();">Next</button>
+      <button type="submit" class="btn scrolltotop" ng-disabled="orderCtrl.s.disableorder" ng-show="orderCtrl.s.acknowledge_instructions_dialogue" ng-click="orderCtrl.SubmitToWario()">Submit Order</button>
+    </div>
+    <div ng-hide="orderCtrl.s.tip_value === 0">* Gratuity is shared among the entire team.</div>
+  </div>
+  <div ng-if="orderCtrl.s.stage === 6">
+    <div ng-hide="orderCtrl.s.isProcessing">
+      <h3 ng-show="orderCtrl.computeDefaultTipIfClean()" class="flush--top">Add gratuity to your order and settle up!</h3>
+      <h5>{{orderCtrl.CONFIG.TIP_PREAMBLE}}</h5>
+      <div class="flexbox">
+        <div ng-hide="(orderCtrl.s.autograt === 0 && $index === 3) || (orderCtrl.s.autograt !== 0 && $index === 0)" class="flexbox__item one-third soft-quarter"  ng-repeat="tip in orderCtrl.s.tip_options" >
+          <button ng-click="orderCtrl.s.selectPercentageTip($index)" ng-class="{btn:true, tipbtn:true, 'flexbox__item':true, 'one-whole':true, 'selected':orderCtrl.s.selected_tip==$index}" >
+            <h3 class="flush--bottom">{{tip * 100| number:0}}&#37;</h3>
+            <h5 class="flush--top">{{(orderCtrl.s.computed_subtotal + orderCtrl.s.delivery_fee  + orderCtrl.s.computed_tax) * tip | number: 2}}</h5>
+          </button>
+        </div>
+      </div>
+      <div class="flexbox">
+        <div class="flexbox__item one-third soft-quarter" >
+          <button ng-click="orderCtrl.s.selectCustomTip()" ng-class="{btn:true, tipbtn:true, 'flexbox__item':true, 'one-whole':true, 'selected':orderCtrl.s.show_custom_tip_input}" >
+            <h3 class="flush">Custom Tip Amount</h3>
+            <input ng-show="orderCtrl.s.show_custom_tip_input" type="number" class="quantity" min=0 ng-model="orderCtrl.s.custom_tip_value" ng-blur="orderCtrl.updateCustomTip()">
+          </button>
+        </div>
+      </div>
+      <div class="cart">
+        <div class="content border-bottom border-none-at-medium">
+          <table class="cart-table table-collapse-until-medium table-border-rows table-pad-line valign-middle header-color">
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th class="hide-until-medium">
+                  <div class="grid-flex grid-valign-middle">
+                    <span class="column no-shrink">Quantity</span>
+                    <span class="column no-shrink">×</span>
+                    <span class="column no-shrink">Price</span>
+                  </div>
+                </th>
+                <th class="align-right">Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-repeat="cart_item in orderCtrl.s.linear_cart" class="cart-item">
+                <td class="cart-item-description">
+                  <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
+                    <div class="menu-list__item">
+                      <wcppizzacartitem prod="cart_item.pi" description="true" dots="false" price="false"></wcppizzacartitem>
+                    </div>
+                  </div>
+                </td>
+                <td class="cart-item-quantity-price no-wrap">
+                  <div class="grid-flex grid-valign-middle">
+                    <span class="column no-shrink menu-list__item-price">{{cart_item.quantity}}</span>
+                    <span class="column no-shrink">×</span>
+                    <span class="column no-shrink menu-list__item-price">{{cart_item.pi.price}}</span>
+                  </div>
+                </td>
+                <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{cart_item.pi.price * cart_item.quantity | number:2}}</span></td>
+              </tr>
+              <tr class="cart-item" ng-if="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY">
+                <td class="cart-item-description">
+                  <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
+                    <div class="cart-item-title-subtitle column menu-list__item">
+                      <h4 class="menu-list__item-title"><span class="item_title">Delivery Fee<span ng-show="orderCtrl.s.delivery_fee === 0"> (waived)</span></span></h4>
+                    </div>
+                  </div>
+                </td>
+                <td class="cart-item-quantity-price no-wrap"></td>
+                <td class="cart-item-subtotal no-wrap">
+                  <span ng-show="orderCtrl.s.delivery_fee === 0" class="menu-list__item-price"><strike>{{5 | number:2}}</strike></span>
+                  <span ng-show="orderCtrl.s.delivery_fee !== 0" class="menu-list__item-price">{{orderCtrl.s.delivery_fee | number:2}}</span>
+                </td>
+              </tr>
+              <tr ng-if="orderCtrl.s.credit.validation_successful && orderCtrl.s.credit.type == 'DISCOUNT'" class="cart-item">
+                <td class="cart-item-description">
+                  <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
+                    <div class="cart-item-title-subtitle column menu-list__item">
+                      <h4 class="menu-list__item-title"><span class="item_title">Discount Code Applied ({{orderCtrl.s.credit.code}})</span></h4>
+                    </div>
+                  </div>
+                </td>
+                <td class="cart-item-quantity-price no-wrap"></td>
+                <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">-{{orderCtrl.s.credit.amount_used | number: 2}}</span></td>
+              </tr>
+              <tr class="cart-item">
+                <td class="cart-item-description">
+                  <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
+                    <div class="cart-item-title-subtitle column menu-list__item">
+                      <h4 class="menu-list__item-title"><span class="item_title">Sales Tax ({{orderCtrl.CONFIG.TAX_RATE * 100 | number:1}}%)</span></h4>
+                    </div>
+                  </div>
+                </td>
+                <td class="cart-item-quantity-price no-wrap"></td>
+                <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{orderCtrl.s.computed_tax | number:2}}</span></td>
+              </tr>
+              <tr class="cart-item" ng-hide="orderCtrl.s.tip_value === 0">
+                <td class="cart-item-description">
+                  <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
+                    <div class="cart-item-title-subtitle column menu-list__item">
+                      <h4 class="menu-list__item-title"><span class="item_title">Gratuity*</span></h4>
+                    </div>
+                  </div>
+                </td>
+                <td class="cart-item-quantity-price no-wrap"></td>
+                <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{orderCtrl.s.tip_value | number:2}}</span></td>
+              </tr>
+              <tr ng-if="orderCtrl.s.credit.validation_successful && orderCtrl.s.credit.type == 'MONEY'" class="cart-item">
+                <td class="cart-item-description">
+                  <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
+                    <div class="cart-item-title-subtitle column menu-list__item">
+                      <h4 class="menu-list__item-title"><span class="item_title">Digital Gift Applied ({{orderCtrl.s.credit.code}})</span></h4>
+                    </div>
+                  </div>
+                </td>
+                <td class="cart-item-quantity-price no-wrap"></td>
+                <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">-{{orderCtrl.s.credit.amount_used | number: 2}}</span></td>
+              </tr>
+              <tr class="cart-item">
+                <td class="cart-item-description">
+                  <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
+                    <div class="cart-item-title-subtitle column menu-list__item">
+                      <h4 class="menu-list__item-title"><span class="item_title">Total</span></h4>
+                    </div>
+                  </div>
+                </td>
+                <td class="cart-item-quantity-price no-wrap"></td>
+                <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{orderCtrl.s.balance | number: 2}}</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="wpcf7-response-output wpcf7-mail-sent-ng" ng-if="orderCtrl.s.selected_time_timeout">The previously selected service time has expired. We've updated your service time to {{orderCtrl.s.service_time | MinutesToPrintTime : orderCtrl.s.service_type}}.</div>
+      <div class="wpcf7-response-output wpcf7-mail-sent-ng" ng-if="orderCtrl.s.credit.validation_fail">Code entered looks to be invalid. Please check your input and try again. Please copy/paste from the e-mail you received. Credit codes are case sensitive.</div>
       <div class="flexbox">
         <h4 class="flexbox__item one-whole">Payment Information:</h4>
       </div>
       <div class="soft-half">
         <div class="flexbox">
-          <input type="checkbox" class="flexbox__item" id="use_store_credit" ng-model="orderCtrl.s.use_store_credit"
-            ng-change="orderCtrl.ToggleUseStoreCredit()" />
-          <label class="flexbox__item soft-half--left" for="use_store_credit">Use Digital Gift Card / Store
-            Credit</label>
+          <input type="checkbox" class="flexbox__item" id="use_store_credit" ng-model="orderCtrl.s.use_store_credit" ng-change="orderCtrl.ToggleUseStoreCredit()" />
+          <label class="flexbox__item soft-half--left" for="use_store_credit">Use Digital Gift Card / Store Credit</label>
         </div>
         <div class="flexbox" ng-show="orderCtrl.s.use_store_credit">
           <div class="flexbox__item one-tenth"><label for="store_credit_code">Code:</label></div>
           <div class="flexbox__item soft-half--left three-quarters">
-            <span ng-show="!orderCtrl.s.credit.validation_successful && !orderCtrl.s.credit.validation_processing"
-              class="float--right"><input jqmaskedstorecredit type="text" id="store_credit_code"
-                name="store_credit_code" value="" size="20" ng-model="orderCtrl.s.credit.code"></span>
-            <span ng-show="orderCtrl.s.credit.validation_successful || orderCtrl.s.credit.validation_processing"
-              class="float--right"><input type="text" disabled size="20" ng-model="orderCtrl.s.credit.code"></span>
+            <span ng-show="!orderCtrl.s.credit.validation_successful && !orderCtrl.s.credit.validation_processing" class="float--right"><input jqmaskedstorecredit type="text" id="store_credit_code" name="store_credit_code" value="" size="20" ng-model="orderCtrl.s.credit.code"></span>
+            <span ng-show="orderCtrl.s.credit.validation_successful || orderCtrl.s.credit.validation_processing" class="float--right"><input type="text" disabled size="20" ng-model="orderCtrl.s.credit.code"></span>
           </div>
           <div class="flexbox__item soft-half--left">
             <span ng-show="orderCtrl.s.credit.validation_successful" class="icon-check-circle"></span>
@@ -659,43 +534,33 @@
         <div ng-hide="orderCtrl.s.balance == 0" id="form-container">
           <div class="flexbox">
             Credit Card Information
-          </div>
+          </div>     
           <div class="flexbox soft-half--top">
-            <div id="sq-card"></div>
+            <div id="sq-card" ></div>
           </div>
-          <div ng-repeat="e in orderCtrl.s.card_errors" class="wpcf7-response-output wpcf7-mail-sent-ng">{{e.message}}
-          </div>
+          <div ng-repeat="e in orderCtrl.s.card_errors" class="wpcf7-response-output wpcf7-mail-sent-ng">{{e.message}}</div>
         </div>
-        <div>Note: Once orders are submitted, they are non-refundable. We will attempt to make any changes requested,
-          but please do your due diligence to check the order for correctness!</div>
+        <div>Note: Once orders are submitted, they are non-refundable. We will attempt to make any changes requested, but please do your due diligence to check the order for correctness!</div>
         <div class="order-nav" ng-show="orderCtrl.s.stage === 6">
-          <button type="submit" class="btn scrolltotop" ng-disabled="orderCtrl.s.isProcessing"
-            ng-show="orderCtrl.HasPreviousStage()" ng-click="orderCtrl.PreviousStage()">Previous</button>
-          <button ng-show="orderCtrl.s.balance > 0" id="sq-creditcard" class="btn scrolltotop" ng-click="submitForm()"
-            ng-disabled="orderCtrl.s.isProcessing">Pay and submit order!</button>
-          <button ng-show="orderCtrl.s.balance == 0" class="btn scrolltotop" ng-click="orderCtrl.SubmitToWario()"
-            ng-disabled="orderCtrl.s.isProcessing">Pay and submit order!</button>
+          <button type="submit" class="btn scrolltotop" ng-disabled="orderCtrl.s.isProcessing" ng-show="orderCtrl.HasPreviousStage()" ng-click="orderCtrl.PreviousStage()">Previous</button>
+          <button ng-show="orderCtrl.s.balance > 0" id="sq-creditcard" class="btn scrolltotop" ng-click="submitForm()" ng-disabled="orderCtrl.s.isProcessing">Pay and submit order!</button>
+          <button ng-show="orderCtrl.s.balance == 0" class="btn scrolltotop" ng-click="orderCtrl.SubmitToWario()" ng-disabled="orderCtrl.s.isProcessing">Pay and submit order!</button>
         </div>
       </div>
     </div>
   </div>
-  <div ng-show="orderCtrl.s.isProcessing" class="wpcf7 wpcf7-response-output wpcf7-mail-sent-ok">Submitting order! This
-    can take a few seconds.<span class="ajax-loader is-active"></span></div>
-  <div ng-show="orderCtrl.s.stage >= 7">
-    <div ng-show="orderCtrl.s.stage === 7" class="submitsuccess wpcf7-response-output wpcf7-mail-sent-ok">Order
-      submitted successfully! Please check your email.</div>
-    <div ng-show="orderCtrl.s.stage === 8" class="wpcf7-response-output wpcf7-validation-errors">We had some issues
-      processing your order. Please send us a text message or email so we can look into it.</div>
+  <div ng-show="orderCtrl.s.isProcessing" class="wpcf7 wpcf7-response-output wpcf7-mail-sent-ok">Submitting order! This can take a few seconds.<span class="ajax-loader is-active"></span></div>
+  <div ng-show="orderCtrl.s.stage >= 7">      
+    <div ng-show="orderCtrl.s.stage === 7" class="submitsuccess wpcf7-response-output wpcf7-mail-sent-ok" >Order submitted successfully! Please check your email.</div>
+    <div ng-show="orderCtrl.s.stage === 8" class="wpcf7-response-output wpcf7-validation-errors" >We had some issues processing your order. Please send us a text message or email so we can look into it.</div>
     <div ng-if="orderCtrl.s.isPaymentSuccess">
-      Payment of ${{orderCtrl.s.payment_info.result.payment.total_money.amount / 100 | number:2}} received from card
-      ending in: {{orderCtrl.s.payment_info.result.payment.card_details.card.last_4}}!
+      Payment of ${{orderCtrl.s.payment_info.result.payment.total_money.amount / 100 | number:2}} received from card ending in: {{orderCtrl.s.payment_info.result.payment.card_details.card.last_4}}!
       Here's your <a ng-href="{{orderCtrl.s.payment_info.result.payment.receipt_url}}" target="_blank">receipt</a>.
     </div>
     <div ng-if="orderCtrl.s.credit.amount_used > 0 && orderCtrl.s.stage === 7">
       Digital Gift Card number {{orderCtrl.s.credit.code}} debited ${{orderCtrl.s.credit.amount_used | number:2}}.
       <span ng-show="orderCtrl.s.credit.amount === orderCtrl.s.credit.amount_used">No balance remains.</span>
-      <span ng-show="orderCtrl.s.credit.amount !== orderCtrl.s.credit.amount_used">Balance of
-        ${{(orderCtrl.s.credit.amount - orderCtrl.s.credit.amount_used) | number:2}} remains.</span>
+      <span ng-show="orderCtrl.s.credit.amount !== orderCtrl.s.credit.amount_used">Balance of ${{(orderCtrl.s.credit.amount - orderCtrl.s.credit.amount_used) | number:2}} remains.</span>
     </div>
   </div>
 </div>
@@ -709,39 +574,37 @@
 <script src="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.12/angular-material.min.js"></script>
 <script src="https://www.windycitypie.com/wp-includes/js/socket.io.js"></script>
 <script src="https://www.windycitypie.com/wp-includes/js/socket.min.js"></script>
-<script src="https://www.windycitypie.com/wp-includes/js/wcpshared_fxn0.js"></script>
+<script src="https://www.windycitypie.com/wp-includes/js/wcpshared.2.0.5.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
 <script src="https://polyfill.io/v3/polyfill.min.js"></script>
 <script>
-  //var WARIO_ENDPOINT = "https://wario.windycitypie.com/";
-  var WARIO_ENDPOINT = "http://localhost:4001/";
-  var EXTRAS_CATID = "5ef6cf1a3991a469ceda2598";
-  var PIZZAS_CATID = "5eb21d084f5f1946916c6baf";
-  var PIZZA_PCID = "5f074fb8a117bf46f6553aad";
-  var TOPPINGS_MTID = "5ef6cf743991a469ceda25aa";
-  var CHEESE_MTID = "5ef6cf603991a469ceda25a3";
-  var SAUCE_MTID = "5ef6cf6b3991a469ceda25a6";
-  var SAUCE_WHITE_OID = "5ef6d0ac3991a469ceda25d9";
-  var TOPPING_BLEU_OID = "5f06f2bca117bf46f6553a51";
-  var TOPPING_BRUSSELS_OID = "5f06f292a117bf46f6553a1c";
-  var TOPPING_MB_OID = "5f06f27ba117bf46f6553a03";
-  var TOPPING_SAUSAGE_OID = "5f06f25da117bf46f65539eb";
-  var TOPPING_ITAL_OID = "5f06f25da117bf46f65539eb";
-  var TOPPING_CHIX_OID = "5f06f247a117bf46f65539d4";
-  var CHEESE_VEGAN_OID = "";
+//var WARIO_ENDPOINT = "https://wario.windycitypie.com/";
+var WARIO_ENDPOINT = "http://localhost:4001/";
+var EXTRAS_CATID = "5ef6cf1a3991a469ceda2598";
+var PIZZAS_CATID = "5eb21d084f5f1946916c6baf";
+var PIZZA_PCID = "5f074fb8a117bf46f6553aad";
+var TOPPINGS_MTID = "5ef6cf743991a469ceda25aa";
+var CHEESE_MTID = "5ef6cf603991a469ceda25a3";
+var SAUCE_MTID = "5ef6cf6b3991a469ceda25a6";
+var SAUCE_WHITE_OID = "5ef6d0ac3991a469ceda25d9";
+var TOPPING_BLEU_OID = "5f06f2bca117bf46f6553a51";
+var TOPPING_BRUSSELS_OID = "5f06f292a117bf46f6553a1c";
+var TOPPING_MB_OID = "5f06f27ba117bf46f6553a03";
+var TOPPING_SAUSAGE_OID = "5f06f25da117bf46f65539eb";
+var TOPPING_CHIX_OID = "5f06f247a117bf46f65539d4";
 
-  var WCP_BLOG_LOAD_TIME = moment(new Date([WCP_blog_epoch_time]));
-  var CONFIG_ALLOW_SLICING = false;
-  var ENABLE_DINE_IN = false;
-  var ADD_SOMETHING_THRESHOLD = 2;
-  var CONST_MESSAGE_ADD_MORE_TO_PIZZA = "Our pizza is designed as a vehicle for add-ons. We recommend at least two toppings to weigh the crust down during baking. If this is your first time dining with us, we'd suggest ordering a menu pizza without modifications.";
-  var CONST_MESSAGE_REQUEST_VEGAN = "Our pizzas cannot be made vegan or without cheese. If you're looking for a vegan option, our Beets By Schrute salad can be made vegan by omitting the bleu cheese.";
-  var CONST_MESSAGE_REQUEST_HALF = "While half toppings are not on the menu, we can do them (with the exception of half roasted garlic or half red sauce, half white sauce) but they are charged the same as full toppings. As such, we recommend against them as they're not a good value for the customer and an imbalance of toppings will cause uneven baking of your pizza.";
-  var CONST_MESSAGE_REQUEST_SLICING = "In order to ensure the quality of our pizzas, we will not slice them. We'd recommend bringing anything from a bench scraper to a butter knife to slice the pizza. Slicing the whole pizza when it's hot inhibits the crust from properly setting, and can cause the crust to get soggy both during transit and as the pie is eaten. We want your pizza to be the best possible and bringing a tool with which to slice the pie will make a big difference. You will need to remove this request to continue with your order.";
-  var CONST_MESSAGE_TIP_PREAMBLE = "The Windy City Pie family is working hard to serve you, safely. All gratuity is shared with the entire staff. Everyone, from our team that makes the house-made dough, to the staff that handles your order appreciates your support!";
-  var DELIVERY_LINK = "http://bit.ly/2QsrfV8";
-  var TOPPING_NONE = WCPShared.TOPPING_NONE;
-  var TOPPING_NONE = WCPShared.TOPPING_NONE;
+var WCP_BLOG_LOAD_TIME = moment(new Date([WCP_blog_epoch_time]));
+var CONFIG_ALLOW_SLICING = false;
+var ENABLE_DINE_IN = false;
+var ADD_SOMETHING_THRESHOLD = 2;
+var CONST_MESSAGE_ADD_MORE_TO_PIZZA = "Our pizza is designed as a vehicle for add-ons. We recommend at least two toppings to weigh the crust down during baking. If this is your first time dining with us, we'd suggest ordering a menu pizza without modifications.";
+var CONST_MESSAGE_REQUEST_VEGAN = "Our pizzas cannot be made vegan or without cheese. If you're looking for a vegan option, our Beets By Schrute salad can be made vegan by omitting the bleu cheese.";
+var CONST_MESSAGE_REQUEST_HALF = "While half toppings are not on the menu, we can do them (with the exception of half roasted garlic or half red sauce, half white sauce) but they are charged the same as full toppings. As such, we recommend against them as they're not a good value for the customer and an imbalance of toppings will cause uneven baking of your pizza.";
+var CONST_MESSAGE_REQUEST_SLICING = "In order to ensure the quality of our pizzas, we will not slice them. We'd recommend bringing anything from a bench scraper to a butter knife to slice the pizza. Slicing the whole pizza when it's hot inhibits the crust from properly setting, and can cause the crust to get soggy both during transit and as the pie is eaten. We want your pizza to be the best possible and bringing a tool with which to slice the pie will make a big difference. You will need to remove this request to continue with your order.";
+var CONST_MESSAGE_TIP_PREAMBLE = "The Windy City Pie family is working hard to serve you, safely. All gratuity is shared with the entire staff. Everyone, from our team that makes the house-made dough, to the staff that handles your order appreciates your support!";
+var DELIVERY_LINK = "http://bit.ly/2QsrfV8";
+
+var TOPPING_NONE = WCPShared.TOPPING_NONE;
 var TOPPING_LEFT = WCPShared.TOPPING_LEFT;
 var TOPPING_RIGHT = WCPShared.TOPPING_RIGHT;
 var TOPPING_WHOLE = WCPShared.TOPPING_WHOLE;
@@ -759,12 +622,8 @@ var GetPlacementFromMIDOID = WCPShared.GetPlacementFromMIDOID;
 var DisableDataCheck = WCPShared.DisableDataCheck;
 var DATE_STRING_INTERNAL_FORMAT = WCPShared.WDateUtils.DATE_STRING_INTERNAL_FORMAT;
 
-function CopyWCPProduct(pi) {
-  return new WCPProduct(pi.PRODUCT_CLASS, pi.piid, pi.name, pi.description, pi.ordinal, pi.modifiers, pi.shortcode, pi.base_price, pi.disable_data, pi.is_base, pi.display_flags);
-}
-function WCPProductFromDTO(dto, MENU) {
-  return new WCPProduct(MENU.product_classes[dto.pid].product, "", "", "", 0, dto.modifiers, "", dto.base_price, null, false, {});
-}
+var CopyWCPProduct = WCPShared.CopyWCPProduct;
+var WCPProductFromDTO = WCPShared.WCPProductFromDTO;
 
 // handy class representing a line in the product cart
 // useful to allow modifications on the product by setting it to a new product instance
@@ -1280,12 +1139,10 @@ function UpdateLeadTime() {
     }
 
     this.CartToDTO = function () {
-      // need: name, shortname, shortcode for each product, split into two sections
-      var dto = { pizza: [], extras: [] };
-      this.linear_cart.forEach(function(cart_entry) {
-        var entrydto = [cart_entry.quantity, {name: cart_entry.pi.name, shortname: cart_entry.pi.shortname, shortcode: cart_entry.pi.shortcode }];
-        cart_entry.catid === PIZZAS_CATID ? dto.pizza.push(entrydto) : dto.extras.push(entrydto);
-      });
+      const dto = {};
+      for (var cid in this.cart) {
+        dto[cid] = this.cart[cid].map(function (x) { return [x.quantity, x.pi.ToDTO(cfg.MENU)] });
+      }
       return dto;
     }
 
@@ -1328,7 +1185,7 @@ function UpdateLeadTime() {
       state.isProcessing = true;
       http_provider({
         method: "POST",
-        url: `${WARIO_ENDPOINT}api/v1/order/new`,
+        url: `${WARIO_ENDPOINT}api/v1/order`,
         data: {
           nonce: nonce,
           service_option: state.service_type,
@@ -1362,7 +1219,7 @@ function UpdateLeadTime() {
           load_time: state.debug_info.load_time,
           time_selection_time: state.debug_info["time-selection-time"] ? state.debug_info["time-selection-time"].format("H:mm:ss") : "",
           submittime: moment().format("MM-DD-YYYY HH:mm:ss"),
-          useragent: navigator.userAgent + " FEV9",
+          useragent: navigator.userAgent + " FEV11",
         }
       }).then(onSuccess).catch(onFail);
     }

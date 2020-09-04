@@ -624,11 +624,8 @@
           </table>
         </div>
       </div>
-      <div class="wpcf7-response-output wpcf7-mail-sent-ng" ng-if="orderCtrl.s.selected_time_timeout">The previously
-        selected service time has expired. We've updated your service time to
-        {{orderCtrl.s.service_time | MinutesToPrintTime : orderCtrl.s.service_type}}.</div>
-      <div class="wpcf7-response-output wpcf7-mail-sent-ng" ng-if="orderCtrl.s.credit.validation_fail">Code entered
-        looks to be invalid. Please check your input and try again. Credit codes are case sensitive.</div>
+      <div class="wpcf7-response-output wpcf7-mail-sent-ng" ng-if="orderCtrl.s.selected_time_timeout">The previously selected service time has expired. We've updated your service time to {{orderCtrl.s.service_time | MinutesToPrintTime : orderCtrl.s.service_type}}.</div>
+      <div class="wpcf7-response-output wpcf7-mail-sent-ng" ng-if="orderCtrl.s.credit.validation_fail">Code entered looks to be invalid. Please check your input and try again. Please copy/paste from the e-mail you received. Credit codes are case sensitive.</div>
       <div class="flexbox">
         <h4 class="flexbox__item one-whole">Payment Information:</h4>
       </div>
@@ -709,7 +706,7 @@
   <script src="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.12/angular-material.min.js"></script>
   <script src="https://www.breezytownpizza.com/wp-includes/js/socket.io.js"></script>
   <script src="https://www.breezytownpizza.com/wp-includes/js/socket.min.js"></script>
-  <script src="https://www.breezytownpizza.com/wp-includes/js/wcpshared_fxn2.js"></script>
+  <script src="https://www.breezytownpizza.com/wp-includes/js/wcpshared.2.0.5.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
   <script src="https://polyfill.io/v3/polyfill.min.js"></script>
   <script>
@@ -741,4 +738,4 @@
     var CONST_MESSAGE_REQUEST_SLICING = null;
     var CONST_MESSAGE_TIP_PREAMBLE = "The Breezy Town Pizza family is working hard to serve you, safely. All gratuity is shared with the entire staff. Everyone, from our team that makes the house-made dough, to the staff that handles your order appreciates your support!";
     </script>
-    <script src="https://www.breezytownpizza.com/wp-includes/js/BTPJSFE12.js"></script>
+    <script src="https://www.breezytownpizza.com/wp-includes/js/BTPJSFE13.js"></script>
