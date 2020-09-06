@@ -7,7 +7,7 @@
       <ul class="flexitems menu-list__items">
         <li class="flexitem menu-list__item" ng-repeat="pizza in pmenuCtrl.CONFIG.MENU.categories[pmenuCtrl.CONFIG.PIZZAS_CATID].menu | filter:orderCtrl.FilterDisabledProducts(pmenuCtrl.CONFIG.MENU)">
           <div class="offer-link" ng-click="orderCtrl.ScrollTop(); orderCtrl.SelectProduct(pmenuCtrl.CONFIG.PIZZAS_CATID, pizza, pmenuCtrl)">
-            <wcppizzacartitem prod="pizza" description="true" dots="true" price="true"></wcppizzacartitem>
+            <wcppizzacartitem prod="pizza" description="true" allowadornment="true" dots="true" price="true"></wcppizzacartitem>
           </div>
         </li>
       </ul>
@@ -28,13 +28,13 @@
           <li class="menu-list__item" ng-if="pmenuCtrl.CONFIG.MENU.categories[subcatid].subtitle"><strong><span ng-bind-html="pmenuCtrl.CONFIG.MENU.categories[subcatid].subtitle | TrustAsHTML"></span></strong></li>
           <li class="menu-list__item" ng-repeat="extra in pmenuCtrl.CONFIG.MENU.categories[subcatid].menu | filter:orderCtrl.FilterDisabledProducts(pmenuCtrl.CONFIG.MENU)">
             <div class="offer-link" ng-click="orderCtrl.ScrollTop(); orderCtrl.SelectProduct(subcatid, extra, pmenuCtrl)">
-              <wcppizzacartitem prod="extra" description="true" dots="true" price="true"></wcppizzacartitem>
+              <wcppizzacartitem prod="extra" allowadornment="true" description="true" dots="true" price="true"></wcppizzacartitem>
           </li>
         </ul>
       </div>
     </md-content>
     <div class="customizer menu-list__items" ng-if="pmenuCtrl.selection">
-      <h3 class="flush--top"><strong>Customize it!</strong></h3>
+      <h3 class="flush--top"><strong>Customize {{pmenuCtrl.selection.PRODUCT_CLASS.display_flags && pmenuCtrl.selection.PRODUCT_CLASS.display_flags.singular_noun ? pmenuCtrl.selection.PRODUCT_CLASS.display_flags.singular_noun : "it"}}!</strong></h3>
       <div class="menu-list__item">
         <wcppizzacartitem prod="pmenuCtrl.selection" description="true" dots="true" price="true"></wcppizzacartitem>
       </div>

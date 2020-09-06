@@ -1169,16 +1169,22 @@ function UpdateLeadTime() {
         prod: "=prod",
         dots: "=dots",
         price: "=price",
+        allowadornment: "=allowadornment",
         description: "=description"
       },
       controller: function () { 
         this.ShowOptionsSections = function () {
           return !(this.prod.options_sections.length === 1 && this.prod.options_sections[0][1] === this.prod.name)
         }
+        this.ShowAdornment = function () {
+          return this.allowadornment && this.prod.display_flags && this.prod.display_flags.menu_adornment; 
+        }
       },
       controllerAs: "ctrl",
       bindToController: true,
-      template: '<h4 class="menu-list__item-title"><span class="item_title">{{ctrl.prod.name}}</span><span ng-if="ctrl.dots" class="dots"></span></h4>' +
+      template: '<div ng-class={"menu-list__item-highlight-wrapper": ctrl.ShowAdornment()}>'+
+        '<span ng-if="ctrl.ShowAdornment()" class="menu-list__item-highlight-title">{{ctrl.prod.display_flags.menu_adornment}}</span>' +
+        '<h4 class="menu-list__item-title"><span class="item_title">{{ctrl.prod.name}}</span><span ng-if="ctrl.dots" class="dots"></span></h4>' +
         '<p ng-if="ctrl.description && ctrl.prod.description" class="menu-list__item-desc">' +
         '<span class="desc__content">' +
         '<span>{{ctrl.prod.description}}</span>' +
@@ -1191,7 +1197,8 @@ function UpdateLeadTime() {
         '</span>' +
         '</p>' +
         '<span ng-if="ctrl.dots" class="dots"></span>' +
-        '<span ng-if="ctrl.price" class="menu-list__item-price">{{ctrl.prod.price}}</span>',
+        '<span ng-if="ctrl.price" class="menu-list__item-price">{{ctrl.prod.price}}</span>' +
+        '</div>',
     };
   });
 
@@ -1297,7 +1304,7 @@ function UpdateLeadTime() {
         this.Initialize();
       },
       template: '\
-      <div>{{ctrl.config.MENU.modifiers[ctrl.mtid].modifier_type.name}}:</div> \
+      <div>{{ctrl.config.MENU.modifiers[ctrl.mtid].modifier_type.display_name ? ctrl.config.MENU.modifiers[ctrl.mtid].modifier_type.display_name : ctrl.config.MENU.modifiers[ctrl.mtid].modifier_type.name}}:</div> \
       <div class="flexitems"> \
         <div ng-if="ctrl.display_type !== 1" class="flexitem" ng-repeat="option in ctrl.visible_options" wcpoptiondir \
           selection="ctrl.selection" modctrl="ctrl" option="option" config="ctrl.config" allowsplit="ctrl.allowsplit"> \
