@@ -34,7 +34,7 @@
       </div>
     </md-content>
     <div class="customizer menu-list__items" ng-if="pmenuCtrl.selection">
-      <h3 class="flush--top"><strong>Customize {{pmenuCtrl.selection.PRODUCT_CLASS.display_flags && pmenuCtrl.selection.PRODUCT_CLASS.display_flags.singular_noun ? pmenuCtrl.selection.PRODUCT_CLASS.display_flags.singular_noun : "it"}}!</strong></h3>
+      <h3 class="flush--top"><strong>Customize {{pmenuCtrl.selection.PRODUCT_CLASS.display_flags && pmenuCtrl.selection.PRODUCT_CLASS.display_flags.singular_noun ? `your ${pmenuCtrl.selection.PRODUCT_CLASS.display_flags.singular_noun}` : "it"}}!</strong></h3>
       <div class="menu-list__item">
         <wcppizzacartitem prod="pmenuCtrl.selection" description="true" dots="true" price="true"></wcppizzacartitem>
       </div>

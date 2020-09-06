@@ -1182,7 +1182,7 @@ function UpdateLeadTime() {
       },
       controllerAs: "ctrl",
       bindToController: true,
-      template: '<div ng-class={"menu-list__item-highlight-wrapper": ctrl.ShowAdornment()}>'+
+      template: '<div ng-class="{\'menu-list__item-highlight-wrapper\': ctrl.ShowAdornment()}">'+
         '<span ng-if="ctrl.ShowAdornment()" class="menu-list__item-highlight-title">{{ctrl.prod.display_flags.menu_adornment}}</span>' +
         '<h4 class="menu-list__item-title"><span class="item_title">{{ctrl.prod.name}}</span><span ng-if="ctrl.dots" class="dots"></span></h4>' +
         '<p ng-if="ctrl.description && ctrl.prod.description" class="menu-list__item-desc">' +
