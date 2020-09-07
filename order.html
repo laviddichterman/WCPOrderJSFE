@@ -39,7 +39,7 @@
         <wcppizzacartitem prod="pmenuCtrl.selection" description="true" dots="true" price="true"></wcppizzacartitem>
       </div>
       <hr class="separator">
-      <div wcpmodifierdir ng-repeat="mtid in pmenuCtrl.selection.PRODUCT_CLASS.modifiers"
+      <div wcpmodifierdir ng-repeat="(mtid, value) in pmenuCtrl.modifier_map | filter:pmenuCtrl.FilterModifiers(pmenuCtrl.CONFIG.MENU)"
       mtid="mtid" selection="pmenuCtrl.selection" pmenuctrl="pmenuCtrl" config="orderCtrl.CONFIG" allowsplit="orderCtrl.s.enable_split_toppings"
       >
       </div>

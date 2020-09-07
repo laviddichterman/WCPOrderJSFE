@@ -1073,8 +1073,25 @@ function UpdateLeadTime() {
     this.catid = null;
     this.is_addition = true;
     this.messages = [];
+    // mod map is { MTID: { has_selectable: boolean, options: { MOID: {placement, enable_left, enable_right, enable_whole } } } }
     this.modifier_map = {};
 
+    this.FilterModifiers = function (menu) {
+      return function (mtid, value) {
+        var modifier_entry = menu.modifiers[mtid];
+        var omit_section_if_no_available_options = true;
+        var hidden = false;
+        if (modifier_entry.display_flags) {
+          omit_section_if_no_available_options = modifier_entry.display_flags.hasOwnProperty(omit_section_if_no_available_options) ? modifier_entry.display_flags.omit_section_if_no_available_options : omit_section_if_no_available_options;
+          hidden = modifier_entry.display_flags.hasOwnProperty(hidden) ? modifier_entry.display_flags.hidden : hidden;
+        }
+        // cases to not show:
+        // modifier.display_flags.omit_section_if_no_available_options && (has selected item, all other options cannot be selected, currently selected items cannot be deselected)
+        // modifier.display_flags.hidden is true
+        return !hidden && (!omit_section_if_no_available_options || value.has_selectable);
+      }
+    }
+    
     this.PopulateOrderGuide = function () {
       this.messages = [];
       if (this.selection && this.selection.PRODUCT_CLASS._id === PIZZA_PCID) {
@@ -1092,31 +1109,31 @@ function UpdateLeadTime() {
 
     this.PostModifierChangeCallback = function (mid, oid, placement) {
       console.assert(this.selection);
-
-      var updated_modifiers = {};
-      // NEEDS to iterate in the order of the options in the MENU otherwise the display will be out of order
-      for (var mtidx = 0; mtidx < this.selection.PRODUCT_CLASS.modifiers.length; ++mtidx) {
-        var mtid = this.selection.PRODUCT_CLASS.modifiers[mtidx];
-        if (this.modifier_map.hasOwnProperty(mtid)) { 
-          var selected_list = [];
-          for (var moidx = 0; moidx < this.CONFIG.MENU.modifiers[mtid].options_list.length; ++moidx) {
-            var moid = this.CONFIG.MENU.modifiers[mtid].options_list[moidx].moid;
-            if (this.modifier_map[mtid].hasOwnProperty(moid)) {
-              selected_list.push([this.modifier_map[mtid][moid], moid]);  
-            }
-          }
-          if (selected_list.length) {
-            updated_modifiers[mtid] = selected_list;
-          }
-        }
-      }
-      var selectionDTO = this.selection.ToDTO();
-      selectionDTO.modifiers = updated_modifiers;
-      var selection_copy = WCPProductFromDTO(selectionDTO, this.CONFIG.MENU);
-      selection_copy.description = this.selection.description;
-      selection_copy.Initialize(this.CONFIG.MENU);
-      this.selection = selection_copy;
-      this.PopulateOrderGuide();
+      return this.SetProduct(this.catid, this.selection, this.is_addition);
+      // var updated_modifiers = {};
+      // // NEEDS to iterate in the order of the options in the MENU otherwise the display will be out of order
+      // for (var mtidx = 0; mtidx < this.selection.PRODUCT_CLASS.modifiers.length; ++mtidx) {
+      //   var mtid = this.selection.PRODUCT_CLASS.modifiers[mtidx];
+      //   if (this.modifier_map.hasOwnProperty(mtid)) { 
+      //     var selected_list = [];
+      //     for (var moidx = 0; moidx < this.CONFIG.MENU.modifiers[mtid].options_list.length; ++moidx) {
+      //       var moid = this.CONFIG.MENU.modifiers[mtid].options_list[moidx].moid;
+      //       if (this.modifier_map[mtid].hasOwnProperty(moid)) {
+      //         selected_list.push([this.modifier_map[mtid][moid], moid]);  
+      //       }
+      //     }
+      //     if (selected_list.length) {
+      //       updated_modifiers[mtid] = selected_list;
+      //     }
+      //   }
+      // }
+      // var selectionDTO = this.selection.ToDTO();
+      // selectionDTO.modifiers = updated_modifiers;
+      // var selection_copy = WCPProductFromDTO(selectionDTO, this.CONFIG.MENU);
+      // selection_copy.description = this.selection.description;
+      //selection_copy.Initialize(this.CONFIG.MENU);
+      //this.selection = selection_copy;
+      //this.PopulateOrderGuide();
     }
 
     this.EditCartEntry = function(cart_entry) {
@@ -1133,17 +1150,28 @@ function UpdateLeadTime() {
       this.selection.Initialize(this.CONFIG.MENU);
       this.catid = catid;
       this.is_addition = is_new;
-
-      // mod map is { MID: { OID: placement } }
+      
       var selection_modifiers_map = {};
-      for (var midx = 0; midx < this.selection.PRODUCT_CLASS.modifiers.length; ++midx) {
-        var mid = this.selection.PRODUCT_CLASS.modifiers[midx];
-        var modifier_entry = this.CONFIG.MENU.modifiers[mid];
-        // create the { OID: placement } part of the map
-        selection_modifiers_map[mid] = {};
-        if (this.selection.modifiers.hasOwnProperty(mid)) {
-          this.selection.modifiers[mid].forEach(function (option_placement) {
-            selection_modifiers_map[mid][option_placement[1]] = option_placement[0];
+      for (var mtidx = 0; mtidx < this.selection.PRODUCT_CLASS.modifiers.length; ++mtidx) {
+        var mtid = this.selection.PRODUCT_CLASS.modifiers[mtidx];
+        var modifier_entry = this.CONFIG.MENU.modifiers[mtid];
+        // create the MOID: {placement: placement, enabled: { location: boolean } } } part of the map
+        selection_modifiers_map[mtid] = { has_selectable: false, options: {} };
+        for (var moidx = 0; moidx < modifier_entry.options_list.length; ++moidx) {
+          var option_object = modifier_entry.options_list[moidx];
+          var option_info = { 
+            placement: TOPPING_NONE, 
+            // do we need to figure out if we can de-select?
+            enable_left: option_object.can_split && option_object.IsEnabled(this.selection, this.CONFIG.LEFT, this.CONFIG.MENU),
+            enable_right: option_object.can_split && option_object.IsEnabled(this.selection, this.CONFIG.RIGHT, this.CONFIG.MENU),
+            enable_whole: option_object.IsEnabled(this.selection, this.CONFIG.WHOLE, this.CONFIG.MENU),
+          };
+          selection_modifiers_map[mtid].options[option_object.moid] = option_info;
+          selection_modifiers_map[mtid].has_selectable = selection_modifiers_map[mtid].has_selectable || option_info.enable_left || option_info.enable_right || option_info.enable_whole;
+        }
+        if (this.selection.modifiers.hasOwnProperty(mtid)) {
+          this.selection.modifiers[mtid].forEach(function (option_placement) {
+            selection_modifiers_map[mtid].options[option_placement[1]].placement = option_placement[0];
           })
         }
       }
@@ -1275,28 +1303,29 @@ function UpdateLeadTime() {
           }
         };
 
-        this.PostModifyCallback = function (placement, moid) { 
+        this.PostModifyCallback = function (moid, placement) { 
           //console.log(`placement ${placement} of option ${JSON.stringify(moid)}`);
           if (this.display_type === MODDISP_CHECKBOX) {
             if (placement === TOPPING_NONE) {
-              delete this.pmenuctrl.modifier_map[this.mtid][moid];
+              this.pmenuctrl.selection.modifiers[this.mtid] = this.pmenuctrl.selection.modifiers[this.mtid].filter(function(x) { return x[1] != moid; });
             }
             else {
-              if (this.config.MENU.modifiers[this.mtid].modifier_type.min_selected === 0 && 
-                this.config.MENU.modifiers[this.mtid].modifier_type.max_selected === 1) {
+              if (!this.pmenuctrl.selection.modifiers.hasOwnProperty(this.mtid) ||
+                (this.config.MENU.modifiers[this.mtid].modifier_type.min_selected === 0 && 
+                this.config.MENU.modifiers[this.mtid].modifier_type.max_selected === 1)) {
+                // 
                 // checkbox that requires we unselect any other values since it kinda functions like a radio
-                this.pmenuctrl.modifier_map[this.mtid] = { };
+                this.pmenuctrl.selection.modifiers[this.mtid] = [];
               }
-              this.pmenuctrl.modifier_map[this.mtid][moid] = placement;
+              this.pmenuctrl.selection.modifiers[this.mtid].push([placement, moid]);
             }
           }
           else { // display_type === MODDISP_TOGGLE || display_type === MODDISP_RADIO
-            this.pmenuctrl.modifier_map[this.mtid] = { };
             if (this.display_type === MODDISP_TOGGLE) {
-              this.pmenuctrl.modifier_map[this.mtid][this.toggle_values[this.current_single_value].moid] = TOPPING_WHOLE;  
+              this.pmenuctrl.selection.modifiers[this.mtid] = [[TOPPING_WHOLE, this.toggle_values[this.current_single_value].moid]];
             }
             else {
-              this.pmenuctrl.modifier_map[this.mtid][this.current_single_value] = TOPPING_WHOLE;
+              this.pmenuctrl.selection.modifiers[this.mtid] = [[TOPPING_WHOLE, this.current_single_value]];
             }
           }
           this.pmenuctrl.PostModifierChangeCallback(this.mtid, moid, placement);
@@ -1344,7 +1373,7 @@ app.directive("wcpoptiondir", function () {
       };
 
       this.UpdateOption = function (placement) {
-        this.modctrl.PostModifyCallback(placement, this.option.moid);
+        this.modctrl.PostModifyCallback(this.option.moid, placement);
       };
 
       this.ToggleWhole = function () {
