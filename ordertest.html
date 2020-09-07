@@ -34,12 +34,12 @@
       </div>
     </md-content>
     <div class="customizer menu-list__items" ng-if="pmenuCtrl.selection">
-      <h3 class="flush--top"><strong>Customize {{pmenuCtrl.selection.PRODUCT_CLASS.display_flags && pmenuCtrl.selection.PRODUCT_CLASS.display_flags.singular_noun ? pmenuCtrl.selection.PRODUCT_CLASS.display_flags.singular_noun : "it"}}!</strong></h3>
+      <h3 class="flush--top"><strong>Customize {{pmenuCtrl.selection.PRODUCT_CLASS.display_flags && pmenuCtrl.selection.PRODUCT_CLASS.display_flags.singular_noun ? "your " + pmenuCtrl.selection.PRODUCT_CLASS.display_flags.singular_noun : "it"}}!</strong></h3>
       <div class="menu-list__item">
         <wcppizzacartitem prod="pmenuCtrl.selection" description="true" dots="true" price="true"></wcppizzacartitem>
       </div>
       <hr class="separator">
-      <div wcpmodifierdir ng-repeat="mtid in pmenuCtrl.selection.PRODUCT_CLASS.modifiers"
+      <div wcpmodifierdir ng-repeat="(mtid, value) in pmenuCtrl.FilterModifiers(pmenuCtrl.modifier_map)"
       mtid="mtid" selection="pmenuCtrl.selection" pmenuctrl="pmenuCtrl" config="orderCtrl.CONFIG" allowsplit="orderCtrl.s.enable_split_toppings"
       >
       </div>
@@ -564,6 +564,47 @@
     </div>
   </div>
 </div>
+<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.12/angular-material.min.css">
+<script type="text/javascript" src="https://js.squareup.com/v2/paymentform"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.11/angular.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.11/angular-sanitize.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.11/angular-animate.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mailcheck/1.1.2/mailcheck.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.maskedinput/1.4.1/jquery.maskedinput.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.12/angular-material.min.js"></script>
+<script src="https://www.windycitypie.com/wp-includes/js/socket.io.js"></script>
+<script src="https://www.windycitypie.com/wp-includes/js/socket.min.js"></script>
+<script src="https://www.windycitypie.com/wp-includes/js/wcpshared.2.0.5.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
+<script src="https://polyfill.io/v3/polyfill.min.js"></script>
+<script>
+var WARIO_ENDPOINT = "https://wario.windycitypie.com/";
+//var WARIO_ENDPOINT = "http://localhost:4001/";
+var EXTRAS_CATID = "5ef6cf1a3991a469ceda2598";
+var PIZZAS_CATID = "5eb21d084f5f1946916c6baf";
+var PIZZA_PCID = "5f074fb8a117bf46f6553aad";
+var TOPPINGS_MTID = "5ef6cf743991a469ceda25aa";
+var CHEESE_MTID = "5ef6cf603991a469ceda25a3";
+var SAUCE_MTID = "5ef6cf6b3991a469ceda25a6";
+var SAUCE_WHITE_OID = "5ef6d0ac3991a469ceda25d9";
+var TOPPING_BLEU_OID = "5f06f2bca117bf46f6553a51";
+var TOPPING_BRUSSELS_OID = "5f06f292a117bf46f6553a1c";
+var TOPPING_MB_OID = "5f06f27ba117bf46f6553a03";
+var TOPPING_SAUSAGE_OID = "5f06f25da117bf46f65539eb";
+var TOPPING_CHIX_OID = "5f06f247a117bf46f65539d4";
+
+var WCP_BLOG_LOAD_TIME = moment(new Date([WCP_blog_epoch_time]));
+var CONFIG_ALLOW_SLICING = false;
+var ENABLE_DINE_IN = false;
+var ADD_SOMETHING_THRESHOLD = 2;
+var CONST_MESSAGE_ADD_MORE_TO_PIZZA = "Our pizza is designed as a vehicle for add-ons. We recommend at least two toppings to weigh the crust down during baking. If this is your first time dining with us, we'd suggest ordering a menu pizza without modifications.";
+var CONST_MESSAGE_REQUEST_VEGAN = "Our pizzas cannot be made vegan or without cheese. If you're looking for a vegan option, our Beets By Schrute salad can be made vegan by omitting the bleu cheese.";
+var CONST_MESSAGE_REQUEST_HALF = "While half toppings are not on the menu, we can do them (with the exception of half roasted garlic or half red sauce, half white sauce) but they are charged the same as full toppings. As such, we recommend against them as they're not a good value for the customer and an imbalance of toppings will cause uneven baking of your pizza.";
+var CONST_MESSAGE_REQUEST_SLICING = "In order to ensure the quality of our pizzas, we will not slice them. We'd recommend bringing anything from a bench scraper to a butter knife to slice the pizza. Slicing the whole pizza when it's hot inhibits the crust from properly setting, and can cause the crust to get soggy both during transit and as the pie is eaten. We want your pizza to be the best possible and bringing a tool with which to slice the pie will make a big difference. You will need to remove this request to continue with your order.";
+var CONST_MESSAGE_TIP_PREAMBLE = "The Windy City Pie family is working hard to serve you, safely. All gratuity is shared with the entire staff. Everyone, from our team that makes the house-made dough, to the staff that handles your order appreciates your support!";
+var DELIVERY_LINK = "http://bit.ly/2QsrfV8";
+</script>
+<script src="https://www.windycitypie.com/wp-includes/js/WCPJSFE25.js"></script>
 <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.12/angular-material.min.css">
 <script type="text/javascript" src="https://js.squareup.com/v2/paymentform"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.11/angular.min.js"></script>
@@ -1679,8 +1720,31 @@ function UpdateLeadTime() {
     this.catid = null;
     this.is_addition = true;
     this.messages = [];
+    // mod map is { MTID: { has_selectable: boolean, options: { MOID: {placement, enable_left, enable_right, enable_whole } } } }
     this.modifier_map = {};
 
+    this.FilterModifiers = function (mods) {
+      var result = {};
+      var menu = this.CONFIG.MENU;
+      angular.forEach(mods, function(value, mtid) {
+        var modifier_entry = menu.modifiers[mtid];
+        var omit_section_if_no_available_options = true;
+        var hidden = false;
+        var disp_flags = modifier_entry.modifier_type.display_flags;
+        if (disp_flags) {
+          omit_section_if_no_available_options = disp_flags.hasOwnProperty("omit_section_if_no_available_options") ? disp_flags.omit_section_if_no_available_options : omit_section_if_no_available_options;
+          hidden = disp_flags.hasOwnProperty("hidden") ? disp_flags.hidden : hidden;
+        }
+        // cases to not show:
+        // modifier.display_flags.omit_section_if_no_available_options && (has selected item, all other options cannot be selected, currently selected items cannot be deselected)
+        // modifier.display_flags.hidden is true
+        if (!hidden && (!omit_section_if_no_available_options || value.has_selectable)) {
+          result[mtid] = value;
+        }
+      });
+      return result;
+    }
+    
     this.PopulateOrderGuide = function () {
       this.messages = [];
       if (this.selection && this.selection.PRODUCT_CLASS._id === PIZZA_PCID) {
@@ -1698,31 +1762,31 @@ function UpdateLeadTime() {
 
     this.PostModifierChangeCallback = function (mid, oid, placement) {
       console.assert(this.selection);
-
-      var updated_modifiers = {};
-      // NEEDS to iterate in the order of the options in the MENU otherwise the display will be out of order
-      for (var mtidx = 0; mtidx < this.selection.PRODUCT_CLASS.modifiers.length; ++mtidx) {
-        var mtid = this.selection.PRODUCT_CLASS.modifiers[mtidx];
-        if (this.modifier_map.hasOwnProperty(mtid)) { 
-          var selected_list = [];
-          for (var moidx = 0; moidx < this.CONFIG.MENU.modifiers[mtid].options_list.length; ++moidx) {
-            var moid = this.CONFIG.MENU.modifiers[mtid].options_list[moidx].moid;
-            if (this.modifier_map[mtid].hasOwnProperty(moid)) {
-              selected_list.push([this.modifier_map[mtid][moid], moid]);  
-            }
-          }
-          if (selected_list.length) {
-            updated_modifiers[mtid] = selected_list;
-          }
-        }
-      }
-      var selectionDTO = this.selection.ToDTO();
-      selectionDTO.modifiers = updated_modifiers;
-      var selection_copy = WCPProductFromDTO(selectionDTO, this.CONFIG.MENU);
-      selection_copy.description = this.selection.description;
-      selection_copy.Initialize(this.CONFIG.MENU);
-      this.selection = selection_copy;
-      this.PopulateOrderGuide();
+      return this.SetProduct(this.catid, this.selection, this.is_addition);
+      // var updated_modifiers = {};
+      // // NEEDS to iterate in the order of the options in the MENU otherwise the display will be out of order
+      // for (var mtidx = 0; mtidx < this.selection.PRODUCT_CLASS.modifiers.length; ++mtidx) {
+      //   var mtid = this.selection.PRODUCT_CLASS.modifiers[mtidx];
+      //   if (this.modifier_map.hasOwnProperty(mtid)) { 
+      //     var selected_list = [];
+      //     for (var moidx = 0; moidx < this.CONFIG.MENU.modifiers[mtid].options_list.length; ++moidx) {
+      //       var moid = this.CONFIG.MENU.modifiers[mtid].options_list[moidx].moid;
+      //       if (this.modifier_map[mtid].hasOwnProperty(moid)) {
+      //         selected_list.push([this.modifier_map[mtid][moid], moid]);  
+      //       }
+      //     }
+      //     if (selected_list.length) {
+      //       updated_modifiers[mtid] = selected_list;
+      //     }
+      //   }
+      // }
+      // var selectionDTO = this.selection.ToDTO();
+      // selectionDTO.modifiers = updated_modifiers;
+      // var selection_copy = WCPProductFromDTO(selectionDTO, this.CONFIG.MENU);
+      // selection_copy.description = this.selection.description;
+      //selection_copy.Initialize(this.CONFIG.MENU);
+      //this.selection = selection_copy;
+      //this.PopulateOrderGuide();
     }
 
     this.EditCartEntry = function(cart_entry) {
@@ -1739,17 +1803,28 @@ function UpdateLeadTime() {
       this.selection.Initialize(this.CONFIG.MENU);
       this.catid = catid;
       this.is_addition = is_new;
-
-      // mod map is { MID: { OID: placement } }
+      
       var selection_modifiers_map = {};
-      for (var midx = 0; midx < this.selection.PRODUCT_CLASS.modifiers.length; ++midx) {
-        var mid = this.selection.PRODUCT_CLASS.modifiers[midx];
-        var modifier_entry = this.CONFIG.MENU.modifiers[mid];
-        // create the { OID: placement } part of the map
-        selection_modifiers_map[mid] = {};
-        if (this.selection.modifiers.hasOwnProperty(mid)) {
-          this.selection.modifiers[mid].forEach(function (option_placement) {
-            selection_modifiers_map[mid][option_placement[1]] = option_placement[0];
+      for (var mtidx = 0; mtidx < this.selection.PRODUCT_CLASS.modifiers.length; ++mtidx) {
+        var mtid = this.selection.PRODUCT_CLASS.modifiers[mtidx];
+        var modifier_entry = this.CONFIG.MENU.modifiers[mtid];
+        // create the MOID: {placement: placement, enabled: { location: boolean } } } part of the map
+        selection_modifiers_map[mtid] = { has_selectable: false, options: {} };
+        for (var moidx = 0; moidx < modifier_entry.options_list.length; ++moidx) {
+          var option_object = modifier_entry.options_list[moidx];
+          var option_info = { 
+            placement: TOPPING_NONE, 
+            // do we need to figure out if we can de-select?
+            enable_left: option_object.can_split && option_object.IsEnabled(this.selection, this.CONFIG.LEFT, this.CONFIG.MENU),
+            enable_right: option_object.can_split && option_object.IsEnabled(this.selection, this.CONFIG.RIGHT, this.CONFIG.MENU),
+            enable_whole: option_object.IsEnabled(this.selection, this.CONFIG.WHOLE, this.CONFIG.MENU),
+          };
+          selection_modifiers_map[mtid].options[option_object.moid] = option_info;
+          selection_modifiers_map[mtid].has_selectable = selection_modifiers_map[mtid].has_selectable || option_info.enable_left || option_info.enable_right || option_info.enable_whole;
+        }
+        if (this.selection.modifiers.hasOwnProperty(mtid)) {
+          this.selection.modifiers[mtid].forEach(function (option_placement) {
+            selection_modifiers_map[mtid].options[option_placement[1]].placement = option_placement[0];
           })
         }
       }
@@ -1881,28 +1956,29 @@ function UpdateLeadTime() {
           }
         };
 
-        this.PostModifyCallback = function (placement, moid) { 
+        this.PostModifyCallback = function (moid, placement) { 
           //console.log(`placement ${placement} of option ${JSON.stringify(moid)}`);
           if (this.display_type === MODDISP_CHECKBOX) {
             if (placement === TOPPING_NONE) {
-              delete this.pmenuctrl.modifier_map[this.mtid][moid];
+              this.pmenuctrl.selection.modifiers[this.mtid] = this.pmenuctrl.selection.modifiers[this.mtid].filter(function(x) { return x[1] != moid; });
             }
             else {
-              if (this.config.MENU.modifiers[this.mtid].modifier_type.min_selected === 0 && 
-                this.config.MENU.modifiers[this.mtid].modifier_type.max_selected === 1) {
+              if (!this.pmenuctrl.selection.modifiers.hasOwnProperty(this.mtid) ||
+                (this.config.MENU.modifiers[this.mtid].modifier_type.min_selected === 0 && 
+                this.config.MENU.modifiers[this.mtid].modifier_type.max_selected === 1)) {
+                // 
                 // checkbox that requires we unselect any other values since it kinda functions like a radio
-                this.pmenuctrl.modifier_map[this.mtid] = { };
+                this.pmenuctrl.selection.modifiers[this.mtid] = [];
               }
-              this.pmenuctrl.modifier_map[this.mtid][moid] = placement;
+              this.pmenuctrl.selection.modifiers[this.mtid].push([placement, moid]);
             }
           }
           else { // display_type === MODDISP_TOGGLE || display_type === MODDISP_RADIO
-            this.pmenuctrl.modifier_map[this.mtid] = { };
             if (this.display_type === MODDISP_TOGGLE) {
-              this.pmenuctrl.modifier_map[this.mtid][this.toggle_values[this.current_single_value].moid] = TOPPING_WHOLE;  
+              this.pmenuctrl.selection.modifiers[this.mtid] = [[TOPPING_WHOLE, this.toggle_values[this.current_single_value].moid]];
             }
             else {
-              this.pmenuctrl.modifier_map[this.mtid][this.current_single_value] = TOPPING_WHOLE;
+              this.pmenuctrl.selection.modifiers[this.mtid] = [[TOPPING_WHOLE, this.current_single_value]];
             }
           }
           this.pmenuctrl.PostModifierChangeCallback(this.mtid, moid, placement);
@@ -1950,7 +2026,7 @@ app.directive("wcpoptiondir", function () {
       };
 
       this.UpdateOption = function (placement) {
-        this.modctrl.PostModifyCallback(placement, this.option.moid);
+        this.modctrl.PostModifyCallback(this.option.moid, placement);
       };
 
       this.ToggleWhole = function () {

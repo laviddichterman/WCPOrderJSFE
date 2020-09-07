@@ -1076,20 +1076,26 @@ function UpdateLeadTime() {
     // mod map is { MTID: { has_selectable: boolean, options: { MOID: {placement, enable_left, enable_right, enable_whole } } } }
     this.modifier_map = {};
 
-    this.FilterModifiers = function (menu) {
-      return function (mtid, value) {
+    this.FilterModifiers = function (mods) {
+      var result = {};
+      var menu = this.CONFIG.MENU;
+      angular.forEach(mods, function(value, mtid) {
         var modifier_entry = menu.modifiers[mtid];
         var omit_section_if_no_available_options = true;
         var hidden = false;
-        if (modifier_entry.display_flags) {
-          omit_section_if_no_available_options = modifier_entry.display_flags.hasOwnProperty(omit_section_if_no_available_options) ? modifier_entry.display_flags.omit_section_if_no_available_options : omit_section_if_no_available_options;
-          hidden = modifier_entry.display_flags.hasOwnProperty(hidden) ? modifier_entry.display_flags.hidden : hidden;
+        var disp_flags = modifier_entry.modifier_type.display_flags;
+        if (disp_flags) {
+          omit_section_if_no_available_options = disp_flags.hasOwnProperty("omit_section_if_no_available_options") ? disp_flags.omit_section_if_no_available_options : omit_section_if_no_available_options;
+          hidden = disp_flags.hasOwnProperty("hidden") ? disp_flags.hidden : hidden;
         }
         // cases to not show:
         // modifier.display_flags.omit_section_if_no_available_options && (has selected item, all other options cannot be selected, currently selected items cannot be deselected)
         // modifier.display_flags.hidden is true
-        return !hidden && (!omit_section_if_no_available_options || value.has_selectable);
-      }
+        if (!hidden && (!omit_section_if_no_available_options || value.has_selectable)) {
+          result[mtid] = value;
+        }
+      });
+      return result;
     }
     
     this.PopulateOrderGuide = function () {

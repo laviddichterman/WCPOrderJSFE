@@ -34,12 +34,12 @@
       </div>
     </md-content>
     <div class="customizer menu-list__items" ng-if="pmenuCtrl.selection">
-      <h3 class="flush--top"><strong>Customize {{pmenuCtrl.selection.PRODUCT_CLASS.display_flags && pmenuCtrl.selection.PRODUCT_CLASS.display_flags.singular_noun ? `your ${pmenuCtrl.selection.PRODUCT_CLASS.display_flags.singular_noun}` : "it"}}!</strong></h3>
+      <h3 class="flush--top"><strong>Customize {{pmenuCtrl.selection.PRODUCT_CLASS.display_flags && pmenuCtrl.selection.PRODUCT_CLASS.display_flags.singular_noun ? "your " + pmenuCtrl.selection.PRODUCT_CLASS.display_flags.singular_noun : "it"}}!</strong></h3>
       <div class="menu-list__item">
         <wcppizzacartitem prod="pmenuCtrl.selection" description="true" dots="true" price="true"></wcppizzacartitem>
       </div>
       <hr class="separator">
-      <div wcpmodifierdir ng-repeat="(mtid, value) in pmenuCtrl.modifier_map | filter:pmenuCtrl.FilterModifiers(pmenuCtrl.CONFIG.MENU)"
+      <div wcpmodifierdir ng-repeat="(mtid, value) in pmenuCtrl.FilterModifiers(pmenuCtrl.modifier_map)"
       mtid="mtid" selection="pmenuCtrl.selection" pmenuctrl="pmenuCtrl" config="orderCtrl.CONFIG" allowsplit="orderCtrl.s.enable_split_toppings"
       >
       </div>
