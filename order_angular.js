@@ -1280,23 +1280,24 @@ function UpdateLeadTime() {
                 this.visible_options.length === 2) {
                 var BASE_PRODUCT_INSTANCE = menu.product_classes[this.selection.PRODUCT_CLASS._id].instances_list.find(function (prod) { return prod.is_base === true; });
                 console.assert(BASE_PRODUCT_INSTANCE, `Cannot find base product instance of ${JSON.stringify(this.selection)}.`);
-                var base_option = menu.modifiers[this.mtid].options[BASE_PRODUCT_INSTANCE.modifiers[this.mtid][0][1]];
-                if (!this.visible_options.some(function (x) { return x.moid === base_option.moid; })) {
-                  console.error(`the base product's option ${base_option.moid} isn't visible. switching to RADIO modifier display for ${this.mtid}`);
+                var base_moid = BASE_PRODUCT_INSTANCE.modifiers.hasOwnProperty(this.mtid) && BASE_PRODUCT_INSTANCE.modifiers[this.mtid].length === 1 ? BASE_PRODUCT_INSTANCE.modifiers[this.mtid][0][1] : "";
+                var base_option = base_moid ? menu.modifiers[this.mtid].options[base_moid] : null;
+                if (!base_option || !this.visible_options.some(function (x) { return x.moid == base_moid; })) {
+                  console.error(`the base product's option ${base_moid} isn't visible. switching to RADIO modifier display for ${this.mtid}`);
                   this.display_type = MODDISP_RADIO;
                 }
                 else {
                   this.display_type = MODDISP_TOGGLE;
-                  var toggle_on_option = this.visible_options.find(function(x) { return x.moid !== base_option.moid; });
+                  var toggle_on_option = this.visible_options.find(function(x) { return x.moid != base_moid; });
                   console.assert(toggle_on_option, "should have found an option for the toggle!");
                   this.toggle_values = [base_option, toggle_on_option];
                 }
                 // sets the current single value to the MOID of the current selection
-                this.current_single_value = this.selection.modifiers[this.mtid][0][1];
+                this.current_single_value = this.selection.modifiers.hasOwnProperty(this.mtid) && this.selection.modifiers[this.mtid].length === 1 ? this.selection.modifiers[this.mtid][0][1] : "";
               }
               else {
                 this.display_type = MODDISP_RADIO;
-                this.current_single_value = this.selection.modifiers[this.mtid][0][1];
+                this.current_single_value = this.selection.modifiers.hasOwnProperty(this.mtid) && this.selection.modifiers[this.mtid].length === 1 ? this.selection.modifiers[this.mtid][0][1] : "";
               }
             }
             else { // if (menu.modifiers[this.mtid].modifier_type.min_selected === 0)
