@@ -46,14 +46,17 @@
       <div ng-if="!pmenuCtrl.suppress_guide && pmenuCtrl.messages.length">
         <div class="wpcf7-response-output wpcf7-validation-errors" ng-repeat="msg in pmenuCtrl.messages">{{msg}}</div>
       </div>
+      <div ng-if="pmenuCtrl.errors.length">
+        <div class="wpcf7-response-output" ng-repeat="msg in pmenuCtrl.errors">{{msg}}</div>
+      </div>
       <div class="order-nav">
         <span class="one-fifth">
           <button name="remove" class="btn button-remove scrolltotop" ng-click="pmenuCtrl.UnsetProduct()">Cancel</button>
         </span>
         <span class="four-fifths">
           <span class="order-nav-item float--right">
-            <button ng-if="pmenuCtrl.is_addition" name="add" class="btn scrolltotop" ng-click="orderCtrl.AddToOrder(pmenuCtrl.catid, pmenuCtrl.selection); pmenuCtrl.UnsetProduct()">Add to order</button>
-            <button ng-if="!pmenuCtrl.is_addition" name="save" class="btn scrolltotop" ng-click="orderCtrl.UpdateOrderEntry(pmenuCtrl.cart_entry, pmenuCtrl.selection); pmenuCtrl.UnsetProduct()">Save Changes</button>
+            <button ng-disabled="pmenuCtrl.errors.length" ng-if="pmenuCtrl.is_addition" name="add" class="btn scrolltotop" ng-click="orderCtrl.AddToOrder(pmenuCtrl.catid, pmenuCtrl.selection); pmenuCtrl.UnsetProduct()">Add to order</button>
+            <button ng-disabled="pmenuCtrl.errors.length" ng-if="!pmenuCtrl.is_addition" name="save" class="btn scrolltotop" ng-click="orderCtrl.UpdateOrderEntry(pmenuCtrl.cart_entry, pmenuCtrl.selection); pmenuCtrl.UnsetProduct()">Save Changes</button>
           </span>
         </span>
       </div>

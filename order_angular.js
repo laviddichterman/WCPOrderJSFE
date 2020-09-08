@@ -1073,7 +1073,8 @@ function UpdateLeadTime() {
     this.catid = null;
     this.is_addition = true;
     this.messages = [];
-    // mod map is { MTID: { has_selectable: boolean, options: { MOID: {placement, enable_left, enable_right, enable_whole } } } }
+    this.errors = [];
+    // mod map is { MTID: { has_selectable: boolean, meets_minimum: boolean, options: { MOID: {placement, enable_left, enable_right, enable_whole } } } }
     this.modifier_map = {};
 
     this.FilterModifiers = function (mods) {
@@ -1099,6 +1100,7 @@ function UpdateLeadTime() {
     }
     
     this.PopulateOrderGuide = function () {
+      var menu = this.CONFIG.MENU;
       this.messages = [];
       if (this.selection && this.selection.PRODUCT_CLASS._id === PIZZA_PCID) {
         if (this.selection.bake_count[0] < ADD_SOMETHING_THRESHOLD || this.selection.bake_count[0] < ADD_SOMETHING_THRESHOLD) {
@@ -1111,6 +1113,15 @@ function UpdateLeadTime() {
           this.messages.push("Our white sauce really lets the bleu cheese flavor come through. If you haven't had this pairing before, we'd suggest asking for light bleu cheese or switching back to red sauce.");
         }
       }
+      var error_messages = [];
+      angular.forEach(this.modifier_map, function(entry, mtid) {
+        if (!entry.meets_minimum) {
+          var modifier_entry = menu.modifiers[mtid];
+          var mod_name = modifier_entry.modifier_type.display_name ? modifier_entry.modifier_type.display_name : modifier_entry.modifier_type.name
+          error_messages.push(`Please complete your selection of ${mod_name}.`)
+        }
+      });
+      this.errors = error_messages;
     };
 
     this.PostModifierChangeCallback = function (mid, oid, placement) {
@@ -1162,12 +1173,12 @@ function UpdateLeadTime() {
         var mtid = this.selection.PRODUCT_CLASS.modifiers[mtidx];
         var modifier_entry = this.CONFIG.MENU.modifiers[mtid];
         // create the MOID: {placement: placement, enabled: { location: boolean } } } part of the map
-        selection_modifiers_map[mtid] = { has_selectable: false, options: {} };
+        selection_modifiers_map[mtid] = { has_selectable: false, meets_minimum: false, options: {} };
         for (var moidx = 0; moidx < modifier_entry.options_list.length; ++moidx) {
           var option_object = modifier_entry.options_list[moidx];
           var option_info = { 
             placement: TOPPING_NONE, 
-            // do we need to figure out if we can de-select?
+            // do we need to figure out if we can de-select? answer: probably
             enable_left: option_object.can_split && option_object.IsEnabled(this.selection, this.CONFIG.LEFT, this.CONFIG.MENU),
             enable_right: option_object.can_split && option_object.IsEnabled(this.selection, this.CONFIG.RIGHT, this.CONFIG.MENU),
             enable_whole: option_object.IsEnabled(this.selection, this.CONFIG.WHOLE, this.CONFIG.MENU),
@@ -1175,11 +1186,14 @@ function UpdateLeadTime() {
           selection_modifiers_map[mtid].options[option_object.moid] = option_info;
           selection_modifiers_map[mtid].has_selectable = selection_modifiers_map[mtid].has_selectable || option_info.enable_left || option_info.enable_right || option_info.enable_whole;
         }
+        var num_selected = 0;
         if (this.selection.modifiers.hasOwnProperty(mtid)) {
+          num_selected = this.selection.modifiers[mtid].length;
           this.selection.modifiers[mtid].forEach(function (option_placement) {
             selection_modifiers_map[mtid].options[option_placement[1]].placement = option_placement[0];
           })
         }
+        selection_modifiers_map[mtid].meets_minimum = num_selected >= modifier_entry.modifier_type.min_selected;
       }
       this.modifier_map = selection_modifiers_map;
       this.PopulateOrderGuide();
@@ -1283,7 +1297,7 @@ function UpdateLeadTime() {
                 var base_moid = BASE_PRODUCT_INSTANCE.modifiers.hasOwnProperty(this.mtid) && BASE_PRODUCT_INSTANCE.modifiers[this.mtid].length === 1 ? BASE_PRODUCT_INSTANCE.modifiers[this.mtid][0][1] : "";
                 var base_option = base_moid ? menu.modifiers[this.mtid].options[base_moid] : null;
                 if (!base_option || !this.visible_options.some(function (x) { return x.moid == base_moid; })) {
-                  console.error(`the base product's option ${base_moid} isn't visible. switching to RADIO modifier display for ${this.mtid}`);
+                  console.log(`the base product's option ${base_moid} isn't visible. switching to RADIO modifier display for ${this.mtid}`);
                   this.display_type = MODDISP_RADIO;
                 }
                 else {
