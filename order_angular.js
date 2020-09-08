@@ -1118,7 +1118,7 @@ function UpdateLeadTime() {
         if (!entry.meets_minimum) {
           var modifier_entry = menu.modifiers[mtid];
           var mod_name = modifier_entry.modifier_type.display_name ? modifier_entry.modifier_type.display_name : modifier_entry.modifier_type.name
-          error_messages.push(`Please complete your selection of ${mod_name}.`)
+          error_messages.push(`Please select a ${String(mod_name).toLowerCase()}.`);
         }
       });
       this.errors = error_messages;
