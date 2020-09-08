@@ -1326,19 +1326,26 @@ function UpdateLeadTime() {
 
         this.PostModifyCallback = function (moid, placement) { 
           //console.log(`placement ${placement} of option ${JSON.stringify(moid)}`);
+          if (!this.pmenuctrl.selection.modifiers.hasOwnProperty(this.mtid)) {
+            this.pmenuctrl.selection.modifiers[this.mtid] = [];
+          }
           if (this.display_type === MODDISP_CHECKBOX) {
             if (placement === TOPPING_NONE) {
               this.pmenuctrl.selection.modifiers[this.mtid] = this.pmenuctrl.selection.modifiers[this.mtid].filter(function(x) { return x[1] != moid; });
             }
             else {
-              if (!this.pmenuctrl.selection.modifiers.hasOwnProperty(this.mtid) ||
-                (this.config.MENU.modifiers[this.mtid].modifier_type.min_selected === 0 && 
-                this.config.MENU.modifiers[this.mtid].modifier_type.max_selected === 1)) {
-                // 
+              if (this.config.MENU.modifiers[this.mtid].modifier_type.min_selected === 0 && 
+                this.config.MENU.modifiers[this.mtid].modifier_type.max_selected === 1) {
                 // checkbox that requires we unselect any other values since it kinda functions like a radio
                 this.pmenuctrl.selection.modifiers[this.mtid] = [];
               }
-              this.pmenuctrl.selection.modifiers[this.mtid].push([placement, moid]);
+              var moidx = this.pmenuctrl.selection.modifiers[this.mtid].findIndex(function(x) { return x[1] == moid; });
+              if (moidx === -1) {
+                this.pmenuctrl.selection.modifiers[this.mtid].push([placement, moid]);
+              }
+              else {
+                this.pmenuctrl.selection.modifiers[this.mtid][moidx][0] = placement;
+              }
             }
           }
           else { // display_type === MODDISP_TOGGLE || display_type === MODDISP_RADIO
