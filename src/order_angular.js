@@ -2,22 +2,14 @@ var TOPPING_NONE = WCPShared.TOPPING_NONE;
 var TOPPING_LEFT = WCPShared.TOPPING_LEFT;
 var TOPPING_RIGHT = WCPShared.TOPPING_RIGHT;
 var TOPPING_WHOLE = WCPShared.TOPPING_WHOLE;
-var NO_MATCH = WCPShared.NO_MATCH;
-var AT_LEAST = WCPShared.AT_LEAST;
-var EXACT_MATCH = WCPShared.EXACT_MATCH;
-var LEFT_SIDE = WCPShared.LEFT_SIDE;
-var RIGHT_SIDE = WCPShared.RIGHT_SIDE;
 var EMAIL_REGEX = WCPShared.EMAIL_REGEX;
 var CREDIT_REGEX = WCPShared.CREDIT_REGEX;
-var WCPOption = WCPShared.WCPOption;
-var WCPProduct = WCPShared.WCPProduct;
 
 var GetPlacementFromMIDOID = WCPShared.GetPlacementFromMIDOID;
 var DisableDataCheck = WCPShared.DisableDataCheck;
 var DATE_STRING_INTERNAL_FORMAT = WCPShared.WDateUtils.DATE_STRING_INTERNAL_FORMAT;
 
 var CopyWCPProduct = WCPShared.CopyWCPProduct;
-var WCPProductFromDTO = WCPShared.WCPProductFromDTO;
 
 // handy class representing a line in the product cart
 // useful to allow modifications on the product by setting it to a new product instance
@@ -747,7 +739,7 @@ function UpdateLeadTime() {
     function (OrderHelper, $http, $location, $rootScope, $socket) {
       this.ORDER_HELPER = OrderHelper;
       this.CONFIG = $rootScope.CONFIG = OrderHelper.cfg;
-      var split_toppings = $location.search().split === true;
+      var split_toppings = true;//$location.search().split === true;
       var enable_delivery = true;
       this.ScrollTop = ScrollTopJQ;
       this.s = $rootScope.state = new WCPOrderState(this.CONFIG, enable_delivery, split_toppings);
@@ -1297,7 +1289,7 @@ function UpdateLeadTime() {
                 var base_moid = BASE_PRODUCT_INSTANCE.modifiers.hasOwnProperty(this.mtid) && BASE_PRODUCT_INSTANCE.modifiers[this.mtid].length === 1 ? BASE_PRODUCT_INSTANCE.modifiers[this.mtid][0][1] : "";
                 var base_option = base_moid ? menu.modifiers[this.mtid].options[base_moid] : null;
                 if (!base_option || !this.visible_options.some(function (x) { return x.moid == base_moid; })) {
-                  console.log(`the base product's option ${base_moid} isn't visible. switching to RADIO modifier display for ${this.mtid}`);
+                  // the base product's option ${base_moid} isn't visible. switching to RADIO modifier display for ${this.mtid}`);
                   this.display_type = MODDISP_RADIO;
                 }
                 else {
