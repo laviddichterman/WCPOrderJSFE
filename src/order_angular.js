@@ -876,21 +876,21 @@ function UpdateLeadTime() {
         }
       }
 
-      this.FilterDisabledProducts = function(menu) {
+      this.FilterProducts = function(menu) {
         var current_time = moment();
         return function ( item ) {
-          var all_enabled = DisableDataCheck(item.disable_data, current_time);
+          var passes = !item.display_flags.hide_from_menu && DisableDataCheck(item.disable_data, current_time);
           for (var mtid in item.modifiers) {
-            all_enabled = all_enabled && Math.min(1, Math.min.apply(null, item.modifiers[mtid].map(function(x) {
+            passes = passes && Math.min(1, Math.min.apply(null, item.modifiers[mtid].map(function(x) {
               return DisableDataCheck(menu.modifiers[mtid].options[x[1]].disable_data, current_time);
             })));
           }
-          return all_enabled;
+          return passes;
         }
       }
 
       this.FilterEmptyCategories = function(menu) {
-        var filter_fxn = this.FilterDisabledProducts(menu);
+        var filter_fxn = this.FilterProducts(menu);
         return function ( item ) {
           var cat_menu = menu.categories[item].menu;
           for (var i = 0; i < cat_menu.length; ++i) {
@@ -1074,13 +1074,9 @@ function UpdateLeadTime() {
       var menu = this.CONFIG.MENU;
       angular.forEach(mods, function(value, mtid) {
         var modifier_entry = menu.modifiers[mtid];
-        var omit_section_if_no_available_options = true;
-        var hidden = false;
         var disp_flags = modifier_entry.modifier_type.display_flags;
-        if (disp_flags) {
-          omit_section_if_no_available_options = disp_flags.hasOwnProperty("omit_section_if_no_available_options") ? disp_flags.omit_section_if_no_available_options : omit_section_if_no_available_options;
-          hidden = disp_flags.hasOwnProperty("hidden") ? disp_flags.hidden : hidden;
-        }
+        var omit_section_if_no_available_options = disp_flags.omit_section_if_no_available_options;
+        var hidden = disp_flags.hidden;
         // cases to not show:
         // modifier.display_flags.omit_section_if_no_available_options && (has selected item, all other options cannot be selected, currently selected items cannot be deselected)
         // modifier.display_flags.hidden is true
@@ -1119,30 +1115,6 @@ function UpdateLeadTime() {
     this.PostModifierChangeCallback = function (mid, oid, placement) {
       console.assert(this.selection);
       return this.SetProduct(this.catid, this.selection, this.is_addition);
-      // var updated_modifiers = {};
-      // // NEEDS to iterate in the order of the options in the MENU otherwise the display will be out of order
-      // for (var mtidx = 0; mtidx < this.selection.PRODUCT_CLASS.modifiers.length; ++mtidx) {
-      //   var mtid = this.selection.PRODUCT_CLASS.modifiers[mtidx];
-      //   if (this.modifier_map.hasOwnProperty(mtid)) { 
-      //     var selected_list = [];
-      //     for (var moidx = 0; moidx < this.CONFIG.MENU.modifiers[mtid].options_list.length; ++moidx) {
-      //       var moid = this.CONFIG.MENU.modifiers[mtid].options_list[moidx].moid;
-      //       if (this.modifier_map[mtid].hasOwnProperty(moid)) {
-      //         selected_list.push([this.modifier_map[mtid][moid], moid]);  
-      //       }
-      //     }
-      //     if (selected_list.length) {
-      //       updated_modifiers[mtid] = selected_list;
-      //     }
-      //   }
-      // }
-      // var selectionDTO = this.selection.ToDTO();
-      // selectionDTO.modifiers = updated_modifiers;
-      // var selection_copy = WCPProductFromDTO(selectionDTO, this.CONFIG.MENU);
-      // selection_copy.description = this.selection.description;
-      //selection_copy.Initialize(this.CONFIG.MENU);
-      //this.selection = selection_copy;
-      //this.PopulateOrderGuide();
     }
 
     this.EditCartEntry = function(cart_entry) {
@@ -1219,11 +1191,21 @@ function UpdateLeadTime() {
         this.ShowAdornment = function () {
           return this.allowadornment && this.prod.display_flags && this.prod.display_flags.menu_adornment; 
         }
+        this.PriceText = function () {
+          if (this.prod.incomplete) {
+            switch (this.prod.display_flags) {
+              case "FROM_X": return `from ${this.prod.price}`;
+              case "VARIES": return "MP";
+              case "ALWAYS": default: return `${this.prod.price}`;
+            }
+          }
+          return `${this.prod.price}`;
+        }
       },
       controllerAs: "ctrl",
       bindToController: true,
       template: '<div ng-class="{\'menu-list__item-highlight-wrapper\': ctrl.ShowAdornment()}">'+
-        '<span ng-if="ctrl.ShowAdornment()" class="menu-list__item-highlight-title">{{ctrl.prod.display_flags.menu_adornment}}</span>' +
+        '<span ng-if="ctrl.ShowAdornment()" class="menu-list__item-highlight-title" ng-bind-html="ctrl.prod.display_flags.menu_adornment | TrustAsHTML"></span>' +
         '<h4 class="menu-list__item-title"><span class="item_title">{{ctrl.prod.name}}</span><span ng-if="ctrl.dots" class="dots"></span></h4>' +
         '<p ng-if="ctrl.description && ctrl.prod.description" class="menu-list__item-desc">' +
         '<span class="desc__content">' +
@@ -1237,7 +1219,7 @@ function UpdateLeadTime() {
         '</span>' +
         '</p>' +
         '<span ng-if="ctrl.dots" class="dots"></span>' +
-        '<span ng-if="ctrl.price" class="menu-list__item-price">{{ctrl.prod.price}}</span>' +
+        '<span ng-if="ctrl.price" class="menu-list__item-price">{{ctrl.PriceText()}}</span>' +
         '</div>',
     };
   });
