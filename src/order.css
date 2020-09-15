@@ -84,6 +84,13 @@ input.quantity {
 	font-size: 10px;
 }
 
+.ordering-menu .menu-list__item-highlight-title a {
+  color: #EEE;
+}
+.ordering-menu .menu-list__item-highlight-title a:hover {
+  color: #EEE;
+}
+
 .order-nav-item {
   display: inline-block;
 }
