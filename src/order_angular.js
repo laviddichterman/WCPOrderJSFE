@@ -1193,7 +1193,7 @@ function UpdateLeadTime() {
         }
         this.PriceText = function () {
           if (this.prod.incomplete) {
-            switch (this.prod.display_flags) {
+            switch (this.prod.display_flags.price_display) {
               case "FROM_X": return `from ${this.prod.price}`;
               case "VARIES": return "MP";
               case "ALWAYS": default: return `${this.prod.price}`;
