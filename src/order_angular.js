@@ -1064,6 +1064,12 @@ function UpdateLeadTime() {
     this.cart_entry = null;
     this.catid = null;
     this.is_addition = true;
+    // flag indicating that there's at least one modifier for the selected product that has an advanced option available
+    this.advanced_option_eligible = false;
+    // flag indicating there's at least one modifier for the selected product that has an advanced option selected
+    this.advanced_option_selected = false;
+    // value tied to the toggle switch presented to the user
+    this.allow_advanced = false;
     this.messages = [];
     this.errors = [];
     // mod map is { MTID: { has_selectable: boolean, meets_minimum: boolean, options: { MOID: {placement, enable_left, enable_right, enable_whole } } } }
@@ -1114,7 +1120,9 @@ function UpdateLeadTime() {
 
     this.PostModifierChangeCallback = function (mid, oid, placement) {
       console.assert(this.selection);
-      return this.SetProduct(this.catid, this.selection, this.is_addition);
+      var had_allowed_advanced_options = this.allow_advanced;
+      this.SetProduct(this.catid, this.selection, this.is_addition);
+      this.allow_advanced = this.allow_advanced || had_allowed_advanced_options;
     }
 
     this.EditCartEntry = function(cart_entry) {
@@ -1124,14 +1132,18 @@ function UpdateLeadTime() {
       this.SetProduct(cart_entry.catid, pi_copy, false);
     }
 
-    this.SetProduct = function (catid, product_instance, is_new) {
+    this.SetProduct = function (catid, product_instance, is_new /*, service_time*/) {
+      // todo: address service_time piping
+      var service_time = moment();
       this.selection = CopyWCPProduct(product_instance);
       // note: clearing the PIID allows things like a BYO pizza to show up as RED SAUCE + MOZZARELLA after it's added to the customizer
       this.selection.piid = "";
       this.selection.Initialize(this.CONFIG.MENU);
       this.catid = catid;
       this.is_addition = is_new;
-      
+      this.advanced_option_eligible = false;
+      this.advanced_option_selected = false;
+
       var selection_modifiers_map = {};
       for (var mtidx = 0; mtidx < this.selection.PRODUCT_CLASS.modifiers.length; ++mtidx) {
         var mtid = this.selection.PRODUCT_CLASS.modifiers[mtidx];
@@ -1140,25 +1152,31 @@ function UpdateLeadTime() {
         selection_modifiers_map[mtid] = { has_selectable: false, meets_minimum: false, options: {} };
         for (var moidx = 0; moidx < modifier_entry.options_list.length; ++moidx) {
           var option_object = modifier_entry.options_list[moidx];
+          var is_disabled = DisableDataCheck(option_object.disable_data, service_time)
           var option_info = { 
             placement: TOPPING_NONE, 
             // do we need to figure out if we can de-select? answer: probably
-            enable_left: option_object.can_split && option_object.IsEnabled(this.selection, this.CONFIG.LEFT, this.CONFIG.MENU),
-            enable_right: option_object.can_split && option_object.IsEnabled(this.selection, this.CONFIG.RIGHT, this.CONFIG.MENU),
-            enable_whole: option_object.IsEnabled(this.selection, this.CONFIG.WHOLE, this.CONFIG.MENU),
+            enable_left: !is_disabled && option_object.can_split && option_object.IsEnabled(this.selection, this.CONFIG.LEFT, this.CONFIG.MENU),
+            enable_right: !is_disabled && option_object.can_split && option_object.IsEnabled(this.selection, this.CONFIG.RIGHT, this.CONFIG.MENU),
+            enable_whole: !is_disabled && option_object.IsEnabled(this.selection, this.CONFIG.WHOLE, this.CONFIG.MENU),
           };
+          var enable_left_or_right = option_info.enable_left || option_info.enable_right;
+          this.advanced_option_eligible = this.advanced_option_eligible || enable_left_or_right;
           selection_modifiers_map[mtid].options[option_object.moid] = option_info;
-          selection_modifiers_map[mtid].has_selectable = selection_modifiers_map[mtid].has_selectable || option_info.enable_left || option_info.enable_right || option_info.enable_whole;
+          selection_modifiers_map[mtid].has_selectable = selection_modifiers_map[mtid].has_selectable || enable_left_or_right || option_info.enable_whole;
         }
         var num_selected = 0;
         if (this.selection.modifiers.hasOwnProperty(mtid)) {
           num_selected = this.selection.modifiers[mtid].length;
-          this.selection.modifiers[mtid].forEach(function (option_placement) {
+          for (var moidx = 0; moidx < this.selection.modifiers[mtid].length; ++moidx) {
+            var option_placement = this.selection.modifiers[mtid][moidx];
             selection_modifiers_map[mtid].options[option_placement[1]].placement = option_placement[0];
-          })
+            this.advanced_option_selected = this.advanced_option_selected || option_placement[0] === TOPPING_LEFT || option_placement[0] === TOPPING_RIGHT;
+          }
         }
         selection_modifiers_map[mtid].meets_minimum = num_selected >= modifier_entry.modifier_type.min_selected;
       }
+      this.allow_advanced = this.advanced_option_selected;
       this.modifier_map = selection_modifiers_map;
       this.PopulateOrderGuide();
     };
@@ -1168,7 +1186,6 @@ function UpdateLeadTime() {
       this.selection = null;
       this.cart_entry = null;
       this.catid = null;
-      this.is_addition = true;
       this.messages = [];
     };
 
@@ -1236,26 +1253,26 @@ function UpdateLeadTime() {
         config: "=config",
         allowsplit: "=allowsplit",
         pmenuctrl: "=pmenuctrl",
+        //servicetime: "=servicetime"
       },
       controllerAs: "ctrl",
       bindToController: true,
       controller: function () {
         this.Initialize = function () {
-          var current_time = moment();
+          // todo: deal with servicetime
+          var service_time = moment();//this.servicetime;
           var menu = this.config.MENU;
+          var modmap = this.pmenuctrl.modifier_map;
+          var mtid = this.mtid;
           // determine list of visible options
           var filtered_options = menu.modifiers[this.mtid].options_list.filter(function (x) {
-            return DisableDataCheck(x.disable_data, current_time);
+            return DisableDataCheck(x.disable_data, service_time);
           })
-          if (menu.modifiers[this.mtid].modifier_type.display_flags && menu.modifiers[this.mtid].modifier_type.display_flags.omit_options_if_not_available) {
+          if (menu.modifiers[this.mtid].modifier_type.display_flags.omit_options_if_not_available) {
             var filterfxn = function (x) {
-              return x.IsEnabled(this.selection, this.config.WHOLE, menu) ||
-                (x.can_split && this.allowsplit && (
-                  x.IsEnabled(this.selection, this.config.LEFT, menu) ||
-                  x.IsEnabled(this.selection, this.config.RIGHT, menu)
-                ));
+              var modmap_entry = modmap[mtid].options[x.moid];
+              return modmap_entry.enable_left || modmap_entry.enable_right || modmap_entry.enable_whole;
             };
-            filterfxn = filterfxn.bind(this);
             filtered_options = filtered_options.filter(filterfxn);
           }
           this.visible_options = filtered_options;
@@ -1338,11 +1355,11 @@ function UpdateLeadTime() {
       <div>{{ctrl.config.MENU.modifiers[ctrl.mtid].modifier_type.display_name ? ctrl.config.MENU.modifiers[ctrl.mtid].modifier_type.display_name : ctrl.config.MENU.modifiers[ctrl.mtid].modifier_type.name}}:</div> \
       <div class="flexitems"> \
         <div ng-if="ctrl.display_type !== 1" class="flexitem" ng-repeat="option in ctrl.visible_options" wcpoptiondir \
-          selection="ctrl.selection" modctrl="ctrl" option="option" config="ctrl.config" allowsplit="ctrl.allowsplit"> \
+          selection="ctrl.selection" modctrl="ctrl" option="option" config="ctrl.config" allowadvanced="ctrl.pmenuctrl.allow_advanced"> \
         </div> \
         <div class="flexitem" ng-if="ctrl.display_type === 1"> \
           <input type="checkbox" id="{{ctrl.toggle_values[1].shortname}}_whole" class="input-whole" \
-            ng-disabled="!ctrl.toggle_values[1].IsEnabled(ctrl.selection, ctrl.config.WHOLE, ctrl.config.MENU)" \
+            ng-disabled="!ctrl.pmenuctrl.modifier_map[ctrl.mtid].options[ctrl.toggle_values[1].moid].enable_whole" \
             ng-model="ctrl.current_single_value" ng-true-value="1" \
             ng-false-value="0" ng-change="ctrl.PostModifyCallback()"> \
           <span class="option-circle-container"> \
@@ -1361,21 +1378,35 @@ app.directive("wcpoptiondir", function () {
       option: "=option",
       selection: "=selection",
       config: "=config",
-      allowsplit: "=allowsplit",
+      // flag passed in from above saying we should show the advanced functionality, if available
+      allowadvanced: "=allowadvanced",
       modctrl: "=modctrl",
     },
     controller: function () {
       this.Initialize = function () {
         this.MENU = this.config.MENU;
-        this.split = this.allowsplit && this.option.can_split && this.modctrl.display_type === MODDISP_CHECKBOX;
+        // flag indicating if the advanced display is opened or not
+        this.option_detail_state = false;
+        // reference to the modifier map info for this particular option, READ ONLY
+        this.enable_state = this.modctrl.pmenuctrl.modifier_map[this.modctrl.mtid].options[this.option.moid];
+        // flag indicating there is an advanced option that could be selected
+        this.advanced_option_eligible = this.allowadvanced && this.modctrl.display_type === MODDISP_CHECKBOX && (this.enable_state.enable_left || this.enable_state.enable_right);
         var placement = GetPlacementFromMIDOID(this.selection, this.option.modifier._id, this.option.moid);
+        this.advanced_option_selected = placement === TOPPING_LEFT || placement === TOPPING_RIGHT;
         this.left = placement === TOPPING_LEFT;
         this.right = placement === TOPPING_RIGHT;
         this.whole = placement === TOPPING_WHOLE;
       };
 
+      this.ToggleDetailState = function() {
+        this.option_detail_state = !this.option_detail_state;
+      };
+
       this.UpdateOption = function (placement) {
+        this.option_detail_state = false;
         this.modctrl.PostModifyCallback(this.option.moid, placement);
+        this.advanced_option_selected = placement === TOPPING_LEFT || placement === TOPPING_RIGHT;
+        this.advanced_option_eligible = this.allowadvanced && this.modctrl.display_type === MODDISP_CHECKBOX && (this.enable_state.enable_left || this.enable_state.enable_right);
       };
 
       this.ToggleWhole = function () {
@@ -1399,16 +1430,18 @@ app.directive("wcpoptiondir", function () {
     },
     controllerAs: 'ctrl',
     bindToController: true,
-    template: '<input ng-if="ctrl.modctrl.display_type === 0" id="{{ctrl.option.shortname}}_whole" class="input-whole" ng-model="ctrl.modctrl.current_single_value" ng-value="ctrl.option.moid" ng-disabled="!ctrl.option.IsEnabled(ctrl.selection, ctrl.config.WHOLE, ctrl.MENU)" type="radio" ng-change="ctrl.UpdateOption()"> \
-      <input ng-if="ctrl.modctrl.display_type === 2" id="{{ctrl.option.shortname}}_whole" class="input-whole" ng-model="ctrl.whole" ng-disabled="!ctrl.option.IsEnabled(ctrl.selection, ctrl.config.WHOLE, ctrl.MENU)" type="checkbox" ng-change="ctrl.ToggleWhole()"> \
-        <input ng-if="ctrl.modctrl.display_type === 2" ng-show="ctrl.split" id="{{ctrl.option.shortname}}_left" class="input-left" ng-model="ctrl.left" ng-disabled="!ctrl.option.IsEnabled(ctrl.selection, ctrl.config.LEFT, ctrl.MENU)" type="checkbox" ng-change="ctrl.ToggleHalf()"> \
-        <input ng-if="ctrl.modctrl.display_type === 2" ng-show="ctrl.split" id="{{ctrl.option.shortname}}_right" class="input-right" ng-model="ctrl.right" ng-disabled="!ctrl.option.IsEnabled(ctrl.selection, ctrl.config.RIGHT, ctrl.MENU)" type="checkbox" ng-change="ctrl.ToggleHalf()"> \
+    template: '<input ng-if="ctrl.modctrl.display_type === 0" id="{{ctrl.option.shortname}}_whole" class="input-whole" ng-model="ctrl.modctrl.current_single_value" ng-value="ctrl.option.moid" ng-disabled="!ctrl.enable_state.enable_whole"> \
+      <input ng-if="ctrl.modctrl.display_type === 2" id="{{ctrl.option.shortname}}_whole" class="input-whole" ng-model="ctrl.whole" ng-disabled="!ctrl.enable_state.enable_whole" type="checkbox" ng-change="ctrl.ToggleWhole()"> \
+        <input ng-if="ctrl.modctrl.display_type === 2" ng-show="ctrl.option_detail_state" id="{{ctrl.option.shortname}}_left" class="input-left" ng-model="ctrl.left" ng-disabled="!ctrl.enable_state.enable_left" type="checkbox" ng-change="ctrl.ToggleHalf()"> \
+        <input ng-if="ctrl.modctrl.display_type === 2" ng-show="ctrl.option_detail_state" id="{{ctrl.option.shortname}}_right" class="input-right" ng-model="ctrl.right" ng-disabled="!ctrl.enable_state.enable_right" type="checkbox" ng-change="ctrl.ToggleHalf()"> \
         <span class="option-circle-container"> \
         <label for="{{ctrl.option.shortname}}_whole" class="option-whole option-circle"></label> \
-        <label ng-if="ctrl.modctrl.display_type === 2" ng-show="ctrl.split" for="{{ctrl.option.shortname}}_left" class="option-left option-circle"></label> \
-        <label ng-if="ctrl.modctrl.display_type === 2" ng-show="ctrl.split" for="{{ctrl.option.shortname}}_right" class="option-right option-circle"></label> \
+        <label ng-if="ctrl.modctrl.display_type === 2" ng-show="ctrl.option_detail_state" for="{{ctrl.option.shortname}}_left" class="option-left option-circle"></label> \
+        <label ng-if="ctrl.modctrl.display_type === 2" ng-show="ctrl.option_detail_state" for="{{ctrl.option.shortname}}_right" class="option-right option-circle"></label> \
         </span> \
-        <label class="topping_text" for="{{ctrl.option.shortname}}_whole" ng-disabled="!ctrl.option.IsEnabled(ctrl.selection, ctrl.config.WHOLE, ctrl.pmenuctrl.CONFIG.MENU)">{{ctrl.option.name}}</label>'
+        <label class="topping_text" for="{{ctrl.option.shortname}}_whole" ng-disabled="!ctrl.enable_state.enable_whole">{{ctrl.option.name}}</label> \
+        <button name="edit" ng-if="!ctrl.advanced_option_eligible" ng-click="ctrl.ToggleDetailState()" class="button-sml"><div class="icon-pencil"></div></button>' 
+
   };
 });
 
