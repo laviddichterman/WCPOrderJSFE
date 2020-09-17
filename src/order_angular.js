@@ -1176,7 +1176,7 @@ function UpdateLeadTime() {
         }
         selection_modifiers_map[mtid].meets_minimum = num_selected >= modifier_entry.modifier_type.min_selected;
       }
-      this.allow_advanced = this.advanced_option_selected;
+      this.allow_advanced = this.advanced_option_selected || this.advanced_option_eligible;
       this.modifier_map = selection_modifiers_map;
       this.PopulateOrderGuide();
     };
@@ -1440,7 +1440,7 @@ app.directive("wcpoptiondir", function () {
         <label ng-if="ctrl.modctrl.display_type === 2" ng-show="ctrl.option_detail_state" for="{{ctrl.option.shortname}}_right" class="option-right option-circle"></label> \
         </span> \
         <label class="topping_text" for="{{ctrl.option.shortname}}_whole" ng-disabled="!ctrl.enable_state.enable_whole">{{ctrl.option.name}}</label> \
-        <button name="edit" ng-if="!ctrl.advanced_option_eligible" ng-click="ctrl.ToggleDetailState()" class="button-sml"><div class="icon-pencil"></div></button>' 
+        <button name="edit" ng-if="ctrl.advanced_option_eligible" ng-click="ctrl.ToggleDetailState()" class="button-sml"><div class="icon-pencil"></div></button>' 
 
   };
 });
