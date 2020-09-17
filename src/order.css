@@ -327,7 +327,7 @@ span.cf7bridge {
   -ms-flex-pack: start !important;
   justify-content: flex-start !important;
 }
-.cart button {
+.cart button, .customizer .modifier button {
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
@@ -367,7 +367,7 @@ span.cf7bridge {
   font-size: 0;
   line-height: 0;
 }
-.cart .button-sml {
+.cart .button-sml, .customizer .button-sml {
   position: relative;
   width: 19px;
   height: 19px;

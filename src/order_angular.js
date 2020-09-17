@@ -1353,7 +1353,7 @@ function UpdateLeadTime() {
       },
       template: '\
       <div>{{ctrl.config.MENU.modifiers[ctrl.mtid].modifier_type.display_name ? ctrl.config.MENU.modifiers[ctrl.mtid].modifier_type.display_name : ctrl.config.MENU.modifiers[ctrl.mtid].modifier_type.name}}:</div> \
-      <div class="flexitems"> \
+      <div class="modifier flexitems"> \
         <div ng-if="ctrl.display_type !== 1" class="flexitem" ng-repeat="option in ctrl.visible_options" wcpoptiondir \
           selection="ctrl.selection" modctrl="ctrl" option="option" config="ctrl.config" allowadvanced="ctrl.pmenuctrl.allow_advanced"> \
         </div> \
@@ -1388,24 +1388,21 @@ app.directive("wcpoptiondir", function () {
         return this.modctrl.pmenuctrl.modifier_map[this.modctrl.mtid].options[this.option.moid];
       }
 
-      this.DetermineAdvancedOptionEligible = function (placement) {
+      this.AdvancedOptionEligible = function () {
         var enable_state = this.GetEnableState();
         // flag indicating there is an advanced option that could be selected, and we should show the button to access that
-        this.advanced_option_eligible = this.allowadvanced && this.modctrl.display_type === MODDISP_CHECKBOX && (enable_state.enable_left || enable_state.enable_right) && placement !== TOPPING_NONE;
+        this.advanced_option_eligible = this.allowadvanced && this.modctrl.display_type === MODDISP_CHECKBOX && (enable_state.enable_left || enable_state.enable_right) && this.placement !== TOPPING_NONE;
       }
 
       this.Initialize = function () {
         this.MENU = this.config.MENU;
         // flag indicating if the advanced display is opened or not
         this.option_detail_state = false;
-        // reference to the modifier map info for this particular option, READ ONLY
-        var enable_state = this.GetEnableState();
-        var placement = GetPlacementFromMIDOID(this.selection, this.option.modifier._id, this.option.moid);
+        this.placement = GetPlacementFromMIDOID(this.selection, this.option.modifier._id, this.option.moid);
         this.advanced_option_selected = placement === TOPPING_LEFT || placement === TOPPING_RIGHT;
         this.left = placement === TOPPING_LEFT;
         this.right = placement === TOPPING_RIGHT;
         this.whole = placement === TOPPING_WHOLE;
-        this.DetermineAdvancedOptionEligible(placement);
       };
 
       this.ToggleDetailState = function() {
@@ -1415,8 +1412,8 @@ app.directive("wcpoptiondir", function () {
       this.UpdateOption = function (placement) {
         this.option_detail_state = false;
         this.modctrl.PostModifyCallback(this.option.moid, placement);
+        this.placement = placement;
         this.advanced_option_selected = placement === TOPPING_LEFT || placement === TOPPING_RIGHT;
-        this.DetermineAdvancedOptionEligible(placement);
       };
 
       this.ToggleWhole = function () {
@@ -1450,7 +1447,7 @@ app.directive("wcpoptiondir", function () {
         <label ng-if="ctrl.modctrl.display_type === 2" ng-show="ctrl.option_detail_state" for="{{ctrl.option.shortname}}_right" class="option-right option-circle"></label> \
         </span> \
         <label class="topping_text" for="{{ctrl.option.shortname}}_whole" ng-disabled="!ctrl.GetEnableState().enable_whole">{{ctrl.option.name}}</label> \
-        <button name="edit" ng-if="ctrl.advanced_option_eligible && !ctrl.option_detail_state" ng-click="ctrl.ToggleDetailState()" class="button-sml"><div class="icon-pencil"></div></button>' 
+        <button name="edit" ng-if="ctrl.AdvancedOptionEligible() && !ctrl.option_detail_state" ng-click="ctrl.ToggleDetailState()" class="button-sml"><div class="icon-gear"></div></button>' 
   };
 });
 
