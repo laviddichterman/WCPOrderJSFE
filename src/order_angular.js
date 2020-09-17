@@ -1391,14 +1391,15 @@ app.directive("wcpoptiondir", function () {
       this.AdvancedOptionEligible = function () {
         var enable_state = this.GetEnableState();
         // flag indicating there is an advanced option that could be selected, and we should show the button to access that
-        this.advanced_option_eligible = this.allowadvanced && this.modctrl.display_type === MODDISP_CHECKBOX && (enable_state.enable_left || enable_state.enable_right) && this.placement !== TOPPING_NONE;
+        return this.allowadvanced && this.modctrl.display_type === MODDISP_CHECKBOX && (enable_state.enable_left || enable_state.enable_right) && this.placement !== TOPPING_NONE;
       }
 
       this.Initialize = function () {
         this.MENU = this.config.MENU;
         // flag indicating if the advanced display is opened or not
         this.option_detail_state = false;
-        this.placement = GetPlacementFromMIDOID(this.selection, this.option.modifier._id, this.option.moid);
+        var placement = GetPlacementFromMIDOID(this.selection, this.option.modifier._id, this.option.moid);
+        this.placement = placement;
         this.advanced_option_selected = placement === TOPPING_LEFT || placement === TOPPING_RIGHT;
         this.left = placement === TOPPING_LEFT;
         this.right = placement === TOPPING_RIGHT;
