@@ -1152,13 +1152,13 @@ function UpdateLeadTime() {
         selection_modifiers_map[mtid] = { has_selectable: false, meets_minimum: false, options: {} };
         for (var moidx = 0; moidx < modifier_entry.options_list.length; ++moidx) {
           var option_object = modifier_entry.options_list[moidx];
-          var is_disabled = DisableDataCheck(option_object.disable_data, service_time)
+          var is_enabled = DisableDataCheck(option_object.disable_data, service_time)
           var option_info = { 
             placement: TOPPING_NONE, 
             // do we need to figure out if we can de-select? answer: probably
-            enable_left: !is_disabled && option_object.can_split && option_object.IsEnabled(this.selection, this.CONFIG.LEFT, this.CONFIG.MENU),
-            enable_right: !is_disabled && option_object.can_split && option_object.IsEnabled(this.selection, this.CONFIG.RIGHT, this.CONFIG.MENU),
-            enable_whole: !is_disabled && option_object.IsEnabled(this.selection, this.CONFIG.WHOLE, this.CONFIG.MENU),
+            enable_left: is_enabled && option_object.can_split && option_object.IsEnabled(this.selection, this.CONFIG.LEFT, this.CONFIG.MENU),
+            enable_right: is_enabled && option_object.can_split && option_object.IsEnabled(this.selection, this.CONFIG.RIGHT, this.CONFIG.MENU),
+            enable_whole: is_enabled && option_object.IsEnabled(this.selection, this.CONFIG.WHOLE, this.CONFIG.MENU),
           };
           var enable_left_or_right = option_info.enable_left || option_info.enable_right;
           this.advanced_option_eligible = this.advanced_option_eligible || enable_left_or_right;
@@ -1176,7 +1176,7 @@ function UpdateLeadTime() {
         }
         selection_modifiers_map[mtid].meets_minimum = num_selected >= modifier_entry.modifier_type.min_selected;
       }
-      this.allow_advanced = this.advanced_option_selected;
+      this.allow_advanced = this.advanced_option_selected || this.advanced_option_eligible;
       this.modifier_map = selection_modifiers_map;
       this.PopulateOrderGuide();
     };
@@ -1451,7 +1451,6 @@ app.directive("wcpoptiondir", function () {
         </span> \
         <label class="topping_text" for="{{ctrl.option.shortname}}_whole" ng-disabled="!ctrl.GetEnableState().enable_whole">{{ctrl.option.name}}</label> \
         <button name="edit" ng-if="ctrl.advanced_option_eligible && !ctrl.option_detail_state" ng-click="ctrl.ToggleDetailState()" class="button-sml"><div class="icon-pencil"></div></button>' 
-
   };
 });
 
