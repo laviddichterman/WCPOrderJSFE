@@ -1383,14 +1383,19 @@ app.directive("wcpoptiondir", function () {
       modctrl: "=modctrl",
     },
     controller: function () {
+      this.GetEnableState = function () {
+        // reference to the modifier map info for this particular option, READ ONLY
+        return this.modctrl.pmenuctrl.modifier_map[this.modctrl.mtid].options[this.option.moid];
+      }
+
       this.Initialize = function () {
         this.MENU = this.config.MENU;
         // flag indicating if the advanced display is opened or not
         this.option_detail_state = false;
         // reference to the modifier map info for this particular option, READ ONLY
-        this.enable_state = this.modctrl.pmenuctrl.modifier_map[this.modctrl.mtid].options[this.option.moid];
+        var enable_state = this.GetEnableState();
         // flag indicating there is an advanced option that could be selected
-        this.advanced_option_eligible = this.allowadvanced && this.modctrl.display_type === MODDISP_CHECKBOX && (this.enable_state.enable_left || this.enable_state.enable_right);
+        this.advanced_option_eligible = this.allowadvanced && this.modctrl.display_type === MODDISP_CHECKBOX && (enable_state.enable_left || enable_state.enable_right);
         var placement = GetPlacementFromMIDOID(this.selection, this.option.modifier._id, this.option.moid);
         this.advanced_option_selected = placement === TOPPING_LEFT || placement === TOPPING_RIGHT;
         this.left = placement === TOPPING_LEFT;
@@ -1402,11 +1407,13 @@ app.directive("wcpoptiondir", function () {
         this.option_detail_state = !this.option_detail_state;
       };
 
+
       this.UpdateOption = function (placement) {
         this.option_detail_state = false;
         this.modctrl.PostModifyCallback(this.option.moid, placement);
         this.advanced_option_selected = placement === TOPPING_LEFT || placement === TOPPING_RIGHT;
-        this.advanced_option_eligible = this.allowadvanced && this.modctrl.display_type === MODDISP_CHECKBOX && (this.enable_state.enable_left || this.enable_state.enable_right);
+        var enable_state = this.GetEnableState();
+        this.advanced_option_eligible = this.allowadvanced && this.modctrl.display_type === MODDISP_CHECKBOX && (enable_state.enable_left || enable_state.enable_right);
       };
 
       this.ToggleWhole = function () {
@@ -1430,16 +1437,16 @@ app.directive("wcpoptiondir", function () {
     },
     controllerAs: 'ctrl',
     bindToController: true,
-    template: '<input ng-if="ctrl.modctrl.display_type === 0" id="{{ctrl.option.shortname}}_whole" class="input-whole" ng-model="ctrl.modctrl.current_single_value" ng-value="ctrl.option.moid" ng-disabled="!ctrl.enable_state.enable_whole"> \
-      <input ng-if="ctrl.modctrl.display_type === 2" id="{{ctrl.option.shortname}}_whole" class="input-whole" ng-model="ctrl.whole" ng-disabled="!ctrl.enable_state.enable_whole" type="checkbox" ng-change="ctrl.ToggleWhole()"> \
-        <input ng-if="ctrl.modctrl.display_type === 2" ng-show="ctrl.option_detail_state" id="{{ctrl.option.shortname}}_left" class="input-left" ng-model="ctrl.left" ng-disabled="!ctrl.enable_state.enable_left" type="checkbox" ng-change="ctrl.ToggleHalf()"> \
-        <input ng-if="ctrl.modctrl.display_type === 2" ng-show="ctrl.option_detail_state" id="{{ctrl.option.shortname}}_right" class="input-right" ng-model="ctrl.right" ng-disabled="!ctrl.enable_state.enable_right" type="checkbox" ng-change="ctrl.ToggleHalf()"> \
+    template: '<input ng-if="ctrl.modctrl.display_type === 0" id="{{ctrl.option.shortname}}_whole" class="input-whole" ng-model="ctrl.modctrl.current_single_value" ng-value="ctrl.option.moid" ng-disabled="!ctrl.GetEnableState().enable_whole"> \
+      <input ng-if="ctrl.modctrl.display_type === 2" id="{{ctrl.option.shortname}}_whole" class="input-whole" ng-model="ctrl.whole" ng-disabled="!ctrl.GetEnableState().enable_whole" type="checkbox" ng-change="ctrl.ToggleWhole()"> \
+        <input ng-if="ctrl.modctrl.display_type === 2" ng-show="ctrl.option_detail_state" id="{{ctrl.option.shortname}}_left" class="input-left" ng-model="ctrl.left" ng-disabled="!ctrl.GetEnableState().enable_left" type="checkbox" ng-change="ctrl.ToggleHalf()"> \
+        <input ng-if="ctrl.modctrl.display_type === 2" ng-show="ctrl.option_detail_state" id="{{ctrl.option.shortname}}_right" class="input-right" ng-model="ctrl.right" ng-disabled="!ctrl.GetEnableState().enable_right" type="checkbox" ng-change="ctrl.ToggleHalf()"> \
         <span class="option-circle-container"> \
         <label for="{{ctrl.option.shortname}}_whole" class="option-whole option-circle"></label> \
         <label ng-if="ctrl.modctrl.display_type === 2" ng-show="ctrl.option_detail_state" for="{{ctrl.option.shortname}}_left" class="option-left option-circle"></label> \
         <label ng-if="ctrl.modctrl.display_type === 2" ng-show="ctrl.option_detail_state" for="{{ctrl.option.shortname}}_right" class="option-right option-circle"></label> \
         </span> \
-        <label class="topping_text" for="{{ctrl.option.shortname}}_whole" ng-disabled="!ctrl.enable_state.enable_whole">{{ctrl.option.name}}</label> \
+        <label class="topping_text" for="{{ctrl.option.shortname}}_whole" ng-disabled="!ctrl.GetEnableState().enable_whole">{{ctrl.option.name}}</label> \
         <button name="edit" ng-if="!ctrl.advanced_option_eligible" ng-click="ctrl.ToggleDetailState()" class="button-sml"><div class="icon-pencil"></div></button>' 
 
   };
