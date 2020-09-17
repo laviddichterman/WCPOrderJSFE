@@ -1176,7 +1176,7 @@ function UpdateLeadTime() {
         }
         selection_modifiers_map[mtid].meets_minimum = num_selected >= modifier_entry.modifier_type.min_selected;
       }
-      this.allow_advanced = this.advanced_option_selected || this.advanced_option_eligible;
+      this.allow_advanced = this.advanced_option_selected;
       this.modifier_map = selection_modifiers_map;
       this.PopulateOrderGuide();
     };
@@ -1440,7 +1440,7 @@ app.directive("wcpoptiondir", function () {
     },
     controllerAs: 'ctrl',
     bindToController: true,
-    template: '<input ng-if="ctrl.modctrl.display_type === 0" id="{{ctrl.option.shortname}}_whole" class="input-whole" ng-model="ctrl.modctrl.current_single_value" ng-value="ctrl.option.moid" ng-disabled="!ctrl.GetEnableState().enable_whole"> \
+    template: '<input type="radio" ng-if="ctrl.modctrl.display_type === 0" id="{{ctrl.option.shortname}}_whole" class="input-whole" ng-model="ctrl.modctrl.current_single_value" ng-value="ctrl.option.moid" ng-disabled="!ctrl.GetEnableState().enable_whole" ng-change="ctrl.UpdateOption(ctrl.config.WHOLE)" > \
       <input ng-if="ctrl.modctrl.display_type === 2" id="{{ctrl.option.shortname}}_whole" class="input-whole" ng-model="ctrl.whole" ng-disabled="!ctrl.GetEnableState().enable_whole" type="checkbox" ng-change="ctrl.ToggleWhole()"> \
         <input ng-if="ctrl.modctrl.display_type === 2" ng-show="ctrl.option_detail_state" id="{{ctrl.option.shortname}}_left" class="input-left" ng-model="ctrl.left" ng-disabled="!ctrl.GetEnableState().enable_left" type="checkbox" ng-change="ctrl.ToggleHalf()"> \
         <input ng-if="ctrl.modctrl.display_type === 2" ng-show="ctrl.option_detail_state" id="{{ctrl.option.shortname}}_right" class="input-right" ng-model="ctrl.right" ng-disabled="!ctrl.GetEnableState().enable_right" type="checkbox" ng-change="ctrl.ToggleHalf()"> \

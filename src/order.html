@@ -39,9 +39,7 @@
         <wcppizzacartitem prod="pmenuCtrl.selection" description="true" dots="true" price="true"></wcppizzacartitem>
       </div>
       <hr class="separator">
-      <div wcpmodifierdir ng-repeat="(mtid, value) in pmenuCtrl.FilterModifiers(pmenuCtrl.modifier_map)"
-      mtid="mtid" selection="pmenuCtrl.selection" pmenuctrl="pmenuCtrl" config="orderCtrl.CONFIG" allowsplit="orderCtrl.s.enable_split_toppings"
-      >
+      <div wcpmodifierdir ng-repeat="(mtid, value) in pmenuCtrl.FilterModifiers(pmenuCtrl.modifier_map)" mtid="mtid" selection="pmenuCtrl.selection" pmenuctrl="pmenuCtrl" config="orderCtrl.CONFIG">
       </div>
       <div ng-if="!pmenuCtrl.suppress_guide && pmenuCtrl.messages.length">
         <div class="wpcf7-response-output wpcf7-validation-errors" ng-repeat="msg in pmenuCtrl.messages">{{msg}}</div>
@@ -49,6 +47,8 @@
       <div ng-if="pmenuCtrl.errors.length">
         <div class="wpcf7-response-output" ng-repeat="msg in pmenuCtrl.errors">{{msg}}</div>
       </div>
+      <div ng-if="orderCtrl.s.enable_split_toppings && pmenuCtrl.advanced_option_eligible"><label><input ng-disable="pmenuCtrl.advanced_option_selected" type="checkbox" ng-model="pmenuCtrl.allow_advanced">
+        I desperately need to order a split topping pizza and I know it's going to be a bad value and bake poorly.</label></div>
       <div class="order-nav">
         <span class="one-fifth">
           <button name="remove" class="btn button-remove scrolltotop" ng-click="pmenuCtrl.UnsetProduct()">Cancel</button>
