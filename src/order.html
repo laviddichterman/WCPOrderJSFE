@@ -152,23 +152,15 @@
     <span>Requested Service:</span>
     <form novalidate name="stage4">
     <div class="flexitems">
-      <div class="flexitem" ng-repeat="service in orderCtrl.CONFIG.SERVICE_TYPES track by $index">
-        <div ng-if="orderCtrl.s.service_type_functors[$index](orderCtrl.s)">
+      <div class="flexitem" ng-repeat="service in orderCtrl.CONFIG.SERVICE_TYPES | filter:orderCtrl.FilterServiceTypes(orderCtrl.s)">
           <label><input type="radio" ng-change="orderCtrl.ValidateDate(); orderCtrl.ClearAddress(); orderCtrl.ClearSlicing();" ng-model="orderCtrl.s.service_type" ng-value="service[1]">
           {{service[0]}}</label>
-        </div>
       </div>
     </div>
     <span ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DINEIN">
       <br /><label><input type="checkbox" ng-model="orderCtrl.s.acknowledge_dine_in_terms">
       REQUIRED: For the health and safety of our staff and fellow guests, you and all members of your party understand and agree to:
-    <ul><li>Have been following good social distancing practices.</li>
-      <li>Are actively monitoring for any possible COVID-19 symptoms and have not had any.</li>
-      <li>Are NOT knowingly sick or contagious.</li>
-      <li>Will wear a mask whilst on premise, excepting whilst eating/drinking.</li>
-      <li>Will maintain a safe distance from our crew.</li>
-      <li>Parties are limited to 5 persons.</li>
-      <li>Table reservations last 60 minutes.</li>
+    <ul><li ng-repeat="term in orderCtrl.CONFIG.DINE_IN_TERMS_LIST">{{term}}</li>
       </ul></label>
     </span>
     <label for="service-date">
@@ -188,7 +180,15 @@
     <span class="flexbox" ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && !orderCtrl.s.is_address_validated">
       <span class="flexbox__item one-whole">Delivery Information:</span>
     </span>
-    <span class="flexbox" ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && !orderCtrl.s.is_address_validated">
+    <span ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DINEIN">
+      <label for="guest-count">
+        <span class="guest-count-text">Guest Count</span>
+      </label>
+      <span class="guest-count">
+        <input type="number" name="guest-count" id="guest-count" ng-model="orderCtrl.s.number_guests" ng-blur="orderCtrl.fix_number_guests(true)" ng-change="orderCtrl.fix_number_guests(false)">
+      </span>
+    </span>
+      <span class="flexbox" ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && !orderCtrl.s.is_address_validated">
       <span class="flexbox__item one-half">
         <label for="address-line1">
           <span class="delivery-address-text">Address:</span>
@@ -235,7 +235,7 @@
     </span>
     <div class="order-nav">
       <button type="submit" class="btn scrolltotop" ng-show="orderCtrl.HasPreviousStage()" ng-click="orderCtrl.PreviousStage()">Previous</button>
-      <button type="submit" class="btn scrolltotop" ng-disabled="!orderCtrl.s.date_valid || (orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && (!orderCtrl.s.is_address_validated)) || (orderCtrl.s.service_type == orderCtrl.CONFIG.DINEIN && !orderCtrl.s.acknowledge_dine_in_terms)" ng-show="orderCtrl.HasNextStage()" ng-click="orderCtrl.NextStage(); orderCtrl.ClearTimeoutFlag();">{{(!orderCtrl.s.date_valid || (orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && (!orderCtrl.s.is_address_validated))) ? "Pick a date & time" : "Next"}}</button>
+      <button type="submit" class="btn scrolltotop" ng-disabled="!orderCtrl.s.date_valid || (orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && (!orderCtrl.s.is_address_validated)) || (orderCtrl.s.service_type == orderCtrl.CONFIG.DINEIN && !orderCtrl.s.acknowledge_dine_in_terms)" ng-show="orderCtrl.HasNextStage()" ng-click="orderCtrl.NextStage(); orderCtrl.ClearTimeoutFlag();">Next</button>
     </div>
   </div>
   <div ng-show="orderCtrl.s.stage === 5 && !orderCtrl.s.isProcessing">
@@ -371,15 +371,15 @@
       </div>
     <div ng-show="orderCtrl.s.service_type !== orderCtrl.CONFIG.DELIVERY && !orderCtrl.s.credit.validation_successful">
       <label><input type="checkbox" ng-model="orderCtrl.s.acknowledge_instructions_dialogue" ng-change="orderCtrl.ClearSpecialInstructions()">
-      I need to specify some special instructions (which may delay my order or change its cost) or wish to pay later.</label>
+      I need to specify some special instructions (which may delay my order or change its cost).</label>
       <textarea ng-show="orderCtrl.s.acknowledge_instructions_dialogue" ng-model="orderCtrl.s.special_instructions" ng-change="orderCtrl.ChangedEscapableInfo()"></textarea>
     </div>
     <div ng-repeat="res in orderCtrl.s.special_instructions_responses" class="wpcf7-response-output wpcf7-validation-errors">{{res}}</div>
     <div class="order-nav">
       <span ng-show="false" cf7bridge class="cf7bridge scrolltotop" orderinfo="orderCtrl"></span>
       <button type="submit" class="btn scrolltotop" ng-show="orderCtrl.HasPreviousStage()" ng-click="orderCtrl.PreviousStage()">Previous</button>
-      <button type="submit" class="btn scrolltotop" ng-show="orderCtrl.HasNextStage() && !orderCtrl.s.acknowledge_instructions_dialogue" ng-click="orderCtrl.NextStage();">Next</button>
-      <button type="submit" class="btn scrolltotop" ng-disabled="orderCtrl.s.disableorder" ng-show="orderCtrl.s.acknowledge_instructions_dialogue" ng-click="orderCtrl.SubmitToWario()">Submit Order</button>
+      <button type="submit" class="btn scrolltotop" ng-show="orderCtrl.HasNextStage() && (!orderCtrl.s.acknowledge_instructions_dialogue && !(orderCtrl.s.service_type === orderCtrl.CONFIG.DINEIN && !orderCtrl.CONFIG.ENABLE_DINE_IN_PREPAYMENT))" ng-click="orderCtrl.NextStage();">Next</button>
+      <button type="submit" class="btn scrolltotop" ng-disabled="orderCtrl.s.disableorder" ng-show="orderCtrl.s.acknowledge_instructions_dialogue || (orderCtrl.s.service_type === orderCtrl.CONFIG.DINEIN && !orderCtrl.CONFIG.ENABLE_DINE_IN_PREPAYMENT)" ng-click="orderCtrl.SubmitToWario()">Submit Order</button>
     </div>
     <div ng-hide="orderCtrl.s.tip_value === 0">* Gratuity is shared among the entire team.</div>
   </div>
@@ -577,8 +577,8 @@
 <script src="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.12/angular-material.min.js"></script>
 <script src="https://www.windycitypie.com/wp-includes/js/socket.io.js"></script>
 <script src="https://www.windycitypie.com/wp-includes/js/socket.min.js"></script>
-<script src="https://www.windycitypie.com/wp-includes/js/wcpshared.2.0.6.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
+<script src="https://www.windycitypie.com/wp-includes/js/wcpshared.2.0.9.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 <script src="https://polyfill.io/v3/polyfill.min.js"></script>
 <script>
 var WARIO_ENDPOINT = "https://wario.windycitypie.com/";
@@ -592,9 +592,20 @@ var SAUCE_WHITE_OID = "5ef6d0ac3991a469ceda25d9";
 var TOPPING_BLEU_OID = "5f06f2bca117bf46f6553a51";
 
 var WCP_BLOG_LOAD_TIME = moment(new Date([WCP_blog_epoch_time]));
+var ENABLE_SPLIT_TOPPINGS = false || window.location.search.includes("split");
 var CONFIG_ALLOW_SLICING = false;
 var ENABLE_DINE_IN = false;
+var ENABLE_DINE_IN_PREPAYMENT = false;
 var ADD_SOMETHING_THRESHOLD = 2;
+var MAX_PARTY_SIZE = 3;
+var DINE_IN_TERMS_LIST = ["Have been following good social distancing practices.",
+  "Are actively monitoring for any possible COVID-19 symptoms and have not had any.",
+  "Are NOT knowingly sick or contagious.",
+  "Will wear a mask while on premise and while interacting with our team.",
+  "Will maintain a safe distance from our crew.",
+  `Parties are limited to ${MAX_PARTY_SIZE} persons.`,
+  "Table reservations last 60 minutes.",
+  "A minimum 20% gratuity is suggested."];
 var CONST_MESSAGE_ADD_MORE_TO_PIZZA = "Our pizza is designed as a vehicle for add-ons. We recommend at least two toppings to weigh the crust down during baking. If this is your first time dining with us, we'd suggest ordering a menu pizza without modifications.";
 var CONST_MESSAGE_REQUEST_VEGAN = "Our pizzas cannot be made vegan or without cheese. If you're looking for a vegan option, our Beets By Schrute salad can be made vegan by omitting the bleu cheese.";
 var CONST_MESSAGE_REQUEST_HALF = "While half toppings are not on the menu, we can do them (with the exception of half roasted garlic or half red sauce, half white sauce) but they are charged the same as full toppings. As such, we recommend against them as they're not a good value for the customer and an imbalance of toppings will cause uneven baking of your pizza.";
@@ -602,4 +613,4 @@ var CONST_MESSAGE_REQUEST_SLICING = "In order to ensure the quality of our pizza
 var CONST_MESSAGE_TIP_PREAMBLE = "The Windy City Pie family is working hard to serve you, safely. All gratuity is shared with the entire staff. Everyone, from our team that makes the house-made dough, to the staff that handles your order appreciates your support!";
 var DELIVERY_LINK = "http://bit.ly/2QsrfV8";
 </script>
-<script src="https://www.windycitypie.com/wp-includes/js/WCPJSFE26.js"></script>
+<script src="https://www.windycitypie.com/wp-includes/js/WCPJSFE29.js"></script>

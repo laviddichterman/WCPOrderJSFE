@@ -129,7 +129,9 @@ var WCPStoreConfig = function () {
   // END menu related
 
   // user messaging
-
+  this.ENABLE_DINE_IN_PREPAYMENT = ENABLE_DINE_IN_PREPAYMENT;
+  this.DINE_IN_TERMS_LIST = DINE_IN_TERMS_LIST;
+  this.MAX_PARTY_SIZE = MAX_PARTY_SIZE;
   this.REQUEST_ANY = "By adding any special instructions, you will only be able to pay in person.";
   this.REQUEST_HALF = CONST_MESSAGE_REQUEST_HALF;
   this.REQUEST_SLICING = CONST_MESSAGE_REQUEST_SLICING;
@@ -316,12 +318,17 @@ var WCPOrderHelper = function () {
 
 var wcporderhelper = new WCPOrderHelper();
 
-var FixQuantity = function (val, clear_if_invalid) {
+var FixQuantity = function (val, clear_if_invalid, min, max) {
   if (typeof val === "string" || val instanceof String) {
     val = parseInt(val);
   }
-  if (clear_if_invalid && (!Number.isSafeInteger(val) || val < 1 || val > 99)) {
-    val = 1;
+  if (clear_if_invalid) {
+    if (!Number.isSafeInteger(val) || val < min) {
+      val = min;
+    }
+    if (val > max) {
+      val = max;
+    }
   }
   return val;
 };
@@ -374,7 +381,7 @@ function UpdateLeadTime() {
 
   app.service("OrderHelper", WCPOrderHelper);
 
-  var WCPOrderState = function (cfg, enable_delivery, enable_split_toppings) {
+  var WCPOrderState = function (cfg, enable_delivery) {
 
     this.ClearCredit = function () {
       this.credit = {
@@ -588,6 +595,7 @@ function UpdateLeadTime() {
           },
           user_email: state.email_address,
           sliced: state.slice_pizzas,
+          number_guests: state.number_guests,
           products: state.CartToDTO(),
           short_cart_list: state.short_cart_list,
           special_instructions: SanitizeIfExists(state.special_instructions),
@@ -605,7 +613,7 @@ function UpdateLeadTime() {
           load_time: state.debug_info.load_time,
           time_selection_time: state.debug_info["time-selection-time"] ? state.debug_info["time-selection-time"].format("H:mm:ss") : "",
           submittime: moment().format("MM-DD-YYYY HH:mm:ss"),
-          useragent: navigator.userAgent + " FEV11",
+          useragent: navigator.userAgent + " FEV12",
         }
       }).then(onSuccess).catch(onFail);
     }
@@ -661,6 +669,7 @@ function UpdateLeadTime() {
     this.customer_name_first = "";
     this.customer_name_last = "";
     this.phone_number = "";
+    this.number_guests = 1;
     this.delivery_address = ""; // customer input, not validated
     this.delivery_address_2 = ""; // customer input, not validated/required
     this.delivery_zipcode = ""; // customer input, not validated
@@ -681,7 +690,7 @@ function UpdateLeadTime() {
     this.acknowledge_instructions_dialogue = false;
     this.special_instructions = "";
     this.special_instructions_responses = [];
-    this.enable_split_toppings = enable_split_toppings;
+    this.enable_split_toppings = ENABLE_SPLIT_TOPPINGS;
     this.enable_delivery = enable_delivery;
     this.EMAIL_REGEX = EMAIL_REGEX;
 
@@ -735,21 +744,27 @@ function UpdateLeadTime() {
     this.selected_time_timeout = false;
   };
 
-  app.controller("OrderController", ["OrderHelper", "$http", "$location", "$rootScope", "socket",
-    function (OrderHelper, $http, $location, $rootScope, $socket) {
+  app.controller("OrderController", ["OrderHelper", "$http", "$rootScope", "socket",
+    function (OrderHelper, $http, $rootScope, $socket) {
       this.ORDER_HELPER = OrderHelper;
       this.CONFIG = $rootScope.CONFIG = OrderHelper.cfg;
-      var split_toppings = true;//$location.search().split === true;
       var enable_delivery = true;
       this.ScrollTop = ScrollTopJQ;
-      this.s = $rootScope.state = new WCPOrderState(this.CONFIG, enable_delivery, split_toppings);
+      this.s = $rootScope.state = new WCPOrderState(this.CONFIG, enable_delivery);
 
       this.Reset = function () {
-        this.s = $rootScope.state = new WCPOrderState(this.CONFIG, enable_delivery, split_toppings);
+        this.s = $rootScope.state = new WCPOrderState(this.CONFIG, enable_delivery);
       };
 
       this.ClearTimeoutFlag = function () {
         this.s.selected_time_timeout = false;
+      }
+
+      this.FilterServiceTypes = function (state) {
+        var functors = this.s.service_type_functors;
+        return function (item) {
+          return functors[item[1]](state);
+        }
       }
 
       this.ServiceTimeChanged = function () {
@@ -951,10 +966,15 @@ function UpdateLeadTime() {
       this.fixQuantities = function (clear_if_invalid) {
         for (var cid in this.s.cart) {
           for (var i = 0; i < this.s.cart[cid].length; ++i) {
-            this.s.cart[cid][i].quantity = FixQuantity(this.s.cart[cid][i].quantity, clear_if_invalid);
+            this.s.cart[cid][i].quantity = FixQuantity(this.s.cart[cid][i].quantity, clear_if_invalid, 1, 99);
           }
         }
         this.PostCartUpdate();
+      };
+
+      this.fix_number_guests = function (clear_if_invalid) {
+        console.log(this.s.number_guests);
+        this.s.number_guests = FixQuantity(this.s.number_guests, clear_if_invalid, 1, this.CONFIG.MAX_PARTY_SIZE);
       };
 
       this.updateCustomTip = function () {
@@ -1466,7 +1486,7 @@ app.directive("wcpoptiondir", function () {
     scope.orderinfo.s.special_instructions_responses = [];
           scope.orderinfo.s.disableorder = false;
           var special_instructions_lower = scope.orderinfo.s.special_instructions ? scope.orderinfo.s.special_instructions.toLowerCase() : "";
-          if (wcpconfig.REQUEST_ANY && scope.orderinfo.s.acknowledge_instructions_dialogue) {
+          if (wcpconfig.REQUEST_ANY && scope.orderinfo.s.acknowledge_instructions_dialogue && !(scope.orderinfo.s.service_type === wcpconfig.DINEIN && !wcpconfig.ENABLE_DINE_IN_PREPAYMENT)) {
     scope.orderinfo.s.special_instructions_responses.push(wcpconfig.REQUEST_ANY);
           }
           if (wcpconfig.REQUEST_HALF && (special_instructions_lower.indexOf("split") >= 0 || special_instructions_lower.indexOf("half") >= 0 || special_instructions_lower.indexOf("1/2") >= 0)) {
@@ -1497,10 +1517,10 @@ app.directive("wcpoptiondir", function () {
         function UpdateCurrentTime() {
           var time_diff = moment().valueOf() - timing_info.browser_load_time.valueOf();
           if (time_diff < timing_info.load_time_diff) {
-    // cheater cheater
-    location.reload();
+            // cheater cheater
+            location.reload();
           } else {
-    timing_info.load_time_diff = time_diff;
+            timing_info.load_time_diff = time_diff;
           }
           timing_info.current_time = moment(timing_info.load_time.valueOf() + timing_info.load_time_diff);
           UpdateLeadTime();
@@ -1508,8 +1528,10 @@ app.directive("wcpoptiondir", function () {
         }
         UpdateCurrentTime();
         UpdateLeadTime();
-        var time_updater = $interval(UpdateCurrentTime, 60000);
+        var time_updater = $interval(UpdateCurrentTime, 30000);
+        // check for return to window and update the time
         $window.document.onvisibilitychange = UpdateCurrentTime;
+        $window.document.pageshow = UpdateCurrentTime;
         element.on("$destroy", function () {
     $interval.cancel(time_updater);
         });
