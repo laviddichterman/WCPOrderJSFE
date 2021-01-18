@@ -177,9 +177,6 @@
       </select>
     </span>
     <div class="wpcf7-response-output wpcf7-mail-sent-ng" ng-if="orderCtrl.s.selected_time_timeout">The previously selected service time has expired.</div>
-    <span class="flexbox" ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && !orderCtrl.s.is_address_validated">
-      <span class="flexbox__item one-whole">Delivery Information:</span>
-    </span>
     <span ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DINEIN">
       <label for="guest-count">
         <span class="guest-count-text">Guest Count</span>
@@ -188,7 +185,10 @@
         <input type="number" name="guest-count" id="guest-count" ng-model="orderCtrl.s.number_guests" ng-blur="orderCtrl.fix_number_guests(true)" ng-change="orderCtrl.fix_number_guests(false)">
       </span>
     </span>
-      <span class="flexbox" ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && !orderCtrl.s.is_address_validated">
+    <span class="flexbox" ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && !orderCtrl.s.is_address_validated">
+      <span class="flexbox__item one-whole">Delivery Information:</span>
+    </span>
+    <span class="flexbox" ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && !orderCtrl.s.is_address_validated">
       <span class="flexbox__item one-half">
         <label for="address-line1">
           <span class="delivery-address-text">Address:</span>
@@ -604,7 +604,7 @@ var DINE_IN_TERMS_LIST = ["Have been following good social distancing practices.
   "Will wear a mask while on premise and while interacting with our team.",
   "Will maintain a safe distance from our crew.",
   `Parties are limited to ${MAX_PARTY_SIZE} persons.`,
-  "Table reservations last 60 minutes.",
+  "Table reservations last 60 minutes but we're flexible if there's no one waiting.",
   "A minimum 20% gratuity is suggested."];
 var CONST_MESSAGE_ADD_MORE_TO_PIZZA = "Our pizza is designed as a vehicle for add-ons. We recommend at least two toppings to weigh the crust down during baking. If this is your first time dining with us, we'd suggest ordering a menu pizza without modifications.";
 var CONST_MESSAGE_REQUEST_VEGAN = "Our pizzas cannot be made vegan or without cheese. If you're looking for a vegan option, our Beets By Schrute salad can be made vegan by omitting the bleu cheese.";
@@ -613,4 +613,4 @@ var CONST_MESSAGE_REQUEST_SLICING = "In order to ensure the quality of our pizza
 var CONST_MESSAGE_TIP_PREAMBLE = "The Windy City Pie family is working hard to serve you, safely. All gratuity is shared with the entire staff. Everyone, from our team that makes the house-made dough, to the staff that handles your order appreciates your support!";
 var DELIVERY_LINK = "http://bit.ly/2QsrfV8";
 </script>
-<script src="https://www.windycitypie.com/wp-includes/js/WCPJSFE29.js"></script>
+<script src="https://www.windycitypie.com/wp-includes/js/WCPJSFE30.js"></script>
