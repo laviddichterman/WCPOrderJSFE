@@ -1,3 +1,8 @@
+<script type='text/javascript'>
+  if (navigator.userAgent.indexOf("MSIE ") > -1 || navigator.userAgent.indexOf("Trident/") > -1){
+      alert("It looks like you're using Internet Explorer. This site, and a lot of the internet don't work with your browser. Please switch to an updated browser like Chrome, Firefox, Safari, or Edge!");
+  }
+</script>
 <div ng-cloak class="orderform" ng-app="WCPOrder" ng-controller="OrderController as orderCtrl">
   <span id="ordertop"></span>
   <div ng-show="orderCtrl.s.stage === 1 || orderCtrl.s.stage === 2" ng-controller="ProductMenuController as pmenuCtrl">
@@ -47,7 +52,7 @@
       <div ng-if="pmenuCtrl.errors.length">
         <div class="wpcf7-response-output" ng-repeat="msg in pmenuCtrl.errors">{{msg}}</div>
       </div>
-      <div ng-if="orderCtrl.s.enable_split_toppings && pmenuCtrl.advanced_option_eligible"><label><input ng-disable="pmenuCtrl.advanced_option_selected" type="checkbox" ng-model="pmenuCtrl.allow_advanced">
+      <div ng-if="orderCtrl.s.enable_split_toppings && pmenuCtrl.advanced_option_eligible"><label><input ng-disabled="pmenuCtrl.advanced_option_selected" type="checkbox" ng-model="pmenuCtrl.allow_advanced">
         I desperately need to order a split topping pizza and I know it's going to be a bad value and bake poorly.</label></div>
       <div class="order-nav">
         <span class="one-fifth">
