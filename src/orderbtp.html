@@ -39,6 +39,9 @@
       </div>
     </md-content>
     <div class="customizer menu-list__items" ng-if="pmenuCtrl.selection">
+      <div ng-if="pmenuCtrl.advanced_option !== null" class="advanced_option_modal_container" ng-click="pmenuCtrl.UnSetAdvancedOption()">
+        <div class="modal" wcpoptiondetailmodaldir optionctrl="pmenuCtrl.advanced_option"></div>
+      </div>
       <h3 class="flush--top"><strong>Customize {{pmenuCtrl.selection.PRODUCT_CLASS.display_flags && pmenuCtrl.selection.PRODUCT_CLASS.display_flags.singular_noun ? "your " + pmenuCtrl.selection.PRODUCT_CLASS.display_flags.singular_noun : "it"}}!</strong></h3>
       <div class="menu-list__item">
         <wcppizzacartitem prod="pmenuCtrl.selection" description="true" dots="true" price="true"></wcppizzacartitem>
@@ -582,7 +585,7 @@
   <script src="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.12/angular-material.min.js"></script>
   <script src="https://www.breezytownpizza.com/wp-includes/js/socket.io.js"></script>
   <script src="https://www.breezytownpizza.com/wp-includes/js/socket.min.js"></script>
-  <script src="https://www.windycitypie.com/wp-includes/js/wcpshared.2.0.9.js"></script>
+  <script src="https://www.breezytownpizza.com/wp-includes/js/wcpshared.2.0.9.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
   <script src="https://polyfill.io/v3/polyfill.min.js"></script>
   <script>
@@ -600,6 +603,7 @@
     var ENABLE_SPLIT_TOPPINGS = false || window.location.search.includes("split");
     var DELIVERY_LINK = "https://bit.ly/2wiB68T";
     var CONFIG_ALLOW_SLICING = true;
+    var ENABLE_DELIVERY = false;
     var ENABLE_DINE_IN = false;
     var ENABLE_DINE_IN_PREPAYMENT = true;
     var ADD_SOMETHING_THRESHOLD = 1;
@@ -618,4 +622,4 @@
     var CONST_MESSAGE_REQUEST_SLICING = null;
     var CONST_MESSAGE_TIP_PREAMBLE = "The Breezy Town Pizza family is working hard to serve you, safely. All gratuity is shared with the entire staff. Everyone, from our team that makes the house-made dough, to the staff that handles your order appreciates your support!";
     </script>
-    <script src="https://www.breezytownpizza.com/wp-includes/js/BTPJSFE12.js"></script>
+    <script src="https://www.breezytownpizza.com/wp-includes/js/BTPJSFE13.js"></script>

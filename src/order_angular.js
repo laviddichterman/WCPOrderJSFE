@@ -381,7 +381,7 @@ function UpdateLeadTime() {
 
   app.service("OrderHelper", WCPOrderHelper);
 
-  var WCPOrderState = function (cfg, enable_delivery) {
+  var WCPOrderState = function (cfg) {
 
     this.ClearCredit = function () {
       this.credit = {
@@ -691,7 +691,6 @@ function UpdateLeadTime() {
     this.special_instructions = "";
     this.special_instructions_responses = [];
     this.enable_split_toppings = ENABLE_SPLIT_TOPPINGS;
-    this.enable_delivery = enable_delivery;
     this.EMAIL_REGEX = EMAIL_REGEX;
 
     this.delivery_fee = 0;
@@ -723,7 +722,7 @@ function UpdateLeadTime() {
       },
       // DELIVERY
       function (state) {
-        return state.enable_delivery;
+        return ENABLE_DELIVERY;
       }
     ];
 
@@ -748,12 +747,11 @@ function UpdateLeadTime() {
     function (OrderHelper, $http, $rootScope, $socket) {
       this.ORDER_HELPER = OrderHelper;
       this.CONFIG = $rootScope.CONFIG = OrderHelper.cfg;
-      var enable_delivery = true;
       this.ScrollTop = ScrollTopJQ;
-      this.s = $rootScope.state = new WCPOrderState(this.CONFIG, enable_delivery);
+      this.s = $rootScope.state = new WCPOrderState(this.CONFIG);
 
       this.Reset = function () {
-        this.s = $rootScope.state = new WCPOrderState(this.CONFIG, enable_delivery);
+        this.s = $rootScope.state = new WCPOrderState(this.CONFIG);
       };
 
       this.ClearTimeoutFlag = function () {
@@ -1090,10 +1088,20 @@ function UpdateLeadTime() {
     this.advanced_option_selected = false;
     // value tied to the toggle switch presented to the user
     this.allow_advanced = false;
+    // reference to the controller for the currently selected advanced option
+    this.advanced_option = null;
+
     this.messages = [];
     this.errors = [];
     // mod map is { MTID: { has_selectable: boolean, meets_minimum: boolean, options: { MOID: {placement, enable_left, enable_right, enable_whole } } } }
     this.modifier_map = {};
+
+    this.SetAdvancedOption = function(opt) { 
+      this.advanced_option = opt;
+    }
+    this.UnSetAdvancedOption = function() { 
+      this.advanced_option = null;
+    }
 
     this.FilterModifiers = function (mods) {
       var result = {};
@@ -1163,6 +1171,7 @@ function UpdateLeadTime() {
       this.is_addition = is_new;
       this.advanced_option_eligible = false;
       this.advanced_option_selected = false;
+      this.advanced_option = null;
 
       var selection_modifiers_map = {};
       for (var mtidx = 0; mtidx < this.selection.PRODUCT_CLASS.modifiers.length; ++mtidx) {
@@ -1191,7 +1200,7 @@ function UpdateLeadTime() {
           for (var moidx = 0; moidx < this.selection.modifiers[mtid].length; ++moidx) {
             var option_placement = this.selection.modifiers[mtid][moidx];
             selection_modifiers_map[mtid].options[option_placement[1]].placement = option_placement[0];
-            this.advanced_option_selected = this.advanced_option_selected || option_placement[0] === TOPPING_LEFT || option_placement[0] === TOPPING_RIGHT;
+            this.advanced_option_selected = this.advanced_option_selected || (option_placement[0] !== TOPPING_WHOLE && option_placement[0] !== TOPPING_NONE);
           }
         }
         selection_modifiers_map[mtid].meets_minimum = num_selected >= modifier_entry.modifier_type.min_selected;
@@ -1206,6 +1215,7 @@ function UpdateLeadTime() {
       this.selection = null;
       this.cart_entry = null;
       this.catid = null;
+      this.advanced_option = null;
       this.messages = [];
     };
 
@@ -1410,14 +1420,13 @@ app.directive("wcpoptiondir", function () {
 
       this.AdvancedOptionEligible = function () {
         var enable_state = this.GetEnableState();
+        // TODO: likely need to remove the this.placement !== TOPPING_NONE check since it won't allow a half topping to be added if there's still room on one side
         // flag indicating there is an advanced option that could be selected, and we should show the button to access that
         return this.allowadvanced && this.modctrl.display_type === MODDISP_CHECKBOX && (enable_state.enable_left || enable_state.enable_right) && this.placement !== TOPPING_NONE;
       }
 
       this.Initialize = function () {
         this.MENU = this.config.MENU;
-        // flag indicating if the advanced display is opened or not
-        this.option_detail_state = false;
         var placement = GetPlacementFromMIDOID(this.selection, this.option.modifier._id, this.option.moid);
         this.placement = placement;
         this.advanced_option_selected = placement === TOPPING_LEFT || placement === TOPPING_RIGHT;
@@ -1426,12 +1435,7 @@ app.directive("wcpoptiondir", function () {
         this.whole = placement === TOPPING_WHOLE;
       };
 
-      this.ToggleDetailState = function() {
-        this.option_detail_state = !this.option_detail_state;
-      };
-
       this.UpdateOption = function (placement) {
-        this.option_detail_state = false;
         this.modctrl.PostModifyCallback(this.option.moid, placement);
         this.placement = placement;
         this.advanced_option_selected = placement === TOPPING_LEFT || placement === TOPPING_RIGHT;
@@ -1458,17 +1462,41 @@ app.directive("wcpoptiondir", function () {
     },
     controllerAs: 'ctrl',
     bindToController: true,
+    // TODO we need to display whatever is the most appropriate button instead of just the whole toggle. 
     template: '<input type="radio" ng-if="ctrl.modctrl.display_type === 0" id="{{ctrl.option.shortname}}_whole" class="input-whole" ng-model="ctrl.modctrl.current_single_value" ng-value="ctrl.option.moid" ng-disabled="!ctrl.GetEnableState().enable_whole" ng-change="ctrl.UpdateOption(ctrl.config.WHOLE)" > \
       <input ng-if="ctrl.modctrl.display_type === 2" id="{{ctrl.option.shortname}}_whole" class="input-whole" ng-model="ctrl.whole" ng-disabled="!ctrl.GetEnableState().enable_whole" type="checkbox" ng-change="ctrl.ToggleWhole()"> \
-        <input ng-if="ctrl.modctrl.display_type === 2" ng-show="ctrl.option_detail_state" id="{{ctrl.option.shortname}}_left" class="input-left" ng-model="ctrl.left" ng-disabled="!ctrl.GetEnableState().enable_left" type="checkbox" ng-change="ctrl.ToggleHalf()"> \
-        <input ng-if="ctrl.modctrl.display_type === 2" ng-show="ctrl.option_detail_state" id="{{ctrl.option.shortname}}_right" class="input-right" ng-model="ctrl.right" ng-disabled="!ctrl.GetEnableState().enable_right" type="checkbox" ng-change="ctrl.ToggleHalf()"> \
+        <input ng-if="ctrl.modctrl.display_type === 2" ng-show="ctrl.left" id="{{ctrl.option.shortname}}_left" class="input-left" ng-model="ctrl.left" ng-disabled="!ctrl.GetEnableState().enable_left" type="checkbox" ng-change="ctrl.ToggleHalf()"> \
+        <input ng-if="ctrl.modctrl.display_type === 2" ng-show="ctrl.right" id="{{ctrl.option.shortname}}_right" class="input-right" ng-model="ctrl.right" ng-disabled="!ctrl.GetEnableState().enable_right" type="checkbox" ng-change="ctrl.ToggleHalf()"> \
         <span class="option-circle-container"> \
-        <label for="{{ctrl.option.shortname}}_whole" class="option-whole option-circle"></label> \
-        <label ng-if="ctrl.modctrl.display_type === 2" ng-show="ctrl.option_detail_state" for="{{ctrl.option.shortname}}_left" class="option-left option-circle"></label> \
-        <label ng-if="ctrl.modctrl.display_type === 2" ng-show="ctrl.option_detail_state" for="{{ctrl.option.shortname}}_right" class="option-right option-circle"></label> \
+        <label ng-show="!this.advanced_option_selected" for="{{ctrl.option.shortname}}_whole" class="option-whole option-circle"></label> \
+        <label ng-if="ctrl.modctrl.display_type === 2" ng-show="ctrl.left" for="{{ctrl.option.shortname}}_left" class="option-left option-circle"></label> \
+        <label ng-if="ctrl.modctrl.display_type === 2" ng-show="ctrl.right" for="{{ctrl.option.shortname}}_right" class="option-right option-circle"></label> \
         </span> \
         <label class="topping_text" for="{{ctrl.option.shortname}}_whole" ng-disabled="!ctrl.GetEnableState().enable_whole">{{ctrl.option.name}}</label> \
-        <button name="edit" ng-if="ctrl.AdvancedOptionEligible() && !ctrl.option_detail_state" ng-click="ctrl.ToggleDetailState()" class="button-sml"><div class="icon-gear"></div></button>' 
+        <button name="edit" ng-if="ctrl.AdvancedOptionEligible()" ng-click="ctrl.modctrl.pmenuctrl.SetAdvancedOption(ctrl)" class="button-sml"><div class="icon-gear"></div></button>' 
+  };
+});
+
+app.directive("wcpoptiondetailmodaldir", function () {
+  return {
+    restrict: "A",
+    scope: {
+      optionctrl: "=optionctrl",
+    },
+    controller: function () {
+    },
+    controllerAs: 'ctrl',
+    bindToController: true,
+    template: '<input id="{{ctrl.optionctrl.option.shortname}}_whole" class="input-whole" ng-model="ctrl.optionctrl.whole" ng-disabled="!ctrl.optionctrl.GetEnableState().enable_whole" type="checkbox" ng-change="ctrl.optionctrl.ToggleWhole()"> \
+        <input id="{{ctrl.optionctrl.option.shortname}}_left" class="input-left" ng-model="ctrl.optionctrl.left" ng-disabled="!ctrl.optionctrl.GetEnableState().enable_left" type="checkbox" ng-change="ctrl.optionctrl.ToggleHalf()"> \
+        <input id="{{ctrl.optionctrl.option.shortname}}_right" class="input-right" ng-model="ctrl.optionctrl.right" ng-disabled="!ctrl.optionctrl.GetEnableState().enable_right" type="checkbox" ng-change="ctrl.optionctrl.ToggleHalf()"> \
+        <span class="option-circle-container"> \
+        <label for="{{ctrl.optionctrl.option.shortname}}_whole" class="option-whole option-circle"></label> \
+        <label for="{{ctrl.optionctrl.option.shortname}}_left" class="option-left option-circle"></label> \
+        <label for="{{ctrl.optionctrl.option.shortname}}_right" class="option-right option-circle"></label> \
+        </span> \
+        <span class="topping_text">{{ctrl.optionctrl.option.name}}</span> \
+        <button name="done" ng-click="ctrl.optionctrl.modctrl.pmenuctrl.UnSetAdvancedOption()" class="button-sml"><div class="icon-gear"></div></button>' 
   };
 });
 
