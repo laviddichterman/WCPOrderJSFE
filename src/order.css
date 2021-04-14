@@ -162,13 +162,12 @@ span.cf7bridge {
 .customizer .option-right {
   border-bottom-right-radius: 13px;
   border-top-right-radius: 13px;
-  margin-left: 26px;
+  margin-left: 13px;
 }
 
 .customizer .option-left {
   border-bottom-left-radius: 13px;
   border-top-left-radius: 13px;
-  margin-left: -13px;
 }
 
 .cf7bridge .wpcf7-response-output {
@@ -367,7 +366,9 @@ span.cf7bridge {
   font-size: 0;
   line-height: 0;
 }
-.cart .button-sml, .customizer .button-sml {
+
+.cart .button-sml, 
+.customizer .button-sml {
   position: relative;
   width: 19px;
   height: 19px;
@@ -376,13 +377,13 @@ span.cf7bridge {
   min-height: 0;
   padding: 0;
   margin: 0;
-  vertical-align: middle;
   background-color: white !important;
   border: 1px solid #969799;
   border-radius: 50%;
   overflow: hidden;
   line-height: 0;
-}
+};
+
 .cart .button-remove:before,
 .cart .button-remove:after {
   content: "";
