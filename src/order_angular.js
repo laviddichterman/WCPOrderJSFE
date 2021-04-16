@@ -19,21 +19,36 @@ var CartEntry = function (catid, product, quantity, can_edit) {
   this.pi = product;
   this.quantity = quantity;
   this.can_edit = can_edit;
+  this.locked = false;
 };
 
 var $j = jQuery.noConflict();
 
 var DELIVERY_INTERVAL_TIME = 30;
 
+if (Number.EPSILON === undefined) {
+  Number.EPSILON = Math.pow(2, -52);
+}
+
+var RoundToTwoDecimalPlaces = function(num) {
+  return Math.round((num + Number.EPSILON) * 100) / 100;
+}
 var SanitizeIfExists = function (str) {
   return str && str.length ? str.replace("'", "`").replace("/", "|").replace("&", "and").replace("<", "").replace(">", "").replace(/[\+\t\r\n\v\f]/g, '') : str;
 }
 
-function ScrollTopJQ() {
-  $j("html, body").animate({
-    scrollTop: $j("#ordertop").offset().top - 150
-  }, 500);
+function ScrollToEIdJQ(id, delay) { 
+  setTimeout(function() {
+    $j("html, body").animate({
+      scrollTop: $j(id).offset().top - 150
+    }, 500);
+  }, delay);
 }
+
+function ScrollTopJQ() {
+  ScrollToEIdJQ("#ordertop", 0);
+}
+
 
 var TimingInfo = function () {
   this.load_time = WCP_BLOG_LOAD_TIME;
@@ -103,7 +118,7 @@ var WCPStoreConfig = function () {
     this.DELIVERY_HOURS
   ];
 
-  this.TAX_RATE = 0.101;
+  this.TAX_RATE = TAX_RATE;
 
   this.LEAD_TIME = [45, 45, 1440];
 
@@ -343,7 +358,7 @@ function UpdateLeadTime() {
 }
 
 (function () {
-  var app = angular.module("WCPOrder", ['ngSanitize', 'btford.socket-io']);
+  var app = angular.module("WCPOrder", ['ngSanitize', 'ngMaterial', 'btford.socket-io']);
 
   app.filter('TrustAsHTML', ['$sce', function ($sce) {
     return function (val) {
@@ -425,7 +440,7 @@ function UpdateLeadTime() {
       if (val === null || val === undefined || val < 0.0) {
         val = 0.0;
       }
-      val = parseFloat(val.toFixed(2));
+      val = RoundToTwoDecimalPlaces(val);
       this.custom_tip_value = val;
       this.tip_value = val;
     }
@@ -435,7 +450,7 @@ function UpdateLeadTime() {
       this.selected_tip = idx;
       this.show_custom_tip_input = false;
       var compute_tip_from = this.computed_subtotal + this.computed_tax + this.delivery_fee;
-      var newtip = parseFloat(Number(this.tip_options[idx] * compute_tip_from).toFixed(2));
+      var newtip = RoundToTwoDecimalPlaces(this.tip_options[idx] * compute_tip_from);
       this.custom_tip_value = this.custom_tip_value < newtip ? newtip : this.custom_tip_value;
       this.tip_value = newtip;
       this.TotalsUpdate();
@@ -474,13 +489,12 @@ function UpdateLeadTime() {
         pre_tax_store_credit = Math.min(this.credit.amount, pre_tax_monies);
         this.credit.amount_used = pre_tax_store_credit;
       }
-      this.computed_tax = parseFloat(Number((pre_tax_monies - pre_tax_store_credit) * cfg.TAX_RATE).toFixed(2));
+      this.computed_tax = RoundToTwoDecimalPlaces((pre_tax_monies - pre_tax_store_credit) * cfg.TAX_RATE);
       this.autograt = this.num_pizza >= 5 || this.service_type === cfg.DELIVERY || this.service_type === cfg.DINEIN ? .2 : 0;
       var compute_tip_from = pre_tax_monies + this.computed_tax;
-      var mintip = compute_tip_from * this.autograt;
-      mintip = parseFloat(mintip.toFixed(2));
+      var mintip = RoundToTwoDecimalPlaces(compute_tip_from * this.autograt);
       if (this.tip_clean) {
-        this.custom_tip_value = parseFloat(Number(compute_tip_from * .2).toFixed(2));
+        this.custom_tip_value = RoundToTwoDecimalPlaces(compute_tip_from * .2);
         this.tip_value = this.tip_value < mintip ? mintip : 0;
       }
       else {
@@ -500,7 +514,7 @@ function UpdateLeadTime() {
       }
       this.custom_tip_value = this.custom_tip_value < mintip ? mintip : this.custom_tip_value;
       this.total = pre_tax_monies + this.computed_tax + this.tip_value;
-      this.total = parseFloat(this.total.toFixed(2));
+      this.total = RoundToTwoDecimalPlaces(this.total);
       let post_tax_credit_used = 0;
       // TODO: handle case where discount credit is used to apply to tip, adding the value to amount_used almost does it
       if (this.credit.validation_successful && this.credit.type == "MONEY") {
@@ -613,7 +627,7 @@ function UpdateLeadTime() {
           load_time: state.debug_info.load_time,
           time_selection_time: state.debug_info["time-selection-time"] ? state.debug_info["time-selection-time"].format("H:mm:ss") : "",
           submittime: moment().format("MM-DD-YYYY HH:mm:ss"),
-          useragent: navigator.userAgent + " FEV12",
+          useragent: navigator.userAgent + " FEV13",
         }
       }).then(onSuccess).catch(onFail);
     }
@@ -743,11 +757,12 @@ function UpdateLeadTime() {
     this.selected_time_timeout = false;
   };
 
-  app.controller("OrderController", ["OrderHelper", "$http", "$rootScope", "socket",
-    function (OrderHelper, $http, $rootScope, $socket) {
+  app.controller("OrderController", ["OrderHelper", "$http", "$rootScope", "socket", "$mdToast",
+    function (OrderHelper, $http, $rootScope, $socket, $mdToast) {
       this.ORDER_HELPER = OrderHelper;
       this.CONFIG = $rootScope.CONFIG = OrderHelper.cfg;
       this.ScrollTop = ScrollTopJQ;
+      this.ScrollToID = ScrollToEIdJQ;
       this.s = $rootScope.state = new WCPOrderState(this.CONFIG);
 
       this.Reset = function () {
@@ -881,11 +896,12 @@ function UpdateLeadTime() {
           var pi_copy = CopyWCPProduct(pi);
           pi_copy.piid = "";
           pi_copy.Initialize(this.CONFIG.MENU);
-
+          this.ScrollToID("#accordion-" + String(cid), 0);
           this.AddToOrder(cid, pi_copy);
         }
         else {
-          pmenuctrl.SetProduct(cid, pi, true);
+          this.ScrollTop();
+          pmenuctrl.SetProduct(cid, pi, true, false);
         }
       }
 
@@ -916,6 +932,7 @@ function UpdateLeadTime() {
       }
 
       this.AddToOrder = function (cid, pi) {
+        //$mdToast.show($mdToast.simple().textContent('Hello!'));
         if (!this.s.cart.hasOwnProperty(cid)) {
           this.s.cart[cid] = [];
         }
@@ -1076,7 +1093,7 @@ function UpdateLeadTime() {
       $socket.on("WCP_CATALOG", UpdateCatalogFxn);
     }]);
 
-  app.controller("ProductMenuController", function () {
+  app.controller("ProductMenuController", function ($scope, $mdDialog) {
     this.CONFIG = wcpconfig;
     this.selection = null;
     this.cart_entry = null;
@@ -1089,18 +1106,55 @@ function UpdateLeadTime() {
     // value tied to the toggle switch presented to the user
     this.allow_advanced = false;
     // reference to the controller for the currently selected advanced option
-    this.advanced_option = null;
+    $scope.advanced_option = this.advanced_option = null;
+    // previous state of our advanced option
+    $scope.advanced_option_previous_state = this.advanced_option_previous_state = 0;
+
+    this.ShowAdvancedDialog = function($event) {
+      var par = angular.element(document.body).find(".orderform");
+      $mdDialog.show({
+        parent: par,
+        targetEvent: $event,
+        contentElement: "#wcpoptionmodal",
+        clickOutsideToClose: true,
+        escapeToClose: true
+      }).then(function() {
+        // on confirm change
+        $scope.advanced_option.modctrl.pmenuctrl.ConfirmAdvancedOption();
+      }, function() {
+        // on reject change
+        $scope.advanced_option.modctrl.pmenuctrl.CancelAdvancedOption();
+      });
+    };
+    //$scope.show_advanced_dialog = ShowAdvancedDialog;
 
     this.messages = [];
     this.errors = [];
     // mod map is { MTID: { has_selectable: boolean, meets_minimum: boolean, options: { MOID: {placement, enable_left, enable_right, enable_whole } } } }
     this.modifier_map = {};
 
-    this.SetAdvancedOption = function(opt) { 
-      this.advanced_option = opt;
+    this.SetAdvancedOption = function($event, opt) { 
+      $scope.advanced_option = this.advanced_option = opt;
+      $scope.advanced_option_previous_state = this.advanced_option_previous_state = opt.placement;
+      this.ShowAdvancedDialog($event);
     }
-    this.UnSetAdvancedOption = function() { 
-      this.advanced_option = null;
+  
+    this.CancelAdvancedOptionModal = function() {
+      $mdDialog.cancel();
+    }
+    this.ConfirmAdvancedOptionModal = function() {
+      $mdDialog.hide();
+    }
+
+    this.ConfirmAdvancedOption = function() {
+      $scope.advanced_option = this.advanced_option = null;
+      $scope.advanced_option_previous_state = this.advanced_option_previous_state = 0;
+    }
+    this.CancelAdvancedOption = function() { 
+      $scope.advanced_option.UpdateOption($scope.advanced_option_previous_state, false);
+      // TODO: remove this initalize call once the derived state is in a better situation
+      $scope.advanced_option.Initialize();
+      this.ConfirmAdvancedOption();
     }
 
     this.FilterModifiers = function (mods) {
@@ -1125,7 +1179,7 @@ function UpdateLeadTime() {
       var menu = this.CONFIG.MENU;
       this.messages = [];
       if (this.selection && this.selection.PRODUCT_CLASS._id === PIZZA_PCID) {
-        if (this.selection.bake_count[0] < ADD_SOMETHING_THRESHOLD || this.selection.bake_count[0] < ADD_SOMETHING_THRESHOLD) {
+        if (this.selection.bake_count[0] < ADD_SOMETHING_THRESHOLD || this.selection.bake_count[1] < ADD_SOMETHING_THRESHOLD) {
           this.messages.push(CONST_MESSAGE_ADD_MORE_TO_PIZZA);
         }
         if (this.selection.flavor_count[0] > 5 || this.selection.flavor_count[1] > 5) {
@@ -1146,10 +1200,10 @@ function UpdateLeadTime() {
       this.errors = error_messages;
     };
 
-    this.PostModifierChangeCallback = function (mid, oid, placement) {
+    this.PostModifierChangeCallback = function (mid, oid, placement, is_from_advanced_modal) {
       console.assert(this.selection);
       var had_allowed_advanced_options = this.allow_advanced;
-      this.SetProduct(this.catid, this.selection, this.is_addition);
+      this.SetProduct(this.catid, this.selection, this.is_addition, is_from_advanced_modal);
       this.allow_advanced = this.allow_advanced || had_allowed_advanced_options;
     }
 
@@ -1157,10 +1211,11 @@ function UpdateLeadTime() {
       var pi_copy = CopyWCPProduct(cart_entry.pi);
       pi_copy.Initialize(this.CONFIG.MENU);
       this.cart_entry = cart_entry;
-      this.SetProduct(cart_entry.catid, pi_copy, false);
+      this.cart_entry.locked = true;
+      this.SetProduct(cart_entry.catid, pi_copy, false, false);
     }
 
-    this.SetProduct = function (catid, product_instance, is_new /*, service_time*/) {
+    this.SetProduct = function (catid, product_instance, is_new, is_from_advanced_modal /*, service_time*/) {
       // todo: address service_time piping
       var service_time = moment();
       this.selection = CopyWCPProduct(product_instance);
@@ -1169,10 +1224,11 @@ function UpdateLeadTime() {
       this.selection.Initialize(this.CONFIG.MENU);
       this.catid = catid;
       this.is_addition = is_new;
-      this.advanced_option_eligible = false;
-      this.advanced_option_selected = false;
-      this.advanced_option = null;
-
+      if (!is_from_advanced_modal) {
+        this.advanced_option_eligible = false;
+        this.advanced_option_selected = false;
+        this.advanced_option = null;
+      }
       var selection_modifiers_map = {};
       for (var mtidx = 0; mtidx < this.selection.PRODUCT_CLASS.modifiers.length; ++mtidx) {
         var mtid = this.selection.PRODUCT_CLASS.modifiers[mtidx];
@@ -1212,10 +1268,14 @@ function UpdateLeadTime() {
 
 
     this.UnsetProduct = function () {
+      if (this.cart_entry !== null) {
+        this.cart_entry.locked = false;
+      }
       this.selection = null;
       this.cart_entry = null;
       this.catid = null;
       this.advanced_option = null;
+      this.is_addition = true;
       this.messages = [];
     };
 
@@ -1345,7 +1405,7 @@ function UpdateLeadTime() {
           }
         };
 
-        this.PostModifyCallback = function (moid, placement) { 
+        this.PostModifyCallback = function (moid, placement, is_from_advanced_modal) { 
           //console.log(`placement ${placement} of option ${JSON.stringify(moid)}`);
           if (!this.pmenuctrl.selection.modifiers.hasOwnProperty(this.mtid)) {
             this.pmenuctrl.selection.modifiers[this.mtid] = [];
@@ -1377,7 +1437,7 @@ function UpdateLeadTime() {
               this.pmenuctrl.selection.modifiers[this.mtid] = [[TOPPING_WHOLE, this.current_single_value]];
             }
           }
-          this.pmenuctrl.PostModifierChangeCallback(this.mtid, moid, placement);
+          this.pmenuctrl.PostModifierChangeCallback(this.mtid, moid, placement, is_from_advanced_modal);
         };
         this.Initialize();
       },
@@ -1391,7 +1451,7 @@ function UpdateLeadTime() {
           <input type="checkbox" id="{{ctrl.toggle_values[1].shortname}}_whole" class="input-whole" \
             ng-disabled="!ctrl.pmenuctrl.modifier_map[ctrl.mtid].options[ctrl.toggle_values[1].moid].enable_whole" \
             ng-model="ctrl.current_single_value" ng-true-value="1" \
-            ng-false-value="0" ng-change="ctrl.PostModifyCallback()"> \
+            ng-false-value="0" ng-change="ctrl.PostModifyCallback(0, 0, false)"> \
           <span class="option-circle-container"> \
             <label for="{{ctrl.toggle_values[1].shortname}}_whole" class="option-whole option-circle"></label> \
           </span> \
@@ -1435,45 +1495,43 @@ app.directive("wcpoptiondir", function () {
         this.whole = placement === TOPPING_WHOLE;
       };
 
-      this.UpdateOption = function (placement) {
-        this.modctrl.PostModifyCallback(this.option.moid, placement);
-        this.placement = placement;
-        this.advanced_option_selected = placement === TOPPING_LEFT || placement === TOPPING_RIGHT;
+      this.UpdateOption = function (new_placement, is_from_advanced_modal) {
+        this.modctrl.PostModifyCallback(this.option.moid, new_placement, is_from_advanced_modal);
+        this.placement = new_placement;
+        this.advanced_option_selected = new_placement === TOPPING_LEFT || new_placement === TOPPING_RIGHT;
       };
 
-      this.ToggleWhole = function () {
+      this.WholePostProcess = function (is_from_advanced_modal) {
         this.left = this.right = false;
         var new_placement = (+this.right * TOPPING_RIGHT) + (+this.left * TOPPING_LEFT) + (+this.whole * TOPPING_WHOLE);
-        this.UpdateOption(new_placement);
+        this.UpdateOption(new_placement, is_from_advanced_modal);
       };
 
-      this.ToggleHalf = function () {
-        if (this.left && this.right) {
-          this.whole = true;
-          this.left = this.right = false;
-        } else {
-          this.whole = false;
-        }
-        var new_placement = (+this.right * TOPPING_RIGHT) + (+this.left * TOPPING_LEFT) + (+this.whole * TOPPING_WHOLE);
-        this.UpdateOption(new_placement);
-      };
+      this.LeftPostProcess = function(is_from_advanced_modal) {
+        this.right = this.whole = false;
+        this.UpdateOption((+this.left * TOPPING_LEFT), is_from_advanced_modal);
+      }
+      this.RightPostProcess = function(is_from_advanced_modal) {
+        this.left = this.whole = false;
+        this.UpdateOption((+this.right * TOPPING_RIGHT), is_from_advanced_modal);
+      }
 
       this.Initialize();
     },
     controllerAs: 'ctrl',
     bindToController: true,
     // TODO we need to display whatever is the most appropriate button instead of just the whole toggle. 
-    template: '<input type="radio" ng-if="ctrl.modctrl.display_type === 0" id="{{ctrl.option.shortname}}_whole" class="input-whole" ng-model="ctrl.modctrl.current_single_value" ng-value="ctrl.option.moid" ng-disabled="!ctrl.GetEnableState().enable_whole" ng-change="ctrl.UpdateOption(ctrl.config.WHOLE)" > \
-      <input ng-if="ctrl.modctrl.display_type === 2" id="{{ctrl.option.shortname}}_whole" class="input-whole" ng-model="ctrl.whole" ng-disabled="!ctrl.GetEnableState().enable_whole" type="checkbox" ng-change="ctrl.ToggleWhole()"> \
-        <input ng-if="ctrl.modctrl.display_type === 2" ng-show="ctrl.left" id="{{ctrl.option.shortname}}_left" class="input-left" ng-model="ctrl.left" ng-disabled="!ctrl.GetEnableState().enable_left" type="checkbox" ng-change="ctrl.ToggleHalf()"> \
-        <input ng-if="ctrl.modctrl.display_type === 2" ng-show="ctrl.right" id="{{ctrl.option.shortname}}_right" class="input-right" ng-model="ctrl.right" ng-disabled="!ctrl.GetEnableState().enable_right" type="checkbox" ng-change="ctrl.ToggleHalf()"> \
+    template: '<input type="radio" ng-if="ctrl.modctrl.display_type === 0" id="{{ctrl.option.shortname}}_whole" class="input-whole" ng-model="ctrl.modctrl.current_single_value" ng-value="ctrl.option.moid" ng-disabled="!ctrl.GetEnableState().enable_whole" ng-change="ctrl.UpdateOption(ctrl.config.WHOLE, false)" > \
+      <input ng-if="ctrl.modctrl.display_type === 2" id="{{ctrl.option.shortname}}_whole" class="input-whole" ng-model="ctrl.whole" ng-disabled="!ctrl.GetEnableState().enable_whole" type="checkbox" ng-change="ctrl.WholePostProcess(false)"> \
+        <input ng-if="ctrl.modctrl.display_type === 2" ng-show="ctrl.left || (!ctrl.GetEnableState().enable_whole && ctrl.GetEnableState().enable_left)" id="{{ctrl.option.shortname}}_left" class="input-left" ng-model="ctrl.left" ng-disabled="!ctrl.GetEnableState().enable_left" type="checkbox" ng-change="ctrl.LeftPostProcess(false)"> \
+        <input ng-if="ctrl.modctrl.display_type === 2" ng-show="ctrl.right || (!ctrl.GetEnableState().enable_whole && ctrl.GetEnableState().enable_right)" id="{{ctrl.option.shortname}}_right" class="input-right" ng-model="ctrl.right" ng-disabled="!ctrl.GetEnableState().enable_right" type="checkbox" ng-change="ctrl.RightPostProcess(false)"> \
         <span class="option-circle-container"> \
-        <label ng-show="!this.advanced_option_selected" for="{{ctrl.option.shortname}}_whole" class="option-whole option-circle"></label> \
-        <label ng-if="ctrl.modctrl.display_type === 2" ng-show="ctrl.left" for="{{ctrl.option.shortname}}_left" class="option-left option-circle"></label> \
-        <label ng-if="ctrl.modctrl.display_type === 2" ng-show="ctrl.right" for="{{ctrl.option.shortname}}_right" class="option-right option-circle"></label> \
+        <label ng-show="!ctrl.advanced_option_selected" for="{{ctrl.option.shortname}}_whole" class="option-whole option-circle"></label> \
+        <label ng-if="ctrl.modctrl.display_type === 2" ng-show="ctrl.left || (!ctrl.GetEnableState().enable_whole && ctrl.GetEnableState().enable_left)" for="{{ctrl.option.shortname}}_left" class="option-left option-circle"></label> \
+        <label ng-if="ctrl.modctrl.display_type === 2" ng-show="ctrl.right || (!ctrl.GetEnableState().enable_whole && ctrl.GetEnableState().enable_right)" for="{{ctrl.option.shortname}}_right" class="option-right option-circle"></label> \
         </span> \
         <label class="topping_text" for="{{ctrl.option.shortname}}_whole" ng-disabled="!ctrl.GetEnableState().enable_whole">{{ctrl.option.name}}</label> \
-        <button name="edit" ng-if="ctrl.AdvancedOptionEligible()" ng-click="ctrl.modctrl.pmenuctrl.SetAdvancedOption(ctrl)" class="button-sml"><div class="icon-gear"></div></button>' 
+        <button name="edit" ng-if="ctrl.AdvancedOptionEligible()" ng-click="ctrl.modctrl.pmenuctrl.SetAdvancedOption($event, ctrl)" class="button-sml"><div class="icon-gear"></div></button>' 
   };
 });
 
@@ -1487,16 +1545,27 @@ app.directive("wcpoptiondetailmodaldir", function () {
     },
     controllerAs: 'ctrl',
     bindToController: true,
-    template: '<input id="{{ctrl.optionctrl.option.shortname}}_whole" class="input-whole" ng-model="ctrl.optionctrl.whole" ng-disabled="!ctrl.optionctrl.GetEnableState().enable_whole" type="checkbox" ng-change="ctrl.optionctrl.ToggleWhole()"> \
-        <input id="{{ctrl.optionctrl.option.shortname}}_left" class="input-left" ng-model="ctrl.optionctrl.left" ng-disabled="!ctrl.optionctrl.GetEnableState().enable_left" type="checkbox" ng-change="ctrl.optionctrl.ToggleHalf()"> \
-        <input id="{{ctrl.optionctrl.option.shortname}}_right" class="input-right" ng-model="ctrl.optionctrl.right" ng-disabled="!ctrl.optionctrl.GetEnableState().enable_right" type="checkbox" ng-change="ctrl.optionctrl.ToggleHalf()"> \
+    template: '<md-dialog-content class="option-modal"><h2 class="option-modal-title">{{ctrl.optionctrl.option.name}} options</h2>\
+        <div layout="row" layout-align="center center">\
+        <div>Placement:</div><div></div>\
+        <div><input id="{{ctrl.optionctrl.option.shortname}}_modal_whole" class="input-whole" ng-model="ctrl.optionctrl.whole" ng-disabled="!ctrl.optionctrl.GetEnableState().enable_whole" type="checkbox" ng-change="ctrl.optionctrl.WholePostProcess(true)"> \
+        <input id="{{ctrl.optionctrl.option.shortname}}_modal_left" class="input-left" ng-model="ctrl.optionctrl.left" ng-disabled="!ctrl.optionctrl.GetEnableState().enable_left" type="checkbox" ng-change="ctrl.optionctrl.LeftPostProcess(true)"> \
+        <input id="{{ctrl.optionctrl.option.shortname}}_modal_right" class="input-right" ng-model="ctrl.optionctrl.right" ng-disabled="!ctrl.optionctrl.GetEnableState().enable_right" type="checkbox" ng-change="ctrl.optionctrl.RightPostProcess(true)"> \
         <span class="option-circle-container"> \
-        <label for="{{ctrl.optionctrl.option.shortname}}_whole" class="option-whole option-circle"></label> \
-        <label for="{{ctrl.optionctrl.option.shortname}}_left" class="option-left option-circle"></label> \
-        <label for="{{ctrl.optionctrl.option.shortname}}_right" class="option-right option-circle"></label> \
-        </span> \
-        <span class="topping_text">{{ctrl.optionctrl.option.name}}</span> \
-        <button name="done" ng-click="ctrl.optionctrl.modctrl.pmenuctrl.UnSetAdvancedOption()" class="button-sml"><div class="icon-gear"></div></button>' 
+          <label for="{{ctrl.optionctrl.option.shortname}}_modal_left" class="option-left option-circle"></label> \
+        </span>\
+        <span class="option-circle-container"> \
+          <label for="{{ctrl.optionctrl.option.shortname}}_modal_whole" class="option-whole option-circle"></label> \
+        </span>\
+        <span class="option-circle-container"> \
+          <label for="{{ctrl.optionctrl.option.shortname}}_modal_right" class="option-right option-circle"></label> \
+        </span></div> \
+        </div></md-dialog-content>\
+        <md-dialog-actions>\
+          <button name="cancel" class="btn" ng-click="ctrl.optionctrl.modctrl.pmenuctrl.CancelAdvancedOptionModal()">Cancel</button>\
+          <span class="flex" flex></span>\
+          <button class="btn" name="confirm" ng-click="ctrl.optionctrl.modctrl.pmenuctrl.ConfirmAdvancedOptionModal()">Confirm</button>\
+        </md-dialog-actions>' 
   };
 });
 
@@ -1707,10 +1776,6 @@ app.directive("wcpoptiondetailmodaldir", function () {
       return $scope.isBuilt;
     }
   }]);
-
-  $j(".scrolltotop").click(function () {
-    ScrollTopJQ();
-  });
 
   $j("span.user-email input").on("blur", function (event) {
     $j(this).mailcheck({

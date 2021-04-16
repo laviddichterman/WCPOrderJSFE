@@ -5,6 +5,17 @@
 #ui-datepicker-div {
   z-index: 999 !important;
 }
+
+table tbody tr:nth-of-type(odd) {
+	background-color: #fcfcfc;
+}
+
+.sidebar--footer a { text-decoration: none; }
+
+div.wpcf7-response-output {
+  margin: 1em 0.5em 1em;
+}
+
 .footer-widget-area .widget {
   vertical-align: top;
 }
@@ -326,7 +337,7 @@ span.cf7bridge {
   -ms-flex-pack: start !important;
   justify-content: flex-start !important;
 }
-.cart button, .customizer .modifier button {
+.cart button {
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
@@ -377,12 +388,13 @@ span.cf7bridge {
   min-height: 0;
   padding: 0;
   margin: 0;
+  vertical-align: middle;
   background-color: white !important;
   border: 1px solid #969799;
   border-radius: 50%;
   overflow: hidden;
   line-height: 0;
-};
+}
 
 .cart .button-remove:before,
 .cart .button-remove:after {
@@ -483,7 +495,6 @@ span.cf7bridge {
   -ms-flex-line-pack: center;
   align-content: center;
 }
-
 @media (min-width: 718px) {
   .cart-table tbody tr {
     display: table-row;
@@ -514,7 +525,7 @@ span.cf7bridge {
   .cart-item-description {
     padding-top: 20px !important;
   }
-
+  
   .cart-item-quantity-price {
     padding-left: 100px !important;
   }
@@ -531,11 +542,11 @@ span.cf7bridge {
     width: auto;
     padding-right: 20px !important;
   }
-
+  
   .cart-item-quantity-price {
     padding: 20px !important;
   }
-
+  
   .cart-item-subtotal {
     padding: 20px 0 20px 20px !important;
   }
@@ -707,4 +718,30 @@ html, .wp-caption-text, .small-link, .post-nav-link__label, .author__social-link
 
 .sq-card-form-wrapper {
   box-shadow: 0px 2px 6px rgba(0, 0, 0, .9), 0px 4px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+.sq-input2 {
+	display: inline-block;
+  vertical-align: middle;
+  width: 100%;
+  padding: 10px;
+  padding: .625rem;
+  border: 1px solid #d8d8d8;
+  outline: 0;
+  border-radius: 5px;
+  -webkit-transition: border-color .2s ease-in-out;
+     -moz-transition: border-color .2s ease-in-out;
+      -ms-transition: border-color .2s ease-in-out;
+          transition: border-color .2s ease-in-out;
+}
+
+h2.option-modal-title {
+  background-color: #252525;
+  color: #fff;
+  margin: 0 0 20px;
+  padding: .2em 1em .2em 1em;
+}
+
+.customizer md-dialog-actions {
+  margin-top: 1em;
 }
