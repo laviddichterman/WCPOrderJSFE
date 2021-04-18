@@ -358,14 +358,14 @@ function UpdateLeadTime() {
 }
 
 (function () {
-  var app = angular.module("WCPOrder", ['ngSanitize', 'ngMaterial', 'btford.socket-io']);
+  var app = angular.module("WCPOrder", ['ngSanitize', 'ngMaterial', 'btford.socket-io', 'angularjsToast']);
 
   app.filter('TrustAsHTML', ['$sce', function ($sce) {
     return function (val) {
       return $sce.trustAsHtml(val);
     };
   }]);
-
+  
   app.filter("MinutesToPrintTime", function () {
     return wcporderhelper.MinutesToPrintTime;
   });
@@ -757,8 +757,8 @@ function UpdateLeadTime() {
     this.selected_time_timeout = false;
   };
 
-  app.controller("OrderController", ["OrderHelper", "$http", "$rootScope", "socket", "$mdToast",
-    function (OrderHelper, $http, $rootScope, $socket, $mdToast) {
+  app.controller("OrderController", ["OrderHelper", "$http", "$rootScope", "socket", "toast",
+    function (OrderHelper, $http, $rootScope, $socket, toast) {
       this.ORDER_HELPER = OrderHelper;
       this.CONFIG = $rootScope.CONFIG = OrderHelper.cfg;
       this.ScrollTop = ScrollTopJQ;
@@ -835,8 +835,8 @@ function UpdateLeadTime() {
         }).then(onSuccess).catch(onFail);
       }
 
-      this.PostChangeServiceType() = function() {
-        this.number_guests = 1;
+      this.PostChangeServiceType = function() {
+        this.s.number_guests = 1;
         this.ValidateDate(); 
         this.ClearAddress(); 
         this.ClearSlicing();
@@ -939,7 +939,6 @@ function UpdateLeadTime() {
       }
 
       this.AddToOrder = function (cid, pi) {
-        //$mdToast.show($mdToast.simple().textContent('Hello!'));
         if (!this.s.cart.hasOwnProperty(cid)) {
           this.s.cart[cid] = [];
         }
@@ -947,6 +946,7 @@ function UpdateLeadTime() {
         for (var i in this.s.cart[cid]) {
           if (this.s.cart[cid][i].pi.Equals(pi, this.CONFIG.MENU)) {
             this.s.cart[cid][i].quantity += 1;
+            toast.create({message: `Changed ${pi.name} quantity to ${this.s.cart[cid][i].quantity}.`} );
             this.PostCartUpdate();
             return;
           }
@@ -954,6 +954,7 @@ function UpdateLeadTime() {
         // add new entry
         // TODO: the modifiers length check isn't actually exhaustive as some modifiers might be disabled for any reason
         this.s.cart[cid].push(new CartEntry(cid, pi, 1, pi.PRODUCT_CLASS.modifiers.length !== 0));
+        toast.create({message: `Added ${pi.name} to order.`} );
         this.PostCartUpdate();
       }
 
@@ -963,10 +964,12 @@ function UpdateLeadTime() {
           if (cart_entry !== this.s.cart[cart_entry.catid][i] && this.s.cart[cart_entry.catid][i].pi.Equals(new_pi, this.CONFIG.MENU)) {
             cart_entry.quantity += this.s.cart[cart_entry.catid][i].quantity;
             this.s.cart[cart_entry.catid].splice(i, 1);
+            toast.create({message: `Merged duplicate ${new_pi.name} in your order.`} );
             this.PostCartUpdate();
             return;
           }
         }
+        toast.create({message: `Updated ${new_pi.name} in your order.`} );
         this.PostCartUpdate();
       }
 

@@ -746,3 +746,24 @@ h2.option-modal-title {
 .customizer md-dialog-actions {
   margin-top: 1em;
 }
+
+/* Start section for toast CSS */
+.article--main {
+  will-change: auto !important; 
+}
+.toast-anchor { 
+	position: fixed;
+	top: 110px;
+	right: 5px;
+  width: 100%;
+	z-index: 999999;
+}
+@media (max-width: 899px) {
+  .toast-anchor { 
+    top: 10px !important;
+  }
+}
+.toast-anchor .angularjs-toast {
+	position: relative !important;
+}
+/* End section for toast CSS */
