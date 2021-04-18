@@ -835,6 +835,13 @@ function UpdateLeadTime() {
         }).then(onSuccess).catch(onFail);
       }
 
+      this.PostChangeServiceType() = function() {
+        this.number_guests = 1;
+        this.ValidateDate(); 
+        this.ClearAddress(); 
+        this.ClearSlicing();
+      }
+
       this.ValidateDate = function () {
         // determines if a particular date (as input) is valid, and if so, populates the service dropdown
         var parsedDate = Date.parse(this.s.date_string);
@@ -988,7 +995,6 @@ function UpdateLeadTime() {
       };
 
       this.fix_number_guests = function (clear_if_invalid) {
-        console.log(this.s.number_guests);
         this.s.number_guests = FixQuantity(this.s.number_guests, clear_if_invalid, 1, this.CONFIG.MAX_PARTY_SIZE);
       };
 

@@ -163,7 +163,7 @@
     <form novalidate name="stage4">
     <div class="flexitems">
       <div class="flexitem" ng-repeat="service in orderCtrl.CONFIG.SERVICE_TYPES | filter:orderCtrl.FilterServiceTypes(orderCtrl.s)">
-          <label><input type="radio" ng-change="orderCtrl.ValidateDate(); orderCtrl.ClearAddress(); orderCtrl.ClearSlicing();" ng-model="orderCtrl.s.service_type" ng-value="service[1]">
+          <label><input type="radio" ng-change="orderCtrl.PostChangeServiceType();" ng-model="orderCtrl.s.service_type" ng-value="service[1]">
           {{service[0]}}</label>
       </div>
     </div>
