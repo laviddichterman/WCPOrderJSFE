@@ -1,9 +1,9 @@
-[ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
-  display: none !important;
-}
-
 #ui-datepicker-div {
   z-index: 999 !important;
+}
+
+[ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
+  display: none !important;
 }
 
 table tbody tr:nth-of-type(odd) {
@@ -96,10 +96,10 @@ input.quantity {
 }
 
 .ordering-menu .menu-list__item-highlight-title a {
-  color: #EEE;
+  color: #000;
 }
 .ordering-menu .menu-list__item-highlight-title a:hover {
-  color: #EEE;
+  color: #000;
 }
 
 .order-nav-item {
@@ -739,7 +739,7 @@ html, .wp-caption-text, .small-link, .post-nav-link__label, .author__social-link
 h2.option-modal-title {
   background-color: #252525;
   color: #fff;
-  margin: 0 0 20px;
+  margin: 0 0 20px 0px;
   padding: .2em 1em .2em 1em;
 }
 
