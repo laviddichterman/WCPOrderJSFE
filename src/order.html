@@ -192,7 +192,7 @@
     <div class="wpcf7-response-output wpcf7-mail-sent-ng" ng-if="orderCtrl.s.selected_time_timeout">The previously selected service time has expired.</div>
     <span ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DINEIN">
       <label for="guest-count">
-        <span class="guest-count-text">Guest Count</span>
+        <span class="guest-count-text">Party Size</span>
       </label>
       <span class="guest-count">
         <input type="number" name="guest-count" id="guest-count" ng-model="orderCtrl.s.number_guests" ng-blur="orderCtrl.fix_number_guests(true)" ng-change="orderCtrl.fix_number_guests(false)">
