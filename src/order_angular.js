@@ -10,6 +10,7 @@ var DisableDataCheck = WCPShared.DisableDataCheck;
 var DATE_STRING_INTERNAL_FORMAT = WCPShared.WDateUtils.DATE_STRING_INTERNAL_FORMAT;
 
 var CopyWCPProduct = WCPShared.CopyWCPProduct;
+var WFunctional = WCPShared.WFunctional;
 
 // handy class representing a line in the product cart
 // useful to allow modifications on the product by setting it to a new product instance
@@ -35,6 +36,10 @@ var RoundToTwoDecimalPlaces = function(num) {
 }
 var SanitizeIfExists = function (str) {
   return str && str.length ? str.replace("'", "`").replace("/", "|").replace("&", "and").replace("<", "").replace(">", "").replace(/[\+\t\r\n\v\f]/g, '') : str;
+}
+
+var ProductHasSelectableModifiers = function(pi) {
+  return pi.PRODUCT_CLASS.modifiers2.filter(function(x) { return true; /* TODO: filter out disabled modifiers */ }).length > 0;
 }
 
 function ScrollToEIdJQ(id, delay) { 
@@ -899,7 +904,7 @@ function UpdateLeadTime() {
       // intermedite function that sees if we should be customizing this
       // product or add it directly to the cart
       this.SelectProduct = function(cid, pi, pmenuctrl) {
-        if ((pi.display_flags && pi.display_flags.skip_customization) || pi.PRODUCT_CLASS.modifiers.length === 0) {
+        if ((pi.display_flags && pi.display_flags.skip_customization) || !ProductHasSelectableModifiers(pi)) {
           var pi_copy = CopyWCPProduct(pi);
           pi_copy.piid = "";
           pi_copy.Initialize(this.CONFIG.MENU);
@@ -953,7 +958,7 @@ function UpdateLeadTime() {
         }
         // add new entry
         // TODO: the modifiers length check isn't actually exhaustive as some modifiers might be disabled for any reason
-        this.s.cart[cid].push(new CartEntry(cid, pi, 1, pi.PRODUCT_CLASS.modifiers.length !== 0));
+        this.s.cart[cid].push(new CartEntry(cid, pi, 1, ProductHasSelectableModifiers(pi)));
         toast.create({message: `Added ${pi.name} to order.`} );
         this.PostCartUpdate();
       }
@@ -1210,7 +1215,6 @@ function UpdateLeadTime() {
     };
 
     this.PostModifierChangeCallback = function (mid, oid, placement, is_from_advanced_modal) {
-      console.assert(this.selection);
       var had_allowed_advanced_options = this.allow_advanced;
       this.SetProduct(this.catid, this.selection, this.is_addition, is_from_advanced_modal);
       this.allow_advanced = this.allow_advanced || had_allowed_advanced_options;
@@ -1239,14 +1243,17 @@ function UpdateLeadTime() {
         this.advanced_option = null;
       }
       var selection_modifiers_map = {};
-      for (var mtidx = 0; mtidx < this.selection.PRODUCT_CLASS.modifiers.length; ++mtidx) {
-        var mtid = this.selection.PRODUCT_CLASS.modifiers[mtidx];
+      for (var mtidx = 0; mtidx < this.selection.PRODUCT_CLASS.modifiers2.length; ++mtidx) {
+        var mtid = this.selection.PRODUCT_CLASS.modifiers2[mtidx].mtid;
+        var modifier_type_enable_function = this.selection.PRODUCT_CLASS.modifiers2[mtidx].enable;
+        // TODO: this is where front end needs to look at the modifier type enable function
         var modifier_entry = this.CONFIG.MENU.modifiers[mtid];
         // create the MOID: {placement: placement, enabled: { location: boolean } } } part of the map
         selection_modifiers_map[mtid] = { has_selectable: false, meets_minimum: false, options: {} };
+        var enable_modifier_type = modifier_type_enable_function === null || WFunctional.ProcessProductInstanceFunction(this.selection, modifier_type_enable_function);
         for (var moidx = 0; moidx < modifier_entry.options_list.length; ++moidx) {
           var option_object = modifier_entry.options_list[moidx];
-          var is_enabled = DisableDataCheck(option_object.disable_data, service_time)
+          var is_enabled = enable_modifier_type && DisableDataCheck(option_object.disable_data, service_time)
           var option_info = { 
             placement: TOPPING_NONE, 
             // do we need to figure out if we can de-select? answer: probably
@@ -1268,7 +1275,7 @@ function UpdateLeadTime() {
             this.advanced_option_selected = this.advanced_option_selected || (option_placement[0] !== TOPPING_WHOLE && option_placement[0] !== TOPPING_NONE);
           }
         }
-        selection_modifiers_map[mtid].meets_minimum = num_selected >= modifier_entry.modifier_type.min_selected;
+        selection_modifiers_map[mtid].meets_minimum = !selection_modifiers_map[mtid].has_selectable || num_selected >= modifier_entry.modifier_type.min_selected;
       }
       this.allow_advanced = this.advanced_option_selected;
       this.modifier_map = selection_modifiers_map;
