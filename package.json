@@ -1,6 +1,6 @@
 {
   "name": "@wcp/wcporderjsfe",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "front end javascript for the WCP ordering interface",
   "scripts": {
     "start": "webpack-dev-server --mode development --open"
@@ -16,9 +16,9 @@
   },
   "homepage": "https://github.com/laviddichterman/WCPOrderJSFE#readme",
   "dependencies": {
-    "@babel/polyfill": "^7.11.5",
-    "@wcp/wcpshared": "^2.0.6",
-    "angular": "1.5.11",
+    "@babel/polyfill": "^7.12.1",
+    "@wcp/wcpshared": "^2.1.4",
+    "angular": "^1.8.2",
     "angular-animate": "1.5.11",
     "angular-material": "1.1.22",
     "angular-sanitize": "1.5.11",
@@ -26,20 +26,20 @@
     "jquery": "^1.12.4",
     "jquery.maskedinput": "^1.4.1",
     "mailcheck": "^1.1.1",
-    "moment": "^2.27.0",
-    "socket.io": "^2.3.0"
+    "moment": "^2.29.1",
+    "socket.io": "^2.4.1"
   },
   "devDependencies": {
-    "@babel/cli": "^7.11.6",
-    "@babel/core": "^7.11.6",
-    "@babel/plugin-transform-arrow-functions": "^7.10.4",
-    "@babel/preset-env": "^7.11.5",
-    "babel-loader": "^8.1.0",
+    "@babel/cli": "^7.13.16",
+    "@babel/core": "^7.13.16",
+    "@babel/plugin-transform-arrow-functions": "^7.13.0",
+    "@babel/preset-env": "^7.13.15",
+    "babel-loader": "^8.2.2",
     "css-loader": "^4.3.0",
-    "html-loader": "^1.3.0",
-    "style-loader": "^1.2.1",
-    "webpack": "^4.44.1",
+    "html-loader": "^1.3.2",
+    "style-loader": "^1.3.0",
+    "webpack": "^4.46.0",
     "webpack-cli": "^3.3.12",
-    "webpack-dev-server": "^3.11.0"
+    "webpack-dev-server": "^3.11.2"
   }
 }
