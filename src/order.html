@@ -52,7 +52,7 @@
         <wcppizzacartitem prod="pmenuCtrl.selection" description="true" dots="true" price="true"></wcppizzacartitem>
       </div>
       <hr class="separator">
-      <div wcpmodifierdir ng-repeat="(mtid, value) in pmenuCtrl.FilterModifiers(pmenuCtrl.modifier_map)" mtid="mtid" selection="pmenuCtrl.selection" pmenuctrl="pmenuCtrl" config="orderCtrl.CONFIG">
+      <div wcpmodifierdir ng-repeat="(mtid, value) in pmenuCtrl.FilterModifiers(pmenuCtrl.selection.modifier_map)" mtid="mtid" selection="pmenuCtrl.selection" pmenuctrl="pmenuCtrl" config="orderCtrl.CONFIG">
       </div>
       <div ng-if="!pmenuCtrl.suppress_guide && pmenuCtrl.messages.length">
         <div class="wpcf7-response-output wpcf7-validation-errors" ng-repeat="msg in pmenuCtrl.messages">{{msg}}</div>
@@ -60,7 +60,7 @@
       <div ng-if="pmenuCtrl.errors.length">
         <div class="wpcf7-response-output" ng-repeat="msg in pmenuCtrl.errors">{{msg}}</div>
       </div>
-      <div ng-if="orderCtrl.s.enable_split_toppings && pmenuCtrl.advanced_option_eligible"><label><input ng-disabled="pmenuCtrl.advanced_option_selected" type="checkbox" ng-model="pmenuCtrl.allow_advanced">
+      <div ng-if="orderCtrl.s.enable_split_toppings && pmenuCtrl.selection.advanced_option_eligible"><label><input ng-disabled="pmenuCtrl.selection.advanced_option_selected" type="checkbox" ng-model="pmenuCtrl.allow_advanced">
         I desperately need to order a split topping pizza and I know it's going to be a bad value and bake poorly.</label></div>
       <div class="order-nav">
         <span class="one-fifth">
@@ -589,12 +589,12 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.11/angular-animate.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mailcheck/1.1.2/mailcheck.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.maskedinput/1.4.1/jquery.maskedinput.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.12/angular-material.min.js"></script>
 <script src="https://www.windycitypie.com/wp-includes/js/socket.io.js"></script>
 <script src="https://www.windycitypie.com/wp-includes/js/socket.min.js"></script>
-<script src="https://www.windycitypie.com/wp-includes/js/wcpshared.2.0.9.js"></script>
+<script src="https://www.windycitypie.com/wp-includes/js/wcpshared.2.1.4.js"></script>
 <script src="https://www.windycitypie.com/wp-includes/js/angularjs-toast.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 <script src="https://polyfill.io/v3/polyfill.min.js"></script>
 <script>
 var WARIO_ENDPOINT = "https://wario.windycitypie.com/";
@@ -633,4 +633,4 @@ var CONST_MESSAGE_REQUEST_SLICING = "In order to ensure the quality of our pizza
 var CONST_MESSAGE_TIP_PREAMBLE = "The Windy City Pie family is working hard to serve you, safely. All gratuity is shared with the entire staff. Everyone, from our team that makes the house-made dough, to the staff that handles your order appreciates your support!";
 var DELIVERY_LINK = "http://bit.ly/2QsrfV8";
 </script>
-<script src="https://www.windycitypie.com/wp-includes/js/WCPJSFE34.js"></script>
+<script src="https://www.windycitypie.com/wp-includes/js/WCPJSFE35.js"></script>

@@ -1113,10 +1113,6 @@ function UpdateLeadTime() {
     this.cart_entry = null;
     this.catid = null;
     this.is_addition = true;
-    // flag indicating that there's at least one modifier for the selected product that has an advanced option available
-    this.advanced_option_eligible = false;
-    // flag indicating there's at least one modifier for the selected product that has an advanced option selected
-    this.advanced_option_selected = false;
     // value tied to the toggle switch presented to the user
     this.allow_advanced = false;
     // reference to the controller for the currently selected advanced option
@@ -1144,8 +1140,6 @@ function UpdateLeadTime() {
 
     this.messages = [];
     this.errors = [];
-    // mod map is { MTID: { has_selectable: boolean, meets_minimum: boolean, options: { MOID: {placement, enable_left, enable_right, enable_whole } } } }
-    this.modifier_map = {};
 
     this.SetAdvancedOption = function($event, opt) { 
       $scope.advanced_option = this.advanced_option = opt;
@@ -1214,7 +1208,7 @@ function UpdateLeadTime() {
       this.errors = error_messages;
     };
 
-    this.PostModifierChangeCallback = function (mid, oid, placement, is_from_advanced_modal) {
+    this.PostModifierChangeCallback = function (is_from_advanced_modal) {
       var had_allowed_advanced_options = this.allow_advanced;
       this.SetProduct(this.catid, this.selection, this.is_addition, is_from_advanced_modal);
       this.allow_advanced = this.allow_advanced || had_allowed_advanced_options;
@@ -1238,47 +1232,9 @@ function UpdateLeadTime() {
       this.catid = catid;
       this.is_addition = is_new;
       if (!is_from_advanced_modal) {
-        this.advanced_option_eligible = false;
-        this.advanced_option_selected = false;
         this.advanced_option = null;
       }
-      var selection_modifiers_map = {};
-      for (var mtidx = 0; mtidx < this.selection.PRODUCT_CLASS.modifiers2.length; ++mtidx) {
-        var mtid = this.selection.PRODUCT_CLASS.modifiers2[mtidx].mtid;
-        var modifier_type_enable_function = this.selection.PRODUCT_CLASS.modifiers2[mtidx].enable;
-        // TODO: this is where front end needs to look at the modifier type enable function
-        var modifier_entry = this.CONFIG.MENU.modifiers[mtid];
-        // create the MOID: {placement: placement, enabled: { location: boolean } } } part of the map
-        selection_modifiers_map[mtid] = { has_selectable: false, meets_minimum: false, options: {} };
-        var enable_modifier_type = modifier_type_enable_function === null || WFunctional.ProcessProductInstanceFunction(this.selection, modifier_type_enable_function);
-        for (var moidx = 0; moidx < modifier_entry.options_list.length; ++moidx) {
-          var option_object = modifier_entry.options_list[moidx];
-          var is_enabled = enable_modifier_type && DisableDataCheck(option_object.disable_data, service_time)
-          var option_info = { 
-            placement: TOPPING_NONE, 
-            // do we need to figure out if we can de-select? answer: probably
-            enable_left: is_enabled && option_object.can_split && option_object.IsEnabled(this.selection, this.CONFIG.LEFT, this.CONFIG.MENU),
-            enable_right: is_enabled && option_object.can_split && option_object.IsEnabled(this.selection, this.CONFIG.RIGHT, this.CONFIG.MENU),
-            enable_whole: is_enabled && option_object.IsEnabled(this.selection, this.CONFIG.WHOLE, this.CONFIG.MENU),
-          };
-          var enable_left_or_right = option_info.enable_left || option_info.enable_right;
-          this.advanced_option_eligible = this.advanced_option_eligible || enable_left_or_right;
-          selection_modifiers_map[mtid].options[option_object.moid] = option_info;
-          selection_modifiers_map[mtid].has_selectable = selection_modifiers_map[mtid].has_selectable || enable_left_or_right || option_info.enable_whole;
-        }
-        var num_selected = 0;
-        if (this.selection.modifiers.hasOwnProperty(mtid)) {
-          num_selected = this.selection.modifiers[mtid].length;
-          for (var moidx = 0; moidx < this.selection.modifiers[mtid].length; ++moidx) {
-            var option_placement = this.selection.modifiers[mtid][moidx];
-            selection_modifiers_map[mtid].options[option_placement[1]].placement = option_placement[0];
-            this.advanced_option_selected = this.advanced_option_selected || (option_placement[0] !== TOPPING_WHOLE && option_placement[0] !== TOPPING_NONE);
-          }
-        }
-        selection_modifiers_map[mtid].meets_minimum = !selection_modifiers_map[mtid].has_selectable || num_selected >= modifier_entry.modifier_type.min_selected;
-      }
-      this.allow_advanced = this.advanced_option_selected;
-      this.modifier_map = selection_modifiers_map;
+      this.allow_advanced = this.selection.advanced_option_selected;
       this.PopulateOrderGuide();
     };
 
@@ -1368,7 +1324,7 @@ function UpdateLeadTime() {
           // todo: deal with servicetime
           var service_time = moment();//this.servicetime;
           var menu = this.config.MENU;
-          var modmap = this.pmenuctrl.modifier_map;
+          var modmap = this.pmenuctrl.selection.modifier_map;
           var mtid = this.mtid;
           // determine list of visible options
           var filtered_options = menu.modifiers[this.mtid].options_list.filter(function (x) {
@@ -1453,7 +1409,7 @@ function UpdateLeadTime() {
               this.pmenuctrl.selection.modifiers[this.mtid] = [[TOPPING_WHOLE, this.current_single_value]];
             }
           }
-          this.pmenuctrl.PostModifierChangeCallback(this.mtid, moid, placement, is_from_advanced_modal);
+          this.pmenuctrl.PostModifierChangeCallback(is_from_advanced_modal);
         };
         this.Initialize();
       },
@@ -1465,7 +1421,7 @@ function UpdateLeadTime() {
         </div> \
         <div class="flexitem" ng-if="ctrl.display_type === 1"> \
           <input type="checkbox" id="{{ctrl.toggle_values[1].shortname}}_whole" class="input-whole" \
-            ng-disabled="!ctrl.pmenuctrl.modifier_map[ctrl.mtid].options[ctrl.toggle_values[1].moid].enable_whole" \
+            ng-disabled="!ctrl.pmenuctrl.selection.modifier_map[ctrl.mtid].options[ctrl.toggle_values[1].moid].enable_whole" \
             ng-model="ctrl.current_single_value" ng-true-value="1" \
             ng-false-value="0" ng-change="ctrl.PostModifyCallback(0, 0, false)"> \
           <span class="option-circle-container"> \
@@ -1491,7 +1447,7 @@ app.directive("wcpoptiondir", function () {
     controller: function () {
       this.GetEnableState = function () {
         // reference to the modifier map info for this particular option, READ ONLY
-        return this.modctrl.pmenuctrl.modifier_map[this.modctrl.mtid].options[this.option.moid];
+        return this.modctrl.pmenuctrl.selection.modifier_map[this.modctrl.mtid].options[this.option.moid];
       }
 
       this.AdvancedOptionEligible = function () {
