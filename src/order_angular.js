@@ -39,7 +39,7 @@ var SanitizeIfExists = function (str) {
 }
 
 var ProductHasSelectableModifiers = function(pi) {
-  return pi.PRODUCT_CLASS.modifiers2.filter(function(x) { return true; /* TODO: filter out disabled modifiers */ }).length > 0;
+  return pi.PRODUCT_CLASS.modifiers.filter(function(x) { return true; /* TODO: filter out disabled modifiers */ }).length > 0;
 }
 
 function ScrollToEIdJQ(id, delay) { 
