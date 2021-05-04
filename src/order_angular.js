@@ -560,16 +560,15 @@ function UpdateLeadTime() {
 
     this.SubmitToWarioInternal = function (http_provider, state, nonce) {
       var onSuccess = function (response) {
-        console.log(response);
         state.payment_info = response.data;
         if (response.status == 200) {
-          state.isPaymentSuccess = response.data.result && response.data.result.payment && response.data.result.payment.status == "COMPLETED";
+          state.isPaymentSuccess = response.data.money_charged > 0;
           state.stage = 7;
         }
         else {
           // display server side card processing errors 
           state.card_errors = []
-          var errors = JSON.parse(response.data.result);
+          var errors = response.data.result.errors;
           for (var i = 0; i < errors.length; i++) {
             state.card_errors.push({ message: errors[i].detail })
           }
@@ -584,7 +583,7 @@ function UpdateLeadTime() {
         state.isProcessing = false;
         if (response.data && response.data.result) {
           state.card_errors = [];
-          var errors = JSON.parse(response.data.result).errors;
+          var errors = response.data.result.errors;
           for (var i = 0; i < errors.length; i++) {
             state.card_errors.push({ message: errors[i].detail })
           }
@@ -632,7 +631,7 @@ function UpdateLeadTime() {
           load_time: state.debug_info.load_time,
           time_selection_time: state.debug_info["time-selection-time"] ? state.debug_info["time-selection-time"].format("H:mm:ss") : "",
           submittime: moment().format("MM-DD-YYYY HH:mm:ss"),
-          useragent: navigator.userAgent + " FEV13",
+          useragent: navigator.userAgent + " FEV14",
         }
       }).then(onSuccess).catch(onFail);
     }

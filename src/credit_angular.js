@@ -108,7 +108,7 @@ var WARIO_ENDPOINT = "https://wario.windycitypie.com/";
         $scope.isPaymentSuccess = false;
         if (data && data.result) {
           $scope.card_errors = [];
-          var errors = JSON.parse(data.result).errors;
+          var errors = data.result.errors;
           for (var i = 0; i < errors.length; i++) {
             $scope.card_errors.push({ message: errors[i].detail })
           }

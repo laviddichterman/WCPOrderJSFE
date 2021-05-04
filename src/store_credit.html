@@ -1,5 +1,4 @@
 <h5>Use this page to purchase a gift for yourself or a loved one. It never expires and is good at both Windy City Pie and Breezy Town Pizza!</h5>
-<h5>Please note this page is brand new. Send us a message if you're having any issues!</h5>
 <div ng-cloak class="orderform" ng-app="WCPOrder">
   <div ng-controller="PaymentController as pmntCtrl">
     <div ng-show="stage === 6">
@@ -104,8 +103,8 @@
     </div>
     <div ng-show="stage >= 7">
       <div ng-show="isPaymentSuccess">
-        <h3>Payment of ${{wario_response.payment_response.result.payment.total_money.amount / 100 | number:2}} received
-          from card ending in: {{wario_response.payment_response.result.payment.card_details.card.last_4}}!</h3>
+        <h3>Payment of ${{wario_response.amount_money / 100 | number:2}} received
+          from card ending in: {{wario_response.last4}}!</h3>
         <div>Store credit details:
         <div class="flexbox">
           <div class="flexbox__item one-third">
@@ -122,7 +121,7 @@
           </div>
         </div>
         </p>
-        Here's your <a ng-href="{{wario_response.payment_response.result.payment.receipt_url}}"
+        Here's your <a ng-href="{{wario_response.receipt_url}}"
         target="_blank">receipt</a>.
       </div>
       <div ng-show="!isPaymentSuccess">Well... in a strange situation here. Somehow the payment failed. Send us a text
