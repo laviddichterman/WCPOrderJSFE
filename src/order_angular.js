@@ -1265,7 +1265,7 @@ function UpdateLeadTime() {
       },
       controller: function () { 
         this.ShowOptionsSections = function () {
-          return !(this.prod.options_sections.length === 1 && this.prod.options_sections[0][1] === this.prod.name)
+          return !this.prod.display_flags.suppress_exhaustive_modifier_list && !(this.prod.options_sections.length === 1 && this.prod.options_sections[0][1] === this.prod.name)
         }
         this.ShowAdornment = function () {
           return this.allowadornment && this.prod.display_flags && this.prod.display_flags.menu_adornment; 
