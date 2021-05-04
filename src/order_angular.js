@@ -38,8 +38,27 @@ var SanitizeIfExists = function (str) {
   return str && str.length ? str.replace("'", "`").replace("/", "|").replace("&", "and").replace("<", "").replace(">", "").replace(/[\+\t\r\n\v\f]/g, '') : str;
 }
 
-var ProductHasSelectableModifiers = function(pi) {
-  return pi.PRODUCT_CLASS.modifiers.filter(function(x) { return true; /* TODO: filter out disabled modifiers */ }).length > 0;
+var FilterModifiersCurry = function (menu) {
+  return function (mods) {
+    var result = {};
+    angular.forEach(mods, function(value, mtid) {
+      var modifier_entry = menu.modifiers[mtid];
+      var disp_flags = modifier_entry.modifier_type.display_flags;
+      var omit_section_if_no_available_options = disp_flags.omit_section_if_no_available_options;
+      var hidden = disp_flags.hidden;
+      // cases to not show:
+      // modifier.display_flags.omit_section_if_no_available_options && (has selected item, all other options cannot be selected, currently selected items cannot be deselected)
+      // modifier.display_flags.hidden is true
+      if (!hidden && (!omit_section_if_no_available_options || value.has_selectable)) {
+        result[mtid] = value;
+      }
+    });
+    return result;
+  };
+}
+
+var ProductHasSelectableModifiers = function(pi, menu) {
+  return Object.keys(FilterModifiersCurry(menu)(pi.modifier_map)).length > 0;
 }
 
 function ScrollToEIdJQ(id, delay) { 
@@ -904,7 +923,7 @@ function UpdateLeadTime() {
       // intermedite function that sees if we should be customizing this
       // product or add it directly to the cart
       this.SelectProduct = function(cid, pi, pmenuctrl) {
-        if ((pi.display_flags && pi.display_flags.skip_customization) || !ProductHasSelectableModifiers(pi)) {
+        if ((pi.display_flags && pi.display_flags.skip_customization) || !ProductHasSelectableModifiers(pi, this.CONFIG.MENU)) {
           var pi_copy = CopyWCPProduct(pi);
           pi_copy.piid = "";
           pi_copy.Initialize(this.CONFIG.MENU);
@@ -958,7 +977,7 @@ function UpdateLeadTime() {
         }
         // add new entry
         // TODO: the modifiers length check isn't actually exhaustive as some modifiers might be disabled for any reason
-        this.s.cart[cid].push(new CartEntry(cid, pi, 1, ProductHasSelectableModifiers(pi)));
+        this.s.cart[cid].push(new CartEntry(cid, pi, 1, ProductHasSelectableModifiers(pi, this.CONFIG.MENU)));
         toast.create({message: `Added ${pi.name} to order.`} );
         this.PostCartUpdate();
       }
@@ -1165,23 +1184,7 @@ function UpdateLeadTime() {
       this.ConfirmAdvancedOption();
     }
 
-    this.FilterModifiers = function (mods) {
-      var result = {};
-      var menu = this.CONFIG.MENU;
-      angular.forEach(mods, function(value, mtid) {
-        var modifier_entry = menu.modifiers[mtid];
-        var disp_flags = modifier_entry.modifier_type.display_flags;
-        var omit_section_if_no_available_options = disp_flags.omit_section_if_no_available_options;
-        var hidden = disp_flags.hidden;
-        // cases to not show:
-        // modifier.display_flags.omit_section_if_no_available_options && (has selected item, all other options cannot be selected, currently selected items cannot be deselected)
-        // modifier.display_flags.hidden is true
-        if (!hidden && (!omit_section_if_no_available_options || value.has_selectable)) {
-          result[mtid] = value;
-        }
-      });
-      return result;
-    }
+    this.FilterModifiers = FilterModifiersCurry(this.CONFIG.MENU);
     
     this.PopulateOrderGuide = function () {
       var menu = this.CONFIG.MENU;
