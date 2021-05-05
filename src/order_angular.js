@@ -970,7 +970,7 @@ function UpdateLeadTime() {
         for (var i in this.s.cart[cid]) {
           if (this.s.cart[cid][i].pi.Equals(pi, this.CONFIG.MENU)) {
             this.s.cart[cid][i].quantity += 1;
-            toast.create({message: `Changed ${pi.name} quantity to ${this.s.cart[cid][i].quantity}.`} );
+            toast.create({message: `Changed ${pi.processed_name} quantity to ${this.s.cart[cid][i].quantity}.`} );
             this.PostCartUpdate();
             return;
           }
@@ -978,7 +978,7 @@ function UpdateLeadTime() {
         // add new entry
         // TODO: the modifiers length check isn't actually exhaustive as some modifiers might be disabled for any reason
         this.s.cart[cid].push(new CartEntry(cid, pi, 1, ProductHasSelectableModifiers(pi, this.CONFIG.MENU)));
-        toast.create({message: `Added ${pi.name} to order.`} );
+        toast.create({message: `Added ${pi.processed_name} to order.`} );
         this.PostCartUpdate();
       }
 
@@ -988,12 +988,12 @@ function UpdateLeadTime() {
           if (cart_entry !== this.s.cart[cart_entry.catid][i] && this.s.cart[cart_entry.catid][i].pi.Equals(new_pi, this.CONFIG.MENU)) {
             cart_entry.quantity += this.s.cart[cart_entry.catid][i].quantity;
             this.s.cart[cart_entry.catid].splice(i, 1);
-            toast.create({message: `Merged duplicate ${new_pi.name} in your order.`} );
+            toast.create({message: `Merged duplicate ${new_pi.processed_name} in your order.`} );
             this.PostCartUpdate();
             return;
           }
         }
-        toast.create({message: `Updated ${new_pi.name} in your order.`} );
+        toast.create({message: `Updated ${new_pi.processed_name} in your order.`} );
         this.PostCartUpdate();
       }
 
@@ -1268,7 +1268,7 @@ function UpdateLeadTime() {
       },
       controller: function () { 
         this.ShowOptionsSections = function () {
-          return !this.prod.display_flags.suppress_exhaustive_modifier_list && !(this.prod.options_sections.length === 1 && this.prod.options_sections[0][1] === this.prod.name)
+          return !this.prod.display_flags.suppress_exhaustive_modifier_list && !(this.prod.options_sections.length === 1 && this.prod.options_sections[0][1] === this.prod.processed_name)
         }
         this.ShowAdornment = function () {
           return this.allowadornment && this.prod.display_flags && this.prod.display_flags.menu_adornment; 
@@ -1288,13 +1288,13 @@ function UpdateLeadTime() {
       bindToController: true,
       template: '<div ng-class="{\'menu-list__item-highlight-wrapper\': ctrl.ShowAdornment()}">'+
         '<span ng-if="ctrl.ShowAdornment()" class="menu-list__item-highlight-title" ng-bind-html="ctrl.prod.display_flags.menu_adornment | TrustAsHTML"></span>' +
-        '<h4 class="menu-list__item-title"><span class="item_title">{{ctrl.prod.name}}</span><span ng-if="ctrl.dots" class="dots"></span></h4>' +
-        '<p ng-if="ctrl.description && ctrl.prod.description" class="menu-list__item-desc">' +
+        '<h4 class="menu-list__item-title"><span class="item_title">{{ctrl.prod.processed_name}}</span><span ng-if="ctrl.dots" class="dots"></span></h4>' +
+        '<p ng-if="ctrl.processed_description && ctrl.prod.processed_description" class="menu-list__item-desc">' +
         '<span class="desc__content">' +
-        '<span>{{ctrl.prod.description}}</span>' +
+        '<span>{{ctrl.prod.processed_description}}</span>' +
         '</span>' +
         '</p>' +
-        '<p ng-if="ctrl.description && ctrl.ShowOptionsSections()" ng-repeat="option_section in ctrl.prod.options_sections" class="menu-list__item-desc">' +
+        '<p ng-if="ctrl.processed_description && ctrl.ShowOptionsSections()" ng-repeat="option_section in ctrl.prod.options_sections" class="menu-list__item-desc">' +
         '<span class="desc__content">' +
         '<span ng-if="ctrl.prod.is_split"><strong>{{option_section[0]}}: </strong></span>' +
         '<span>{{option_section[1]}}</span>' +
