@@ -650,7 +650,7 @@ function UpdateLeadTime() {
           load_time: state.debug_info.load_time,
           time_selection_time: state.debug_info["time-selection-time"] ? state.debug_info["time-selection-time"].format("H:mm:ss") : "",
           submittime: moment().format("MM-DD-YYYY HH:mm:ss"),
-          useragent: navigator.userAgent + " FEV14",
+          useragent: navigator.userAgent + " FEV15",
         }
       }).then(onSuccess).catch(onFail);
     }
@@ -1288,12 +1288,12 @@ function UpdateLeadTime() {
       template: '<div ng-class="{\'menu-list__item-highlight-wrapper\': ctrl.ShowAdornment()}">'+
         '<span ng-if="ctrl.ShowAdornment()" class="menu-list__item-highlight-title" ng-bind-html="ctrl.prod.display_flags.menu_adornment | TrustAsHTML"></span>' +
         '<h4 class="menu-list__item-title"><span class="item_title">{{ctrl.prod.processed_name}}</span><span ng-if="ctrl.dots" class="dots"></span></h4>' +
-        '<p ng-if="ctrl.processed_description && ctrl.prod.processed_description" class="menu-list__item-desc">' +
+        '<p ng-if="ctrl.description && ctrl.prod.processed_description" class="menu-list__item-desc">' +
         '<span class="desc__content">' +
         '<span>{{ctrl.prod.processed_description}}</span>' +
         '</span>' +
         '</p>' +
-        '<p ng-if="ctrl.processed_description && ctrl.ShowOptionsSections()" ng-repeat="option_section in ctrl.prod.options_sections" class="menu-list__item-desc">' +
+        '<p ng-if="ctrl.description && ctrl.ShowOptionsSections()" ng-repeat="option_section in ctrl.prod.options_sections" class="menu-list__item-desc">' +
         '<span class="desc__content">' +
         '<span ng-if="ctrl.prod.is_split"><strong>{{option_section[0]}}: </strong></span>' +
         '<span>{{option_section[1]}}</span>' +
