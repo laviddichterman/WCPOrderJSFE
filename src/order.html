@@ -248,7 +248,7 @@
     </span>
     <div class="order-nav">
       <button type="submit" class="btn" ng-show="orderCtrl.HasPreviousStage()" ng-click="orderCtrl.ScrollTop(); orderCtrl.PreviousStage()">Previous</button>
-      <button type="submit" class="btn" ng-disabled="!orderCtrl.s.date_valid || (orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && (!orderCtrl.s.is_address_validated)) || (orderCtrl.s.service_type == orderCtrl.CONFIG.DINEIN && !orderCtrl.s.acknowledge_dine_in_terms)" ng-show="orderCtrl.HasNextStage()" ng-click="orderCtrl.ScrollTop(); orderCtrl.NextStage(); orderCtrl.ClearTimeoutFlag();">Next</button>
+      <button type="submit" class="btn" ng-disabled="!orderCtrl.s.date_valid || (orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && (!orderCtrl.s.is_address_validated)) || (orderCtrl.s.service_type == orderCtrl.CONFIG.DINEIN && (!orderCtrl.s.acknowledge_dine_in_terms || Number.isNaN(orderCtrl.s.number_guests) || orderCtrl.s.number_guests < 1 || orderCtrl.s.number_guests > orderCtrl.CONFIG.MAX_PARTY_SIZE))" ng-show="orderCtrl.HasNextStage()" ng-click="orderCtrl.ScrollTop(); orderCtrl.NextStage(); orderCtrl.ClearTimeoutFlag();">Next</button>
     </div>
   </div>
   <div ng-show="orderCtrl.s.stage === 5 && !orderCtrl.s.isProcessing">
@@ -273,6 +273,10 @@
         <tr ng-if="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY">
           <td>Address</td>
           <td>{{orderCtrl.s.validated_delivery_address}}{{orderCtrl.s.delivery_address_2 ? ", " + orderCtrl.s.delivery_address_2 : ""}}</td>
+        </tr>
+        <tr ng-if="orderCtrl.s.service_type == orderCtrl.CONFIG.DINEIN">
+          <td>Party Size</td>
+          <td>{{orderCtrl.s.number_guests}}</td>
         </tr>
       </table>
       <div class="cart">

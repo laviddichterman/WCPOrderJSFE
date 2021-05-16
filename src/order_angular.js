@@ -632,7 +632,7 @@ function UpdateLeadTime() {
           },
           user_email: state.email_address,
           sliced: state.slice_pizzas,
-          number_guests: state.number_guests,
+          number_guests: state.number_guests || 1,
           products: state.CartToDTO(),
           short_cart_list: state.short_cart_list,
           special_instructions: SanitizeIfExists(state.special_instructions),
@@ -650,7 +650,7 @@ function UpdateLeadTime() {
           load_time: state.debug_info.load_time,
           time_selection_time: state.debug_info["time-selection-time"] ? state.debug_info["time-selection-time"].format("H:mm:ss") : "",
           submittime: moment().format("MM-DD-YYYY HH:mm:ss"),
-          useragent: navigator.userAgent + " FEV15",
+          useragent: navigator.userAgent + " FEV16",
         }
       }).then(onSuccess).catch(onFail);
     }
@@ -706,7 +706,7 @@ function UpdateLeadTime() {
     this.customer_name_first = "";
     this.customer_name_last = "";
     this.phone_number = "";
-    this.number_guests = 1;
+    this.number_guests = "";
     this.delivery_address = ""; // customer input, not validated
     this.delivery_address_2 = ""; // customer input, not validated/required
     this.delivery_zipcode = ""; // customer input, not validated
@@ -859,7 +859,7 @@ function UpdateLeadTime() {
       }
 
       this.PostChangeServiceType = function() {
-        this.s.number_guests = 1;
+        this.s.number_guests = "";
         this.ValidateDate(); 
         this.ClearAddress(); 
         this.ClearSlicing();
@@ -1021,7 +1021,7 @@ function UpdateLeadTime() {
       };
 
       this.fix_number_guests = function (clear_if_invalid) {
-        this.s.number_guests = FixQuantity(this.s.number_guests, clear_if_invalid, 1, this.CONFIG.MAX_PARTY_SIZE);
+        this.s.number_guests = clear_if_invalid && !Number.isInteger(this.s.number_guests) ? "" : FixQuantity(this.s.number_guests, clear_if_invalid, 1, this.CONFIG.MAX_PARTY_SIZE);
       };
 
       this.updateCustomTip = function () {
