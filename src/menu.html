@@ -1,0 +1,41 @@
+<script type='text/javascript'>
+  if (navigator.userAgent.indexOf("MSIE ") > -1 || navigator.userAgent.indexOf("Trident/") > -1){
+      alert("It looks like you're using Internet Explorer. This site, and a lot of the internet don't work with your browser. Please switch to an updated browser like Chrome, Firefox, Safari, or Edge!");
+  }
+</script>
+<div ng-cloak class="wmenu" ng-app="WARIOMenu" ng-controller="WMenuCtrl as menuCtrl">
+  <div ng-repeat="section in menuCtrl.display_menu">
+    <div ng-repeat="subsection in menuCtrl.CONFIG.MENU.categories[section.cat_id].children">
+      <h2 class="menu-list__title" ng-bind-html="menuCtrl.CONFIG.MENU.categories[subsection].menu_title | TrustAsHTML"></h2>
+      <div class="ordering-menu menu-list menu-list__dotted">
+        <h3 ng-if="menuCtrl.CONFIG.MENU.categories[subsection].subtitle" class="flush--top"><strong ng-bind-html="menuCtrl.CONFIG.MENU.categories[subsection].subtitle | TrustAsHTML"></strong></h3>
+        <ul class="menu-list__items">
+          <li class="menu-list__item" ng-repeat="product in menuCtrl.CONFIG.MENU.categories[subsection].menu">
+            <div>
+              <wcppizzacartitem prod="product" description="true" allowadornment="true" dots="true" price="true"></wcppizzacartitem>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+</div>
+<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.12/angular-material.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.11/angular.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.11/angular-aria.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.11/angular-sanitize.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.11/angular-animate.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.12/angular-material.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.4.0/socket.io.min.js"></script>
+<script src="https://www.windycitypie.com/wp-includes/js/socket.min.js"></script>
+<script src="https://www.windycitypie.com/wp-includes/js/wcpshared.test.222.js"></script>
+<script>
+var WARIO_ENDPOINT = "https://wdev.windycitypie.com/";
+//var WARIO_ENDPOINT = "http://localhost:4001/";
+var MENU_CATID = "60abfd20f63154136d940941"
+
+
+
+</script>
