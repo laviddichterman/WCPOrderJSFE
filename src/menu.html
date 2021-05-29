@@ -6,9 +6,13 @@
 <div ng-cloak class="wmenu" ng-app="WARIOMenu" ng-controller="WMenuCtrl as menuCtrl">
   <div ng-repeat="section in menuCtrl.display_menu">
     <div ng-repeat="subsection in menuCtrl.CONFIG.MENU.categories[section.cat_id].children">
-      <h2 class="menu-list__title" ng-bind-html="menuCtrl.CONFIG.MENU.categories[subsection].menu_title | TrustAsHTML"></h2>
+      <h2 class="menu-list__title">
+        <span ng-bind-html="menuCtrl.CONFIG.MENU.categories[subsection].menu_title | TrustAsHTML"></span>
+      </h2>
       <div class="ordering-menu menu-list menu-list__dotted">
-        <h3 ng-if="menuCtrl.CONFIG.MENU.categories[subsection].subtitle" class="flush--top"><strong ng-bind-html="menuCtrl.CONFIG.MENU.categories[subsection].subtitle | TrustAsHTML"></strong></h3>
+        <h3 ng-if="menuCtrl.CONFIG.MENU.categories[subsection].subtitle" class="flush--top">
+          <strong><span ng-bind-html="menuCtrl.CONFIG.MENU.categories[subsection].subtitle | TrustAsHTML"></span></strong>
+        </h3>
         <ul class="menu-list__items">
           <li class="menu-list__item" ng-repeat="product in menuCtrl.CONFIG.MENU.categories[subsection].menu">
             <div>
