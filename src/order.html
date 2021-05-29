@@ -68,8 +68,8 @@
         </span>
         <span class="four-fifths">
           <span class="order-nav-item float--right">
-            <button ng-disabled="pmenuCtrl.errors.length" ng-if="pmenuCtrl.is_addition" name="add" class="btn" ng-click="orderCtrl.ScrollTop(); orderCtrl.AddToOrder(pmenuCtrl.catid, pmenuCtrl.selection); pmenuCtrl.UnsetProduct()">Add to order</button>
-            <button ng-disabled="pmenuCtrl.errors.length" ng-if="!pmenuCtrl.is_addition" name="save" class="btn" ng-click="orderCtrl.ScrollTop(); orderCtrl.UpdateOrderEntry(pmenuCtrl.cart_entry, pmenuCtrl.selection); pmenuCtrl.UnsetProduct()">Save Changes</button>
+            <button ng-disabled="pmenuCtrl.errors.length || pmenuCtrl.selection.incomplete" ng-if="pmenuCtrl.is_addition" name="add" class="btn" ng-click="orderCtrl.ScrollTop(); orderCtrl.AddToOrder(pmenuCtrl.catid, pmenuCtrl.selection); pmenuCtrl.UnsetProduct()">Add to order</button>
+            <button ng-disabled="pmenuCtrl.errors.length || pmenuCtrl.selection.incomplete" ng-if="!pmenuCtrl.is_addition" name="save" class="btn" ng-click="orderCtrl.ScrollTop(); orderCtrl.UpdateOrderEntry(pmenuCtrl.cart_entry, pmenuCtrl.selection); pmenuCtrl.UnsetProduct()">Save Changes</button>
           </span>
         </span>
       </div>

@@ -1200,7 +1200,7 @@ function UpdateLeadTime() {
         }
       }
       var error_messages = [];
-      angular.forEach(this.modifier_map, function(entry, mtid) {
+      angular.forEach(this.selection.modifier_map, function(entry, mtid) {
         if (!entry.meets_minimum) {
           var modifier_entry = menu.modifiers[mtid];
           var mod_name = modifier_entry.modifier_type.display_name ? modifier_entry.modifier_type.display_name : modifier_entry.modifier_type.name
