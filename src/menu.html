@@ -7,8 +7,8 @@
 <div ng-cloak class="wmenu" ng-app="WARIOMenu" ng-controller="WMenuCtrl as menuCtrl">
   <div ng-if="menuCtrl.display_menu.length > 1" class="pixcode  pixcode--tabs">
     <ul class="pixcode--tabs__nav  tabs__nav  nav  nav-tabs">
-      <li ng-click="menuCtrl.setActive($index)" ng-repeat="section in menuCtrl.display_menu track by $index">
-        {{menuCtrl.CONFIG.MENU.categories[section.cat_id].menu_name}}
+      <li ng-repeat="section in menuCtrl.display_menu track by $index">
+        <a ng-click="menuCtrl.setActive($index)" ng-class="{current: $index === menuCtrl.active}">{{menuCtrl.CONFIG.MENU.categories[section].menu_name}}</a>
       </li>
     </ul>
   </div>
