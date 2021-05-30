@@ -1,60 +1,10 @@
-var TOPPING_NONE = WCPShared.TOPPING_NONE;
-var TOPPING_LEFT = WCPShared.TOPPING_LEFT;
-var TOPPING_RIGHT = WCPShared.TOPPING_RIGHT;
-var TOPPING_WHOLE = WCPShared.TOPPING_WHOLE;
-
-var GetPlacementFromMIDOID = WCPShared.GetPlacementFromMIDOID;
-var DisableDataCheck = WCPShared.DisableDataCheck;
 var FilterProduct = WCPShared.FilterProduct
 var FilterWMenu = WCPShared.FilterWMenu;
+var ComputePotentialPrices = WCPShared.ComputePotentialPrices;
 
 var $j = jQuery.noConflict();
 
-
-var FilterModifiersCurry = function (menu) {
-  return function (mods) {
-    var result = {};
-    angular.forEach(mods, function(value, mtid) {
-      var modifier_entry = menu.modifiers[mtid];
-      var disp_flags = modifier_entry.modifier_type.display_flags;
-      var omit_section_if_no_available_options = disp_flags.omit_section_if_no_available_options;
-      var hidden = disp_flags.hidden;
-      // cases to not show:
-      // modifier.display_flags.omit_section_if_no_available_options && (has selected item, all other options cannot be selected, currently selected items cannot be deselected)
-      // modifier.display_flags.hidden is true
-      if (!hidden && (!omit_section_if_no_available_options || value.has_selectable)) {
-        result[mtid] = value;
-      }
-    });
-    return result;
-  };
-}
-
-var ProductHasSelectableModifiers = function(pi, menu) {
-  return Object.keys(FilterModifiersCurry(menu)(pi.modifier_map)).length > 0;
-}
-
-function ScrollToEIdJQ(id, delay) { 
-  setTimeout(function() {
-    $j("html, body").animate({
-      scrollTop: $j(id).offset().top - 150
-    }, 500);
-  }, delay);
-}
-
-function ScrollTopJQ() {
-  ScrollToEIdJQ("#ordertop", 0);
-}
-
 var WCPStoreConfig = function () {
-
-  // option placement enums
-  this.NONE = TOPPING_NONE;
-  this.LEFT = TOPPING_LEFT;
-  this.RIGHT = TOPPING_RIGHT;
-  this.WHOLE = TOPPING_WHOLE;
-
-
   // menu related
   this.MENU = {
     // modifiers are { MID: { modifier_type: WARIO modifier type JSON, options_list: [WCPOption], options: {OID: WCPOption} } }
@@ -123,9 +73,7 @@ var wcpconfig = new WCPStoreConfig();
   app.controller("WMenuCtrl", ["$rootScope", "socket",
     function ($rootScope, $socket) {
       this.CONFIG = $rootScope.CONFIG = wcpconfig;
-      this.ScrollTop = ScrollTopJQ;
-      this.ScrollToID = ScrollToEIdJQ;
-
+      this.active = 0;
       this.display_menu = [];
 
       this.InitializeMenu = function() {
@@ -138,17 +86,20 @@ var wcpconfig = new WCPStoreConfig();
         if (is_tabbed_menu) {
           // e.g.: [FOOD: [SMALL PLATES, PIZZAS], COCKTAILS: [], WINE: [BUBBLES, WHITE, RED, PINK]]
           // create a menu from the filtered categories and products.
-          this.display_menu = MENU_CATEGORIES.map(function(cat_id) { return { active: false, cat_id: cat_id };})
-          if (this.display_menu.length > 0) {
-            this.display_menu[0].active = true;
-          }  
+          this.display_menu = MENU_CATEGORIES;
         }
         else {
           // e.g.: [SMALL PLATES, PIZZAS]
-          this.display_menu = [ {active: true, cat_id: MENU_CATID}]
+          this.display_menu = [ MENU_CATID ]
         }
+        this.active = 0;
+        console.log(this.display_menu);
       }
-    
+      
+      this.setActive = function(idx) { 
+        this.active = idx;
+      }
+
       var UpdateCatalogFxn = function (message) {
         this.CONFIG.UpdateCatalog(message);
         this.InitializeMenu();
@@ -163,6 +114,7 @@ var wcpconfig = new WCPStoreConfig();
       restrict: "E",
       scope: {
         prod: "=prod",
+        menu: "=menu",
         dots: "=dots",
         price: "=price",
         allowadornment: "=allowadornment",
@@ -180,6 +132,11 @@ var wcpconfig = new WCPStoreConfig();
             switch (this.prod.display_flags.price_display) {
               case "FROM_X": return `from ${this.prod.price}`;
               case "VARIES": return "MP";
+              case "MIN_TO_MAX": {
+                const prices = ComputePotentialPrices(this.prod, this.menu); 
+                return prices.length > 1 && prices[0] !== prices[prices.length-1] ? `from ${prices[0]} to ${prices[prices.length-1]}` : `${prices[0]}`;
+              }
+              case "LIST": return ComputePotentialPrices(this.prod, this.menu).join("/");
               case "ALWAYS": default: return `${this.prod.price}`;
             }
           }
@@ -193,7 +150,7 @@ var wcpconfig = new WCPStoreConfig();
         '<h4 class="menu-list__item-title"><span class="item_title">{{ctrl.prod.processed_name}}</span><span ng-if="ctrl.dots" class="dots"></span></h4>' +
         '<p ng-if="ctrl.description && ctrl.prod.processed_description" class="menu-list__item-desc">' +
         '<span class="desc__content">' +
-        '<span>{{ctrl.prod.processed_description}}</span>' +
+        '<span ng-bind-html="ctrl.prod.processed_description | TrustAsHTML"></span>' +
         '</span>' +
         '</p>' +
         '<p ng-if="ctrl.description && ctrl.ShowOptionsSections()" ng-repeat="option_section in ctrl.prod.options_sections" class="menu-list__item-desc">' +
