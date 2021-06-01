@@ -5,33 +5,43 @@
 </script>
 
 <div ng-cloak class="wmenu" ng-app="WARIOMenu" ng-controller="WMenuCtrl as menuCtrl">
-  <div ng-if="menuCtrl.display_menu.length > 1" class="pixcode  pixcode--tabs">
-    <ul class="pixcode--tabs__nav  tabs__nav  nav  nav-tabs">
+  <div class="pixcode  pixcode--tabs">
+    <ul ng-if="menuCtrl.display_menu.length > 1" class="pixcode--tabs__nav  tabs__nav  nav  nav-tabs">
       <li ng-repeat="section in menuCtrl.display_menu track by $index">
         <a ng-click="menuCtrl.setActive($index)" ng-class="{current: $index === menuCtrl.active}">{{menuCtrl.CONFIG.MENU.categories[section].menu_name}}</a>
       </li>
     </ul>
-  </div>
-
     <div ng-if="menuCtrl.active < menuCtrl.display_menu.length">
       <div ng-repeat="subsection in menuCtrl.CONFIG.MENU.categories[menuCtrl.display_menu[menuCtrl.active]].children">
         <h2 class="menu-list__title">
-          <hr ng-if="!$first" class="separator">
           <span ng-bind-html="menuCtrl.CONFIG.MENU.categories[subsection].menu_name | TrustAsHTML"></span>
         </h2>
-        <div class="ordering-menu menu-list menu-list__dotted">
-          <h3 ng-if="menuCtrl.CONFIG.MENU.categories[subsection].subtitle" class="flush--top">
-            <strong><span ng-bind-html="menuCtrl.CONFIG.MENU.categories[subsection].subtitle | TrustAsHTML"></strong></h3>
+        <div class="menu-list menu-list__dotted">
+          <h4 ng-if="menuCtrl.CONFIG.MENU.categories[subsection].subtitle" class="flush--top">
+            <span ng-bind-html="menuCtrl.CONFIG.MENU.categories[subsection].subtitle | TrustAsHTML"></span>
+          </h4>
+          <hr class="separator">
           <ul class="menu-list__items">
-            <li class="menu-list__item" ng-repeat="product in menuCtrl.CONFIG.MENU.categories[subsection].menu">
+            <li class="menu-list__item" ng-repeat-start="product in menuCtrl.CONFIG.MENU.categories[subsection].menu">
               <div>
                 <wcppizzacartitem prod="product" description="true" allowadornment="true" dots="true" menu="menuCtrl.CONFIG.MENU" price="true"></wcppizzacartitem>
+              </div>
+            </li>
+            <li class="menu-list__item modifier-section" ng-if="product.is_base && product.PRODUCT_CLASS.modifiers.length > 0" ng-repeat-end ng-repeat="mod_def in product.PRODUCT_CLASS.modifiers">
+              <h4 class="menu-list__item-title">{{menuCtrl.CONFIG.MENU.modifiers[mod_def.mtid].modifier_type.display_name ? menuCtrl.CONFIG.MENU.modifiers[mod_def.mtid].modifier_type.display_name : menuCtrl.CONFIG.MENU.modifiers[mod_def.mtid].modifier_type.name}}
+              </h4>
+              <div class="menu-list ">
+                <ul class="flexitems menu-list__items">
+                  <li ng-repeat="opt in menuCtrl.CONFIG.MENU.modifiers[mod_def.mtid].options_list" class="flexitem menu-list__item">
+                    <p class="menu-list__item-desc"><span class="desc__content">{{opt.name}}</span><span class="menu-list__item-price">{{opt.price ? opt.price : "Included"}}</span></p>
+                  </li>
+                </ul>
               </div>
             </li>
           </ul>
         </div>
       </div>
-      <div ng-if="menuCtrl.CONFIG.MENU.categories[menuCtrl.display_menu[menuCtrl.active]].menu.length > 0" class="ordering-menu menu-list menu-list__dotted">
+      <div ng-if="menuCtrl.CONFIG.MENU.categories[menuCtrl.display_menu[menuCtrl.active]].menu.length > 0" class="menu-list menu-list__dotted">
         <h3 ng-if="menuCtrl.CONFIG.MENU.categories[menuCtrl.display_menu[menuCtrl.active]].subtitle" class="flush--top">
           <strong><span ng-bind-html="menuCtrl.CONFIG.MENU.categories[menuCtrl.display_menu[menuCtrl.active]].subtitle | TrustAsHTML"></strong></h3>
         <ul class="menu-list__items">
@@ -43,6 +53,7 @@
         </ul>
       </div>
     </div>
+  </div>
 </div>
 <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.12/angular-material.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.11/angular.min.js"></script>
