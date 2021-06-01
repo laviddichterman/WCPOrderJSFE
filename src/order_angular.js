@@ -389,6 +389,14 @@ function UpdateLeadTime() {
       return $sce.trustAsHtml(val);
     };
   }]);
+
+  app.filter('Range', function() {
+    return function(input, max) {
+      input = Array(parseInt(max)).fill(0).map(function(_, idx) { return idx + 1; });
+      console.log(input);
+      return input;
+    };
+  });
   
   app.filter("MinutesToPrintTime", function () {
     return wcporderhelper.MinutesToPrintTime;

@@ -195,7 +195,7 @@
         <span class="guest-count-text">Party Size</span>
       </label>
       <span class="guest-count">
-        <input type="number" name="guest-count" id="guest-count" ng-model="orderCtrl.s.number_guests" ng-blur="orderCtrl.fix_number_guests(true)" ng-change="orderCtrl.fix_number_guests(false)">
+        <select name="guest-count" id="guest-count" ng-model="orderCtrl.s.number_guests" ng-options="value for value in [] | Range:orderCtrl.CONFIG.MAX_PARTY_SIZE" ng-change="orderCtrl.fix_number_guests(false)"></select>
       </span>
     </span>
     <span class="flexbox" ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && !orderCtrl.s.is_address_validated">
