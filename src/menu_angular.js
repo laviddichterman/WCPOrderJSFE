@@ -1,8 +1,6 @@
-var FilterProduct = WCPShared.FilterProduct
+var FilterProduct = WCPShared.FilterProduct;
 var FilterWMenu = WCPShared.FilterWMenu;
 var ComputePotentialPrices = WCPShared.ComputePotentialPrices;
-
-var $j = jQuery.noConflict();
 
 var WCPStoreConfig = function () {
   // menu related
@@ -26,11 +24,11 @@ var WCPStoreConfig = function () {
     }
     var catalog_map = new WCPShared.WMenu(cat);
     var current_time = moment();
-    var FilterProdsFxn = function(item) { return FilterProduct(item, catalog_map, function(x) { return x.hide_from_menu; }, current_time); };
+    var FilterProdsFxn = function(item) { return FilterProduct(item, catalog_map, function(x) { return x.menu.hide; }, current_time); };
     FilterWMenu(catalog_map, FilterProdsFxn, current_time);
     Object.assign(this.MENU, catalog_map);
     console.log(this.MENU);
-  }
+  };
   //END WCP store config
 };
 
@@ -64,7 +62,7 @@ var wcpconfig = new WCPStoreConfig();
               callback.apply(socket, args);
             }
           });
-        })
+        });
       }
     };
   });
@@ -90,22 +88,22 @@ var wcpconfig = new WCPStoreConfig();
         }
         else {
           // e.g.: [SMALL PLATES, PIZZAS]
-          this.display_menu = [ MENU_CATID ]
+          this.display_menu = [ MENU_CATID ];
         }
         this.active = 0;
         console.log(this.display_menu);
-      }
+      };
       
       this.setActive = function(idx) { 
         this.active = idx;
-      }
+      };
 
       var UpdateCatalogFxn = function (message) {
         this.CONFIG.UpdateCatalog(message);
         this.InitializeMenu();
       };
-      var UpdateCatalogFxn = UpdateCatalogFxn.bind(this);
-      $socket.on("WCP_CATALOG", UpdateCatalogFxn);
+      var BoundUpdateCatalogFxn = UpdateCatalogFxn.bind(this);
+      $socket.on("WCP_CATALOG", BoundUpdateCatalogFxn);
     }]);
 
 
@@ -117,23 +115,24 @@ var wcpconfig = new WCPStoreConfig();
         menu: "=menu",
         dots: "=dots",
         price: "=price",
+        displayctx: "@displayctx",
         allowadornment: "=allowadornment",
         description: "=description"
       },
       controller: function () { 
         this.ShowOptionsSections = function () {
-          return !this.prod.display_flags.suppress_exhaustive_modifier_list && !(this.prod.options_sections.length === 1 && this.prod.options_sections[0][1] === this.prod.processed_name)
-        }
+          return !this.prod.display_flags[this.displayctx].suppress_exhaustive_modifier_list && !(this.prod.options_sections.length === 1 && this.prod.options_sections[0][1] === this.prod.processed_name);
+        };
         this.ShowAdornment = function () {
-          return this.allowadornment && this.prod.display_flags && this.prod.display_flags.menu_adornment; 
-        }
+          return this.allowadornment && this.prod.display_flags[this.displayctx].adornment ? this.prod.display_flags[this.displayctx].adornment : false; 
+        };
         this.PriceText = function () {
           if (this.prod.incomplete) {
-            switch (this.prod.display_flags.price_display) {
+            switch (this.prod.display_flags[this.displayctx].price_display) {
               case "FROM_X": return `from ${this.prod.price}`;
               case "VARIES": return "MP";
               case "MIN_TO_MAX": {
-                const prices = ComputePotentialPrices(this.prod, this.menu); 
+                var prices = ComputePotentialPrices(this.prod, this.menu); 
                 return prices.length > 1 && prices[0] !== prices[prices.length-1] ? `from ${prices[0]} to ${prices[prices.length-1]}` : `${prices[0]}`;
               }
               case "LIST": return ComputePotentialPrices(this.prod, this.menu).join("/");
@@ -141,12 +140,12 @@ var wcpconfig = new WCPStoreConfig();
             }
           }
           return `${this.prod.price}`;
-        }
+        };
       },
       controllerAs: "ctrl",
       bindToController: true,
       template: '<div ng-class="{\'menu-list__item-highlight-wrapper\': ctrl.ShowAdornment()}">'+
-        '<span ng-if="ctrl.ShowAdornment()" class="menu-list__item-highlight-title" ng-bind-html="ctrl.prod.display_flags.menu_adornment | TrustAsHTML"></span>' +
+        '<span ng-if="ctrl.ShowAdornment()" class="menu-list__item-highlight-title" ng-bind-html="ctrl.ShowAdornment() | TrustAsHTML"></span>' +
         '<h4 class="menu-list__item-title"><span class="item_title">{{ctrl.prod.processed_name}}</span><span ng-if="ctrl.dots" class="dots"></span></h4>' +
         '<p ng-if="ctrl.description && ctrl.prod.processed_description" class="menu-list__item-desc">' +
         '<span class="desc__content">' +
@@ -162,6 +161,31 @@ var wcpconfig = new WCPStoreConfig();
         '<span ng-if="ctrl.dots" class="dots"></span>' +
         '<span ng-if="ctrl.price" class="menu-list__item-price">{{ctrl.PriceText()}}</span>' +
         '</div>',
+    };
+  });
+
+  app.directive("wcpmenumodifiers", function () {
+    return {
+      restrict: "E",
+      scope: {
+        prod: "=prod",
+        menu: "=menu",
+      },
+      controller: function () { 
+      },
+      controllerAs: "ctrl",
+      bindToController: true,
+      template: '<li class="menu-list__item modifier-section" ng-repeat="mod_def in ctrl.prod.PRODUCT_CLASS.modifiers">\
+      <h4 class="menu-list__item-title">{{ctrl.menu.modifiers[mod_def.mtid].modifier_type.display_name ? ctrl.menu.modifiers[mod_def.mtid].modifier_type.display_name : ctrl.menu.modifiers[mod_def.mtid].modifier_type.name}}\
+      </h4>\
+      <div class="menu-list ">\
+        <ul class="flexitems menu-list__items">\
+          <li ng-repeat="opt in ctrl.menu.modifiers[mod_def.mtid].options_list" class="flexitem menu-list__item">\
+            <p class="menu-list__item-desc"><span class="desc__content">{{opt.name}}</span><span class="menu-list__item-price">{{opt.price ? opt.price : "Included"}}</span></p>\
+          </li>\
+        </ul>\
+      </div>\
+    </li>',
     };
   });
 

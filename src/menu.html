@@ -5,7 +5,7 @@
 </script>
 
 <div ng-cloak class="wmenu" ng-app="WARIOMenu" ng-controller="WMenuCtrl as menuCtrl">
-  <div class="pixcode  pixcode--tabs">
+  <div class="pixcode pixcode--tabs">
     <ul ng-if="menuCtrl.display_menu.length > 1" class="pixcode--tabs__nav  tabs__nav  nav  nav-tabs">
       <li ng-repeat="section in menuCtrl.display_menu track by $index">
         <a ng-click="menuCtrl.setActive($index)" ng-class="{current: $index === menuCtrl.active}">{{menuCtrl.CONFIG.MENU.categories[section].menu_name}}</a>
@@ -22,22 +22,12 @@
           </h4>
           <hr class="separator">
           <ul class="menu-list__items">
-            <li class="menu-list__item" ng-repeat-start="product in menuCtrl.CONFIG.MENU.categories[subsection].menu">
+            <li class="menu-list__item" ng-repeat-start="product in menuCtrl.CONFIG.MENU.categories[subsection].menu | orderBy:'display_flags.menu.ordinal'">
               <div>
-                <wcppizzacartitem prod="product" description="true" allowadornment="true" dots="true" menu="menuCtrl.CONFIG.MENU" price="true"></wcppizzacartitem>
+                <wcppizzacartitem prod="product" description="true" allowadornment="true" dots="true" menu="menuCtrl.CONFIG.MENU" displayctx="menu" price="true"></wcppizzacartitem>
               </div>
             </li>
-            <li class="menu-list__item modifier-section" ng-if="product.is_base && product.PRODUCT_CLASS.modifiers.length > 0" ng-repeat-end ng-repeat="mod_def in product.PRODUCT_CLASS.modifiers">
-              <h4 class="menu-list__item-title">{{menuCtrl.CONFIG.MENU.modifiers[mod_def.mtid].modifier_type.display_name ? menuCtrl.CONFIG.MENU.modifiers[mod_def.mtid].modifier_type.display_name : menuCtrl.CONFIG.MENU.modifiers[mod_def.mtid].modifier_type.name}}
-              </h4>
-              <div class="menu-list ">
-                <ul class="flexitems menu-list__items">
-                  <li ng-repeat="opt in menuCtrl.CONFIG.MENU.modifiers[mod_def.mtid].options_list" class="flexitem menu-list__item">
-                    <p class="menu-list__item-desc"><span class="desc__content">{{opt.name}}</span><span class="menu-list__item-price">{{opt.price ? opt.price : "Included"}}</span></p>
-                  </li>
-                </ul>
-              </div>
-            </li>
+            <wcpmenumodifiers ng-if="product.display_flags.menu.show_modifier_options && product.PRODUCT_CLASS.modifiers.length > 0" ng-repeat-end prod="product" menu="menuCtrl.CONFIG.MENU"></wcpmenumodifiers>
           </ul>
         </div>
       </div>
@@ -45,9 +35,9 @@
         <h3 ng-if="menuCtrl.CONFIG.MENU.categories[menuCtrl.display_menu[menuCtrl.active]].subtitle" class="flush--top">
           <strong><span ng-bind-html="menuCtrl.CONFIG.MENU.categories[menuCtrl.display_menu[menuCtrl.active]].subtitle | TrustAsHTML"></strong></h3>
         <ul class="menu-list__items">
-          <li class="menu-list__item" ng-repeat="product in menuCtrl.CONFIG.MENU.categories[menuCtrl.display_menu[menuCtrl.active]].menu">
+          <li class="menu-list__item" ng-repeat="product in menuCtrl.CONFIG.MENU.categories[menuCtrl.display_menu[menuCtrl.active]].menu | orderBy:'display_flags.menu.ordinal'">
             <div>
-              <wcppizzacartitem prod="product" description="true" allowadornment="true" dots="true" menu="menuCtrl.CONFIG.MENU" price="true"></wcppizzacartitem>
+              <wcppizzacartitem prod="product" description="true" allowadornment="true" dots="true" menu="menuCtrl.CONFIG.MENU" displayctx="menu" price="true"></wcppizzacartitem>
             </div>
           </li>
         </ul>
@@ -55,16 +45,14 @@
     </div>
   </div>
 </div>
-<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.12/angular-material.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.11/angular.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.11/angular.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.11/angular-aria.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.11/angular-sanitize.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.11/angular-animate.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
-<script src="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.12/angular-material.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.4.0/socket.io.min.js"></script>
 <script src="https://www.windycitypie.com/wp-includes/js/socket.min.js"></script>
-<script src="https://www.windycitypie.com/wp-includes/js/wcpshared.test.225.js"></script>
+<script src="https://www.windycitypie.com/wp-includes/js/wcpshared.test.227.js"></script>
 <script>
 var WARIO_ENDPOINT = "https://wdev.windycitypie.com/";
 //var WARIO_ENDPOINT = "http://localhost:4001/";

@@ -272,7 +272,7 @@ var WCPOrderHelper = function () {
 
   this.GetServiceIntervalsForDate = function (date, service) {
     // date is passed as moment
-    const internal_formatted_date = date.format(DATE_STRING_INTERNAL_FORMAT);
+    var internal_formatted_date = date.format(DATE_STRING_INTERNAL_FORMAT);
     var blocked_off = this.GetBlockedOffForDate(internal_formatted_date, service);
     var minmax = this.cfg.HOURS_BY_SERVICE_TYPE[service][date.day()];
     if (blocked_off.length === 0) {
@@ -299,13 +299,13 @@ var WCPOrderHelper = function () {
     // param service: the service type enum
     // param size: the order size
     // param cart_based_lead_time: any minimum preorder times associated with the specific items in the cart
-    const internal_formatted_date = date.format(DATE_STRING_INTERNAL_FORMAT);
+    var internal_formatted_date = date.format(DATE_STRING_INTERNAL_FORMAT);
     var blocked_off = this.GetBlockedOffForDate(internal_formatted_date, service);
     var minmax = this.cfg.HOURS_BY_SERVICE_TYPE[service][date.day()];
     // cart_based_lead_time and service/size lead time don't stack
     var leadtime = Math.max(this.cfg.LEAD_TIME[service] + ((size - 1) * this.cfg.ADDITIONAL_PIE_LEAD_TIME), cart_based_lead_time);
 
-    const current_time_plus_leadtime = moment(timing_info.current_time).add(leadtime, 'm');
+    var current_time_plus_leadtime = moment(timing_info.current_time).add(leadtime, 'm');
     if (this.IsFirstDatePreviousDayToSecond(date, current_time_plus_leadtime)) {
       // if by adding the lead time we've passed the date we're looking for
       return minmax[1] + this.cfg.TIME_STEP;
@@ -331,7 +331,7 @@ var WCPOrderHelper = function () {
 
   this.DisableFarOutDates = function (date) {
     // disables dates more than a year out from the current date
-    const load_time_plus_year = moment(timing_info.current_time).add(1, 'y');
+    var load_time_plus_year = moment(timing_info.current_time).add(1, 'y');
     return date.isBefore(load_time_plus_year, 'day');
   };
 
@@ -343,7 +343,7 @@ var WCPOrderHelper = function () {
   this.GetStartTimes = function (userDate, service, size, cart_based_lead_time) {
     // userDate is a moment
     var times = [];
-    const internal_formatted_date = userDate.format(DATE_STRING_INTERNAL_FORMAT);
+    var internal_formatted_date = userDate.format(DATE_STRING_INTERNAL_FORMAT);
     var earliest = this.GetFirstAvailableTime(userDate, service, size, cart_based_lead_time);
     var blockedOff = this.GetBlockedOffForDate(internal_formatted_date, service);
     var latest = this.cfg.HOURS_BY_SERVICE_TYPE[service][userDate.day()][1];
@@ -393,7 +393,6 @@ function UpdateLeadTime() {
   app.filter('Range', function() {
     return function(input, max) {
       input = Array(parseInt(max)).fill(0).map(function(_, idx) { return idx + 1; });
-      console.log(input);
       return input;
     };
   });
@@ -514,7 +513,7 @@ function UpdateLeadTime() {
 
     this.TotalsUpdate = function () {
       // must run with up to date subtotal and order size;
-      const pre_tax_monies = this.computed_subtotal + this.delivery_fee;
+      var pre_tax_monies = this.computed_subtotal + this.delivery_fee;
       var pre_tax_store_credit = 0;
       this.credit.amount_used = 0;
       if (this.credit.validation_successful && this.credit.type === "DISCOUNT") {
@@ -578,7 +577,7 @@ function UpdateLeadTime() {
     }
 
     this.CartToDTO = function () {
-      const dto = {};
+      var dto = {};
       for (var cid in this.cart) {
         dto[cid] = this.cart[cid].map(function (x) { return [x.quantity, x.pi.ToDTO(cfg.MENU)] });
       }
@@ -1105,21 +1104,21 @@ function UpdateLeadTime() {
         this.SlowSubmitterCheck();
         UpdateLeadTime();
       };
-      var UpdateBlockedOffFxn = UpdateBlockedOffFxn.bind(this);
-      $socket.on("WCP_BLOCKED_OFF", UpdateBlockedOffFxn);
+      var BoundUpdateBlockedOffFxn = UpdateBlockedOffFxn.bind(this);
+      $socket.on("WCP_BLOCKED_OFF", BoundUpdateBlockedOffFxn);
       var UpdateOperatingHoursFxn = function (message) {
         this.CONFIG.UpdateOperatingHoursSettings(message);
         this.SlowSubmitterCheck();
         UpdateLeadTime();
       };
-      var UpdateOperatingHoursFxn = UpdateOperatingHoursFxn.bind(this);
-      $socket.on("WCP_SETTINGS", UpdateOperatingHoursFxn);
-      const UpdateLeadTimeFxn = function (message) {
+      var BoundUpdateOperatingHoursFxn = UpdateOperatingHoursFxn.bind(this);
+      $socket.on("WCP_SETTINGS", BoundUpdateOperatingHoursFxn);
+      var UpdateLeadTimeFxn = function (message) {
         this.CONFIG.UpdateLeadTimeVal(message);
         this.SlowSubmitterCheck();
         UpdateLeadTime();
       };
-      const BoundUpdateLeadTimeFxn = UpdateLeadTimeFxn.bind(this);
+      var BoundUpdateLeadTimeFxn = UpdateLeadTimeFxn.bind(this);
       $socket.on("WCP_LEAD_TIMES", BoundUpdateLeadTimeFxn);
       var UpdateCatalogFxn = function (message) {
         this.CONFIG.UpdateCatalog(message);
@@ -1129,8 +1128,8 @@ function UpdateLeadTime() {
         this.SlowSubmitterCheck();
         UpdateLeadTime();
       };
-      var UpdateCatalogFxn = UpdateCatalogFxn.bind(this);
-      $socket.on("WCP_CATALOG", UpdateCatalogFxn);
+      var BoundUpdateCatalogFxn = UpdateCatalogFxn.bind(this);
+      $socket.on("WCP_CATALOG", BoundUpdateCatalogFxn);
     }]);
 
   app.controller("ProductMenuController", function ($scope, $mdDialog) {
@@ -1268,23 +1267,30 @@ function UpdateLeadTime() {
       restrict: "E",
       scope: {
         prod: "=prod",
+        menu: "=menu",
         dots: "=dots",
         price: "=price",
+        displayctx: "@displayctx",
         allowadornment: "=allowadornment",
         description: "=description"
       },
       controller: function () { 
         this.ShowOptionsSections = function () {
-          return !this.prod.display_flags.suppress_exhaustive_modifier_list && !(this.prod.options_sections.length === 1 && this.prod.options_sections[0][1] === this.prod.processed_name)
+          return !this.prod.display_flags[this.displayctx].suppress_exhaustive_modifier_list && !(this.prod.options_sections.length === 1 && this.prod.options_sections[0][1] === this.prod.processed_name);
         }
         this.ShowAdornment = function () {
-          return this.allowadornment && this.prod.display_flags && this.prod.display_flags.menu_adornment; 
+          return this.allowadornment && this.prod.display_flags[this.displayctx].adornment ? this.prod.display_flags[this.displayctx].adornment : false; 
         }
         this.PriceText = function () {
           if (this.prod.incomplete) {
-            switch (this.prod.display_flags.price_display) {
+            switch (this.prod.display_flags[this.displayctx].price_display) {
               case "FROM_X": return `from ${this.prod.price}`;
               case "VARIES": return "MP";
+              case "MIN_TO_MAX": {
+                var prices = ComputePotentialPrices(this.prod, this.menu); 
+                return prices.length > 1 && prices[0] !== prices[prices.length-1] ? `from ${prices[0]} to ${prices[prices.length-1]}` : `${prices[0]}`;
+              }
+              case "LIST": return ComputePotentialPrices(this.prod, this.menu).join("/");
               case "ALWAYS": default: return `${this.prod.price}`;
             }
           }
@@ -1294,11 +1300,11 @@ function UpdateLeadTime() {
       controllerAs: "ctrl",
       bindToController: true,
       template: '<div ng-class="{\'menu-list__item-highlight-wrapper\': ctrl.ShowAdornment()}">'+
-        '<span ng-if="ctrl.ShowAdornment()" class="menu-list__item-highlight-title" ng-bind-html="ctrl.prod.display_flags.menu_adornment | TrustAsHTML"></span>' +
+        '<span ng-if="ctrl.ShowAdornment()" class="menu-list__item-highlight-title" ng-bind-html="ctrl.ShowAdornment() | TrustAsHTML"></span>' +
         '<h4 class="menu-list__item-title"><span class="item_title">{{ctrl.prod.processed_name}}</span><span ng-if="ctrl.dots" class="dots"></span></h4>' +
         '<p ng-if="ctrl.description && ctrl.prod.processed_description" class="menu-list__item-desc">' +
         '<span class="desc__content">' +
-        '<span>{{ctrl.prod.processed_description}}</span>' +
+        '<span ng-bind-html="ctrl.prod.processed_description | TrustAsHTML"></span>' +
         '</span>' +
         '</p>' +
         '<p ng-if="ctrl.description && ctrl.ShowOptionsSections()" ng-repeat="option_section in ctrl.prod.options_sections" class="menu-list__item-desc">' +
@@ -1312,7 +1318,7 @@ function UpdateLeadTime() {
         '</div>',
     };
   });
-
+  
   var MODDISP_RADIO = 0;
   var MODDISP_TOGGLE = 1;
   var MODDISP_CHECKBOX = 2;
