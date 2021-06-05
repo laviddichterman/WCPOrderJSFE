@@ -8,7 +8,8 @@ var CREDIT_REGEX = WCPShared.CREDIT_REGEX;
 var GetPlacementFromMIDOID = WCPShared.GetPlacementFromMIDOID;
 var DisableDataCheck = WCPShared.DisableDataCheck;
 var DATE_STRING_INTERNAL_FORMAT = WCPShared.WDateUtils.DATE_STRING_INTERNAL_FORMAT;
-
+var IsFirstDatePreviousToSecondDate = WCPShared.WDateUtils.IsFirstDatePreviousToSecondDate;
+var WDMinutesToPrintTime = WCPShared.WDateUtils.MinutesToPrintTime;
 var CopyWCPProduct = WCPShared.CopyWCPProduct;
 var WFunctional = WCPShared.WFunctional;
 
@@ -216,14 +217,9 @@ var WCPOrderHelper = function () {
   // HELPER FUNCTIONS
   this.cfg = wcpconfig;
 
-  this.IsFirstDatePreviousDayToSecond = function (first, second) {
-    //takes moments
-    return first.isBefore(second, 'day');
-  };
-
   this.IsPreviousDay = function (date) {
     // dateis a moment
-    return this.IsFirstDatePreviousDayToSecond(date, timing_info.current_time);
+    return IsFirstDatePreviousToSecondDate(date, timing_info.current_time);
   };
 
   this.DateToMinutes = function (date) {
@@ -232,19 +228,11 @@ var WCPOrderHelper = function () {
   };
 
   this.MinutesToPrintTime = function (minutes, service_type) {
-    var mtpt = function (min) {
-      var hour = Math.floor(min / 60);
-      var minute = min - (hour * 60);
-      var meridian = hour >= 12 ? "PM" : "AM";
-      var printHour = (hour % 12 === 0 ? 12 : hour % 12).toString();
-      var printMinute = (minute < 10 ? "0" : "").concat(minute.toString());
-      return printHour.concat(":").concat(printMinute + meridian);
-    }
     if (isNaN(minutes) || minutes < 0) {
       return minutes;
     }
-    var starttime = mtpt(minutes);
-    return service_type != wcpconfig.DELIVERY ? starttime : starttime + " - " + mtpt(minutes + DELIVERY_INTERVAL_TIME);
+    var starttime = WDMinutesToPrintTime(minutes);
+    return service_type != wcpconfig.DELIVERY ? starttime : starttime + " - " + WDMinutesToPrintTime(minutes + DELIVERY_INTERVAL_TIME);
   };
 
   this.GetBlockedOffForDate = function (date, service) {
@@ -306,7 +294,7 @@ var WCPOrderHelper = function () {
     var leadtime = Math.max(this.cfg.LEAD_TIME[service] + ((size - 1) * this.cfg.ADDITIONAL_PIE_LEAD_TIME), cart_based_lead_time);
 
     const current_time_plus_leadtime = moment(timing_info.current_time).add(leadtime, 'm');
-    if (this.IsFirstDatePreviousDayToSecond(date, current_time_plus_leadtime)) {
+    if (IsFirstDatePreviousToSecondDate(date, current_time_plus_leadtime)) {
       // if by adding the lead time we've passed the date we're looking for
       return minmax[1] + this.cfg.TIME_STEP;
     }
@@ -375,7 +363,7 @@ var FixQuantity = function (val, clear_if_invalid, min, max) {
 function UpdateLeadTime() {
   if (wcporderhelper.IsDateActive(timing_info.current_time, wcpconfig.PICKUP, 1, 0)) {
     var first = wcporderhelper.GetFirstAvailableTime(timing_info.current_time, wcpconfig.PICKUP, 1, 0);
-    $j("span.leadtime").html("Next available same-day order: " + wcporderhelper.MinutesToPrintTime(first, wcpconfig.PICKUP));
+    $j("span.leadtime").html("Next available same-day order: " + WDMinutesToPrintTime(first));
   } else {
     $j("span.leadtime").html("");
   }
@@ -393,7 +381,6 @@ function UpdateLeadTime() {
   app.filter('Range', function() {
     return function(input, max) {
       input = Array(parseInt(max)).fill(0).map(function(_, idx) { return idx + 1; });
-      console.log(input);
       return input;
     };
   });
