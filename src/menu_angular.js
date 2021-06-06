@@ -35,7 +35,7 @@ var WCPStoreConfig = function () {
 var wcpconfig = new WCPStoreConfig();
 
 (function () {
-  var app = angular.module("WARIOMenu", ['ngSanitize', 'ngMaterial', 'btford.socket-io']);
+  var app = angular.module("WARIOMenu", ['ngSanitize', 'btford.socket-io']);
 
   app.filter('TrustAsHTML', ['$sce', function ($sce) {
     return function (val) {

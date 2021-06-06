@@ -53,20 +53,24 @@ div.archive-filter {
   padding: 10px 0;
 }
 
-.ordering-menu ul.menu-list__items {
+.ordering-menu ul.menu-list__items,
+.wmenu ul.menu-list__items {
   margin-bottom: 0;
 }
 
-.ordering-menu .menu-list__item-highlight-wrapper {
+.ordering-menu .menu-list__item-highlight-wrapper,
+.wmenu .menu-list__item-highlight-wrapper {
   margin-top: 0;
   margin-bottom: 0;
 }
 
-.ordering-menu .menu-list__item-highlight:before {
+.ordering-menu .menu-list__item-highlight:before,
+.wmenu .menu-list__item-highlight:before {
   border: none;
 }
 
-.ordering-menu .menu-list__item-highlight-wrapper:before {
+.ordering-menu .menu-list__item-highlight-wrapper:before,
+.wmenu .menu-list__item-highlight-wrapper:before {
   border-image: 
     linear-gradient(
       to bottom, 
@@ -74,7 +78,8 @@ div.archive-filter {
     ) 0 0 0 4	;
 	z-index: 0;
 }
-.ordering-menu .menu-list__item-highlight-wrapper:after {
+.ordering-menu .menu-list__item-highlight-wrapper:after,
+.wmenu .menu-list__item-highlight-wrapper:after {
 	position: absolute;
 	content: "";
   top: -18px;
@@ -89,16 +94,19 @@ div.archive-filter {
 	z-index: 0;
 }
 
-.ordering-menu .menu-list__item-highlight-title {
+.ordering-menu .menu-list__item-highlight-title,
+.wmenu .menu-list__item-highlight-title {
 	top: -18px;
 	z-index: 1;
 	font-size: 10px;
 }
 
-.ordering-menu .menu-list__item-highlight-title a {
+.ordering-menu .menu-list__item-highlight-title a,
+.wmenu .menu-list__item-highlight-title a {
   color: #000;
 }
-.ordering-menu .menu-list__item-highlight-title a:hover {
+.ordering-menu .menu-list__item-highlight-title a:hover,
+.wmenu .menu-list__item-highlight-title a:hover {
   color: #000;
 }
 
@@ -767,3 +775,50 @@ h2.option-modal-title {
 	position: relative !important;
 }
 /* End section for toast CSS */
+
+/* WMenu specific */
+.wmenu .tabs__nav,
+.wmenu h1,
+.wmenu h2,
+.wmenu h3,
+.wmenu h4,
+.wmenu h5,
+.wmenu h6 { 
+  font-weight: 700;
+}
+
+.wmenu .menu-list__item-price { 
+  z-index: 10;
+}  
+
+.wmenu .subtitle { 
+  font-weight: 500;
+}
+
+.wmenu .subtitle li.menu-list__item { 
+  margin-bottom: 20px;
+}
+
+.wmenu .modifier-section .flexitems  li { 
+  margin-bottom: 7px;
+}
+
+
+.wmenu .footnotes { 
+  font-weight: 300;
+}
+.wmenu .tabs__nav { 
+  margin-top: 0;
+}
+.wmenu .tabs__nav li,
+.wmenu .tabs__nav li:last-child { 
+  font-size: 1.2em;
+  border: 10px solid transparent;
+}
+/* menu nav bar */
+.wmenu .tabs__nav > li > a { 
+  cursor: pointer;
+}
+/* END menu nav bar*/
+
+/* END WMenu specific */
