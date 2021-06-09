@@ -25,6 +25,13 @@ var CartEntry = function (catid, product, quantity, can_edit) {
   this.locked = false;
 };
 
+var GetInfoMapForAvailabilityComputation = function(WCPCONFIG, date, service, size, cart_based_lead_time) {
+  var services = {};
+  services[service] = true;
+  var stuff_to_depreciate_map = {cart_based_lead_time: cart_based_lead_time, size:size};
+  return WCPShared.WDateUtils.GetInfoMapForAvailabilityComputation(WCPCONFIG.BLOCKED_OFF, WCPCONFIG.WARIO_SETTINGS, WCPCONFIG.LEAD_TIME, date, services, stuff_to_depreciate_map);
+}
+  
 var $j = jQuery.noConflict();
 
 var DELIVERY_INTERVAL_TIME = 30;
@@ -175,11 +182,6 @@ var WCPOrderHelper = function () {
   // HELPER FUNCTIONS
   this.cfg = wcpconfig;
 
-  this.IsPreviousDay = function (date) {
-    // date is a moment
-    return date.isBefore(timing_info.current_time, 'day');
-  };
-
   this.DateToMinutes = function (date) {
     // passed date is a moment
     return date.hours() * 60 + date.minutes();
@@ -193,46 +195,21 @@ var WCPOrderHelper = function () {
     return service_type != wcpconfig.DELIVERY ? starttime : starttime + " - " + WDMinutesToPrintTime(minutes + DELIVERY_INTERVAL_TIME);
   };
 
-  
-  this.GetFirstAvailableTime = function (date, service, size, cart_based_lead_time) {
-    // param date: the date we're looking for the earliest time, as a moment
-    // param service: the service type enum
-    // param size: the order size
-    // param cart_based_lead_time: any minimum preorder times associated with the specific items in the cart
-    var services = {};
-    services[service] = true;
-    return ComputeFirstAvailableTimeForDate(this.cfg.BLOCKED_OFF, this.cfg.WARIO_SETTINGS, this.cfg.LEAD_TIME, date, services, {size, cart_based_lead_time}, timing_info.current_time);
-  };
-
-  this.DisableExhaustedDates = function (date, service, size, cart_based_lead_time) {
-    // checks if orders can still be placed for the
-    // given date (moment), service type, and order size
-    // param cart_based_lead_time: any minimum preorder times associated with the specific items in the cart
-    // return: true if orders can still be placed, false otherwise
-    return this.GetFirstAvailableTime(date, service, size, cart_based_lead_time) !== -1;
-  };
-
   this.DisableFarOutDates = function (date) {
     // disables dates more than a year out from the current date
-    var load_time_plus_year = moment(timing_info.current_time).add(1, 'y');
+    var load_time_plus_year = moment(timing_info.current_time).add(2, 'month');
     return date.isBefore(load_time_plus_year, 'day');
   };
 
-  this.IsDateActive = function (date, service, size, cart_based_lead_time) {
+  this.IsDateActive = function (INFO, date) {
     // date is a moment
-    return this.cfg.HAS_SYNCED_HOURS && !this.IsPreviousDay(date) && this.DisableExhaustedDates(date, service, size, cart_based_lead_time) && this.DisableFarOutDates(date);
+    return this.cfg.HAS_SYNCED_HOURS && ComputeFirstAvailableTimeForDate(INFO, date, timing_info.current_time) !== -1 && this.DisableFarOutDates(date);
   };
 
-  this.GetStartTimes = function (userDate, service, size, cart_based_lead_time) {
+  this.GetStartTimes = function (INFO, userDate) {
     // userDate is a moment
-    if (this.cfg.HAS_SYNCED_HOURS) {
-      var services = {};
-      services[service] = true;
-      var stuff_to_depreciate_map = {cart_based_lead_time: cart_based_lead_time, size:size};
-      var times = GetOptionsForDate(this.cfg.BLOCKED_OFF, this.cfg.WARIO_SETTINGS, this.cfg.LEAD_TIME, userDate, services, stuff_to_depreciate_map, timing_info.current_time);
-      return times.map(function(x) { return x.value; });  
-    }
-    return [];
+    var times = GetOptionsForDate(INFO, userDate, timing_info.current_time);
+    return times.map(function(x) { return x.value; });  
   };
 };
 
@@ -254,12 +231,14 @@ var FixQuantity = function (val, clear_if_invalid, min, max) {
 };
 
 function UpdateLeadTime() {
-  if (wcporderhelper.IsDateActive(timing_info.current_time, wcpconfig.PICKUP, 1, 0)) {
-    var first = wcporderhelper.GetFirstAvailableTime(timing_info.current_time, wcpconfig.PICKUP, 1, 0);
-    $j("span.leadtime").html("Next available same-day order: " + WDMinutesToPrintTime(first));
-  } else {
-    $j("span.leadtime").html("");
+  if (wcpconfig.HAS_SYNCED_HOURS) { 
+    var INFO = GetInfoMapForAvailabilityComputation(wcpconfig, timing_info.current_time, wcpconfig.PICKUP, 1, 0);
+    if (wcporderhelper.IsDateActive(INFO, timing_info.current_time)) {
+      var first = ComputeFirstAvailableTimeForDate(INFO, timing_info.current_time, timing_info.current_time);
+      return $j("span.leadtime").html("Next available same-day order: " + WDMinutesToPrintTime(first));
+    }
   }
+  return $j("span.leadtime").html("");
 }
 
 (function () {
@@ -763,9 +742,11 @@ function UpdateLeadTime() {
           this.s.service_type = this.CONFIG.PICKUP;
           this.s.date_string = "";
         }
+        var INFO = null;
+        var moment_date = moment(parsedDate);
         if (no_longer_meets_service_requirement ||
-          isNaN(parsedDate) ||
-          !OrderHelper.IsDateActive(moment(parsedDate), this.s.service_type, this.s.num_pizza, this.s.cart_based_lead_time)) {
+          isNaN(parsedDate) || !(INFO = GetInfoMapForAvailabilityComputation(this.CONFIG, moment_date, this.s.service_type, this.s.num_pizza, this.s.cart_based_lead_time)) ||
+          !OrderHelper.IsDateActive(INFO, moment_date)) {
           this.s.date_valid = false;
           this.s.service_times = ["Please select a valid date"];
           this.s.service_time = "Please select a valid date";
@@ -773,11 +754,11 @@ function UpdateLeadTime() {
           // grab the old service_time the date was valid then one must have been selected
           var old_service_time = this.s.date_valid ? this.s.service_time : null;
 
-          this.s.selected_date = moment(parsedDate);
+          this.s.selected_date = moment_date;
           this.s.date_string = this.s.selected_date.format("dddd, MMMM DD, Y");
           this.s.date_valid = true;
 
-          this.s.service_times = OrderHelper.GetStartTimes(this.s.selected_date, this.s.service_type, this.s.num_pizza, this.s.cart_based_lead_time);
+          this.s.service_times = OrderHelper.GetStartTimes(INFO, this.s.selected_date);
 
           // don't use findindex here because of IE(all)
           if (!old_service_time || !this.s.service_times.some(function (elt, idx, arr) {
@@ -1547,7 +1528,9 @@ app.directive("wcpoptiondetailmodaldir", function () {
       },
       link: function (scope, element, attrs, ctrl) {
         var DateActive = function (date) {
-          var is_active = OrderHelper.IsDateActive(moment(date), scope.orderinfo.s.service_type, scope.orderinfo.s.num_pizza, scope.orderinfo.s.cart_based_lead_time);
+          var moment_date = moment(date);
+          var INFO = GetInfoMapForAvailabilityComputation(wcpconfig, moment_date, scope.orderinfo.s.service_type, scope.orderinfo.s.num_pizza, scope.orderinfo.s.cart_based_lead_time);
+          var is_active = OrderHelper.IsDateActive(INFO, moment_date);
           var tooltip = is_active ? "Your order can be placed for this date." : "Your order cannot be placed for this date.";
           return [is_active, "", tooltip];
         };
