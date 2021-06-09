@@ -4,8 +4,8 @@
   "description": "front end javascript for the WCP ordering interface",
   "scripts": {
     "start": "webpack-dev-server --mode development --open",
-    "deploy:prodbtp": "rsync -avzhe ssh --progress ./src/order_angular.js breezytown@breezytownpizza.com:~/breezytownpizza.com/wp-includes/js/BTPJSFE23.js",
-    "deploy:prodwcp": "rsync -avzhe ssh --progress ./src/order_angular.js windycitypie@windycitypie.com:~/windycitypie.com/wp-includes/js/WCPJSFE41.js"
+    "deploy:prodbtp": "rsync -avzhe ssh --progress ./src/order_angular.js breezytown@breezytownpizza.com:~/breezytownpizza.com/wp-includes/js/BTPJSFE28.js",
+    "deploy:prodwcp": "rsync -avzhe ssh --progress ./src/order_angular.js windycitypie@windycitypie.com:~/windycitypie.com/wp-includes/js/WCPJSFE43.js"
   },
   "repository": {
     "type": "git",
@@ -19,7 +19,7 @@
   "homepage": "https://github.com/laviddichterman/WCPOrderJSFE#readme",
   "dependencies": {
     "@babel/polyfill": "^7.12.1",
-    "@wcp/wcpshared": "^2.1.4",
+    "@wcp/wcpshared": "^2.2.1",
     "angular": "^1.8.2",
     "angular-animate": "1.5.11",
     "angular-material": "1.1.22",

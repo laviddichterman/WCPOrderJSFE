@@ -8,8 +8,9 @@ var CREDIT_REGEX = WCPShared.CREDIT_REGEX;
 var GetPlacementFromMIDOID = WCPShared.GetPlacementFromMIDOID;
 var DisableDataCheck = WCPShared.DisableDataCheck;
 var DATE_STRING_INTERNAL_FORMAT = WCPShared.WDateUtils.DATE_STRING_INTERNAL_FORMAT;
-var IsFirstDatePreviousToSecondDate = WCPShared.WDateUtils.IsFirstDatePreviousToSecondDate;
 var WDMinutesToPrintTime = WCPShared.WDateUtils.MinutesToPrintTime;
+var ComputeFirstAvailableTimeForDate = WCPShared.WDateUtils.ComputeFirstAvailableTimeForDate;
+var GetOptionsForDate = WCPShared.WDateUtils.GetOptionsForDate;
 var CopyWCPProduct = WCPShared.CopyWCPProduct;
 var WFunctional = WCPShared.WFunctional;
 
@@ -107,49 +108,12 @@ var WCPStoreConfig = function () {
 
   this.BLOCKED_OFF = [[], [], []];
 
-  this.PICKUP_HOURS = [
-    [12 * 60, 21 * 60], //sunday
-    [1 * 60, 0 * 60], //monday
-    [1 * 60, 0 * 60], //tuesday
-    [16 * 60, 21 * 60], //wednesday
-    [16 * 60, 21 * 60], //thursday
-    [12 * 60, 22 * 60], //friday
-    [12 * 60, 22 * 60] //saturday
-  ];
+  this.WARIO_SETTINGS = {};
 
-  this.DINEIN_HOURS = [
-    [1 * 60, 0 * 60], //sunday
-    [1 * 60, 0 * 60], //monday
-    [1 * 60, 0 * 60], //tuesday
-    [1 * 60, 0 * 60], //wednesday
-    [1 * 60, 0 * 60], //thursday
-    [1 * 60, 0 * 60], //friday
-    [1 * 60, 0 * 60] //saturday
-  ];
-
-  this.DELIVERY_HOURS = [
-    [12 * 60, 21 * 60], //sunday
-    [1 * 60, 0 * 60], //monday
-    [1 * 60, 0 * 60], //tuesday
-    [16 * 60, 21 * 60], //wednesday
-    [16 * 60, 21 * 60], //thursday
-    [12 * 60, 22 * 60], //friday
-    [12 * 60, 22 * 60] //saturday
-  ];
-
-  this.HOURS_BY_SERVICE_TYPE = [
-    this.PICKUP_HOURS,
-    this.DINEIN_HOURS,
-    this.DELIVERY_HOURS
-  ];
-
+  this.HAS_SYNCED_HOURS = false;
   this.TAX_RATE = TAX_RATE;
 
   this.LEAD_TIME = [45, 45, 1440];
-
-  this.ADDITIONAL_PIE_LEAD_TIME = 5;
-
-  this.TIME_STEP = 15;
 
   // menu related
   this.MENU = {
@@ -190,14 +154,8 @@ var WCPStoreConfig = function () {
   }
 
   this.UpdateOperatingHoursSettings = function (wario_settings) {
-    this.ADDITIONAL_PIE_LEAD_TIME = wario_settings.additional_pizza_lead_time;
-    this.TIME_STEP = wario_settings.time_step;
-    for (var service_index = 0; service_index < wario_settings.operating_hours.length; ++service_index) {
-      for (var day_index = 0; day_index < wario_settings.operating_hours[service_index].length; ++day_index) {
-        // TODO: add support for multiple day parts
-        this.HOURS_BY_SERVICE_TYPE[service_index][day_index] = wario_settings.operating_hours[service_index][day_index][0] ? wario_settings.operating_hours[service_index][day_index][0] : [60, 0];
-      }
-    }
+    this.HAS_SYNCED_HOURS = true;
+    this.WARIO_SETTINGS = wario_settings;
   }
 
   this.UpdateCatalog = function (cat) {
@@ -218,8 +176,8 @@ var WCPOrderHelper = function () {
   this.cfg = wcpconfig;
 
   this.IsPreviousDay = function (date) {
-    // dateis a moment
-    return IsFirstDatePreviousToSecondDate(date, timing_info.current_time);
+    // date is a moment
+    return date.isBefore(timing_info.current_time, 'day');
   };
 
   this.DateToMinutes = function (date) {
@@ -235,77 +193,15 @@ var WCPOrderHelper = function () {
     return service_type != wcpconfig.DELIVERY ? starttime : starttime + " - " + WDMinutesToPrintTime(minutes + DELIVERY_INTERVAL_TIME);
   };
 
-  this.GetBlockedOffForDate = function (date, service) {
-    // date is passed as DATE_STRING_INTERNAL_FORMAT
-    for (var i in this.cfg.BLOCKED_OFF[service]) {
-      if (this.cfg.BLOCKED_OFF[service][i][0] === date) {
-        return this.cfg.BLOCKED_OFF[service][i][1];
-      }
-    }
-    return [];
-  };
-
-  this.HandleBlockedOffTime = function (blockedOff, time) {
-    // param: blockedOff - the blocked off times for the date/service being processed
-    // param: time - the minutes since the day started
-    // return: time if time isn't blocked off, otherwise the next available time
-    var pushedTime = time;
-    for (var i in blockedOff) {
-      if (blockedOff[i][1] >= pushedTime && blockedOff[i][0] <= pushedTime) {
-        pushedTime = blockedOff[i][1] + this.cfg.TIME_STEP;
-      }
-    }
-    return pushedTime;
-  };
-
-  this.GetServiceIntervalsForDate = function (date, service) {
-    // date is passed as moment
-    var internal_formatted_date = date.format(DATE_STRING_INTERNAL_FORMAT);
-    var blocked_off = this.GetBlockedOffForDate(internal_formatted_date, service);
-    var minmax = this.cfg.HOURS_BY_SERVICE_TYPE[service][date.day()];
-    if (blocked_off.length === 0) {
-      return [minmax];
-    }
-    var earliest = this.HandleBlockedOffTime(blocked_off, minmax[0]);
-    var interval = [earliest, earliest];
-    var intervals = [];
-    while (earliest <= minmax[1]) {
-      var next_time = this.HandleBlockedOffTime(blocked_off, earliest + this.cfg.TIME_STEP);
-      if (next_time != earliest + this.cfg.TIME_STEP || next_time > minmax[1]) {
-        intervals.push(interval);
-        interval = [next_time, next_time];
-      } else {
-        interval[1] = next_time;
-      }
-      earliest = next_time;
-    }
-    return intervals;
-  }
-
+  
   this.GetFirstAvailableTime = function (date, service, size, cart_based_lead_time) {
     // param date: the date we're looking for the earliest time, as a moment
     // param service: the service type enum
     // param size: the order size
     // param cart_based_lead_time: any minimum preorder times associated with the specific items in the cart
-    var internal_formatted_date = date.format(DATE_STRING_INTERNAL_FORMAT);
-    var blocked_off = this.GetBlockedOffForDate(internal_formatted_date, service);
-    var minmax = this.cfg.HOURS_BY_SERVICE_TYPE[service][date.day()];
-    // cart_based_lead_time and service/size lead time don't stack
-    var leadtime = Math.max(this.cfg.LEAD_TIME[service] + ((size - 1) * this.cfg.ADDITIONAL_PIE_LEAD_TIME), cart_based_lead_time);
-
-    var current_time_plus_leadtime = moment(timing_info.current_time).add(leadtime, 'm');
-    if (IsFirstDatePreviousToSecondDate(date, current_time_plus_leadtime)) {
-      // if by adding the lead time we've passed the date we're looking for
-      return minmax[1] + this.cfg.TIME_STEP;
-    }
-
-    if (internal_formatted_date === current_time_plus_leadtime.format(DATE_STRING_INTERNAL_FORMAT)) {
-      var current_time_plus_leadtime_mins_from_start = this.DateToMinutes(current_time_plus_leadtime);
-      if (current_time_plus_leadtime_mins_from_start > minmax[0]) {
-        return this.HandleBlockedOffTime(blocked_off, Math.ceil((current_time_plus_leadtime_mins_from_start) / this.cfg.TIME_STEP) * this.cfg.TIME_STEP);
-      }
-    }
-    return this.HandleBlockedOffTime(blocked_off, minmax[0]);
+    var services = {};
+    services[service] = true;
+    return ComputeFirstAvailableTimeForDate(this.cfg.BLOCKED_OFF, this.cfg.WARIO_SETTINGS, this.cfg.LEAD_TIME, date, services, {size, cart_based_lead_time}, timing_info.current_time);
   };
 
   this.DisableExhaustedDates = function (date, service, size, cart_based_lead_time) {
@@ -313,8 +209,7 @@ var WCPOrderHelper = function () {
     // given date (moment), service type, and order size
     // param cart_based_lead_time: any minimum preorder times associated with the specific items in the cart
     // return: true if orders can still be placed, false otherwise
-    var maxtime = this.cfg.HOURS_BY_SERVICE_TYPE[service][date.day()][1];
-    return this.GetFirstAvailableTime(date, service, size, cart_based_lead_time) <= maxtime;
+    return this.GetFirstAvailableTime(date, service, size, cart_based_lead_time) !== -1;
   };
 
   this.DisableFarOutDates = function (date) {
@@ -325,21 +220,19 @@ var WCPOrderHelper = function () {
 
   this.IsDateActive = function (date, service, size, cart_based_lead_time) {
     // date is a moment
-    return !this.IsPreviousDay(date) && this.DisableExhaustedDates(date, service, size, cart_based_lead_time) && this.DisableFarOutDates(date);
+    return this.cfg.HAS_SYNCED_HOURS && !this.IsPreviousDay(date) && this.DisableExhaustedDates(date, service, size, cart_based_lead_time) && this.DisableFarOutDates(date);
   };
 
   this.GetStartTimes = function (userDate, service, size, cart_based_lead_time) {
     // userDate is a moment
-    var times = [];
-    var internal_formatted_date = userDate.format(DATE_STRING_INTERNAL_FORMAT);
-    var earliest = this.GetFirstAvailableTime(userDate, service, size, cart_based_lead_time);
-    var blockedOff = this.GetBlockedOffForDate(internal_formatted_date, service);
-    var latest = this.cfg.HOURS_BY_SERVICE_TYPE[service][userDate.day()][1];
-    while (earliest <= latest) {
-      times.push(earliest);
-      earliest = this.HandleBlockedOffTime(blockedOff, earliest + this.cfg.TIME_STEP);
+    if (this.cfg.HAS_SYNCED_HOURS) {
+      var services = {};
+      services[service] = true;
+      var stuff_to_depreciate_map = {cart_based_lead_time: cart_based_lead_time, size:size};
+      var times = GetOptionsForDate(this.cfg.BLOCKED_OFF, this.cfg.WARIO_SETTINGS, this.cfg.LEAD_TIME, userDate, services, stuff_to_depreciate_map, timing_info.current_time);
+      return times.map(function(x) { return x.value; });  
     }
-    return times;
+    return [];
   };
 };
 
@@ -645,7 +538,7 @@ function UpdateLeadTime() {
           load_time: state.debug_info.load_time,
           time_selection_time: state.debug_info["time-selection-time"] ? state.debug_info["time-selection-time"].format("H:mm:ss") : "",
           submittime: moment().format("MM-DD-YYYY HH:mm:ss"),
-          useragent: navigator.userAgent + " FEV16",
+          useragent: navigator.userAgent + " FEV17",
         }
       }).then(onSuccess).catch(onFail);
     }
@@ -1606,7 +1499,7 @@ app.directive("wcpoptiondetailmodaldir", function () {
         $window.document.onvisibilitychange = UpdateCurrentTime;
         $window.document.pageshow = UpdateCurrentTime;
         element.on("$destroy", function () {
-    $interval.cancel(time_updater);
+          $interval.cancel(time_updater);
         });
       }
     };
