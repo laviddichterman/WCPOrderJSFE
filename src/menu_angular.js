@@ -18,7 +18,6 @@ var WCPStoreConfig = function () {
   // END menu related
 
   this.UpdateCatalog = function (cat) {
-    console.log(cat);
     if (cat.version === this.MENU.version) {
       return;
     }
@@ -27,7 +26,6 @@ var WCPStoreConfig = function () {
     var FilterProdsFxn = function(item) { return FilterProduct(item, catalog_map, function(x) { return x.menu.hide; }, current_time); };
     FilterWMenu(catalog_map, FilterProdsFxn, current_time);
     Object.assign(this.MENU, catalog_map);
-    console.log(this.MENU);
   };
   //END WCP store config
 };
@@ -75,6 +73,7 @@ var wcpconfig = new WCPStoreConfig();
       this.display_menu = [];
 
       this.InitializeMenu = function() {
+        var previous_menu_length = this.display_menu.length;
         // local access to wmenu
         var WMENU = this.CONFIG.MENU;
         // get all categories that are children of MENU_CATID
@@ -90,7 +89,9 @@ var wcpconfig = new WCPStoreConfig();
           // e.g.: [SMALL PLATES, PIZZAS]
           this.display_menu = [ MENU_CATID ];
         }
-        this.active = 0;
+        if (this.display_menu.length !== previous_menu_length) {
+          this.active = 0;
+        }
         console.log(this.display_menu);
       };
       
@@ -181,7 +182,7 @@ var wcpconfig = new WCPStoreConfig();
       <div class="menu-list ">\
         <ul class="flexitems menu-list__items">\
           <li ng-repeat="opt in ctrl.menu.modifiers[mod_def.mtid].options_list" class="flexitem menu-list__item">\
-            <p class="menu-list__item-desc"><span class="desc__content">{{opt.name}}</span><span class="menu-list__item-price">{{opt.price ? opt.price : "Included"}}</span></p>\
+            <p class="menu-list__item-desc"><span class="desc__content">{{opt.name}}</span><span class="menu-list__item-price">{{opt.price ? opt.price : "No Charge"}}</span></p>\
           </li>\
         </ul>\
       </div>\
