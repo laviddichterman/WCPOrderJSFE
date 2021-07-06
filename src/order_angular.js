@@ -13,6 +13,12 @@ var ComputeFirstAvailableTimeForDate = WCPShared.WDateUtils.ComputeFirstAvailabl
 var GetOptionsForDate = WCPShared.WDateUtils.GetOptionsForDate;
 var CopyWCPProduct = WCPShared.CopyWCPProduct;
 var WFunctional = WCPShared.WFunctional;
+var FilterProduct = function(menu, order_time) { 
+  return function(item) { return WCPShared.FilterProduct(item, menu, function (x) { return x.order.hide; }, order_time); };
+};
+var FilterEmptyCategories = function(menu, order_time) {
+  return WCPShared.FilterEmptyCategories(menu, function(x) { return x.order.hide; }, order_time);
+};
 
 // handy class representing a line in the product cart
 // useful to allow modifications on the product by setting it to a new product instance
@@ -134,7 +140,7 @@ var WCPStoreConfig = function () {
   };
 
   this.PIZZAS_CATID = PIZZAS_CATID;
-  this.EXTRAS_CATID = EXTRAS_CATID;
+  this.EXTRAS_CATEGORIES = [];
 
   this.ALLOW_SLICING = CONFIG_ALLOW_SLICING;
   // END menu related
@@ -172,6 +178,8 @@ var WCPStoreConfig = function () {
     }
     var catalog_map = new WCPShared.WMenu(cat);
     Object.assign(this.MENU, catalog_map);
+    var filter_cat_fxn = FilterEmptyCategories(this.MENU, timing_info.current_time);
+    this.EXTRAS_CATEGORIES = this.MENU.categories[EXTRAS_CATID].children.length ? this.MENU.categories[EXTRAS_CATID].children.filter(filter_cat_fxn) : [];
   }
   //END WCP store config
 };
@@ -302,7 +310,9 @@ function UpdateLeadTime() {
       };
     }
     this.ReinitializeAccordion = function () {
-      this.accordionstate = Array.apply(null, Array(cfg.MENU.categories[EXTRAS_CATID].children.length)).map(function (x, i) { return i === 0; });
+      if (cfg.EXTRAS_CATEGORIES.length !== this.accordionstate.length) { 
+        this.accordionstate = cfg.EXTRAS_CATEGORIES.map(function (x, i) { return i === 0; });
+      }
     }
 
     this.RecomputeOrderSize = function () {
@@ -804,30 +814,8 @@ function UpdateLeadTime() {
         }
       }
 
-      this.FilterProducts = function(menu) {
-        var current_time = moment();
-        return function ( item ) {
-          var passes = !item.display_flags.hide_from_menu && DisableDataCheck(item.disable_data, current_time);
-          for (var mtid in item.modifiers) {
-            passes = passes && Math.min(1, Math.min.apply(null, item.modifiers[mtid].map(function(x) {
-              return DisableDataCheck(menu.modifiers[mtid].options[x[1]].disable_data, current_time);
-            })));
-          }
-          return passes;
-        }
-      }
-
-      this.FilterEmptyCategories = function(menu) {
-        var filter_fxn = this.FilterProducts(menu);
-        return function ( item ) {
-          var cat_menu = menu.categories[item].menu;
-          for (var i = 0; i < cat_menu.length; ++i) {
-            if (filter_fxn(cat_menu[i])) {
-              return true;
-            }
-          }
-          return false;
-        }
+      this.FilterProducts = function(menu) {        
+        return FilterProduct(menu, timing_info.current_time);
       }
 
       this.AddToOrder = function (cid, pi) {
@@ -1073,7 +1061,7 @@ function UpdateLeadTime() {
         if (!entry.meets_minimum) {
           var modifier_entry = menu.modifiers[mtid];
           var mod_name = modifier_entry.modifier_type.display_name ? modifier_entry.modifier_type.display_name : modifier_entry.modifier_type.name
-          error_messages.push(`Please select a ${String(mod_name).toLowerCase()}.`);
+          error_messages.push(`Please select your choice of ${String(mod_name).toLowerCase()}.`);
         }
       });
       this.errors = error_messages;

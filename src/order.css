@@ -1,3 +1,15 @@
+ /* just for WCP */
+ .headroom--top .navigation > ul > li { 
+	text-shadow: #000 -1px 1px 1px;
+}
+/* end just for WCP*/
+
+.headline__primary, .headline__description {
+	text-shadow: rgb(0, 0, 0) -2px 2px 10px;
+}
+.btn { 
+  text-shadow: none;
+}
 #ui-datepicker-div {
   z-index: 999 !important;
 }

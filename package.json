@@ -4,8 +4,8 @@
   "description": "front end javascript for the WCP ordering interface",
   "scripts": {
     "start": "webpack-dev-server --mode development --open",
-    "deploy:prodbtp": "rsync -avzhe ssh --progress ./src/order_angular.js breezytown@breezytownpizza.com:~/breezytownpizza.com/wp-includes/js/BTPJSFE29.js",
-    "deploy:prodwcp": "rsync -avzhe ssh --progress ./src/order_angular.js windycitypie@windycitypie.com:~/windycitypie.com/wp-includes/js/WCPJSFE44.js"
+    "deploy:prodbtp": "rsync -avzhe ssh --progress ./src/order_angular.js breezytown@breezytownpizza.com:~/breezytownpizza.com/wp-includes/js/BTPJSFE30.js",
+    "deploy:prodwcp": "rsync -avzhe ssh --progress ./src/order_angular.js windycitypie@windycitypie.com:~/windycitypie.com/wp-includes/js/WCPJSFE45.js"
   },
   "repository": {
     "type": "git",

@@ -22,7 +22,7 @@
     </div>
     <div ng-show="orderCtrl.s.stage === 2 && !pmenuCtrl.selection">
       <h3 class="flush--top"><strong>Add small plates or beverages to your order.</strong></h3>
-      <div class="ordering-menu menu-list menu-list__dotted md-accordion" ng-repeat="subcatid in pmenuCtrl.CONFIG.MENU.categories[pmenuCtrl.CONFIG.EXTRAS_CATID].children | filter:orderCtrl.FilterEmptyCategories(pmenuCtrl.CONFIG.MENU) ">
+      <div class="ordering-menu menu-list menu-list__dotted md-accordion" ng-repeat="subcatid in pmenuCtrl.CONFIG.EXTRAS_CATEGORIES">
         <md-toolbar ng-attr-id="{{ 'accordion-' + subcatid }}" ng-click="orderCtrl.toggleAccordion($index); orderCtrl.ScrollToID('#accordion-' + subcatid, 300);" role="button">
           <div class="md-toolbar-tools">
             <h2>
@@ -617,7 +617,8 @@ var ENABLE_DELIVERY = true;
 var ENABLE_DINE_IN = true;
 var ENABLE_DINE_IN_PREPAYMENT = false;
 var ADD_SOMETHING_THRESHOLD = 2;
-var MAX_PARTY_SIZE = 8;
+var MAX_PARTY_SIZE = 6;
+var ABSOLUTE_MAX = 6;
 var TAX_RATE = 0.1025;
 var DINE_IN_TERMS_LIST = ["All dining service is outside. No exceptions.",
   "Have been following good social distancing practices.",
@@ -625,7 +626,8 @@ var DINE_IN_TERMS_LIST = ["All dining service is outside. No exceptions.",
   "Are NOT knowingly sick or contagious.",
   "Will wear a mask while on premises and while interacting with our team.",
   "Will maintain a safe distance from our crew.",
-  `Parties are limited to ${MAX_PARTY_SIZE} persons.`,
+  "Please note: Our covered patio is best utilized by parties of 2. Larger parties are likely to be sat at our uncovered patio.",
+  ABSOLUTE_MAX === MAX_PARTY_SIZE ? `Parties are limited to ${MAX_PARTY_SIZE} persons.` : `Parties are currently limited to ${MAX_PARTY_SIZE} due to weather`,
   "Table reservations last 60 minutes from the time selected below but we're flexible if there's no one waiting.",
   "Please arrive anticipating the pizza coming out at the time you select, so you have time to get situated."];
 var CONST_MESSAGE_ADD_MORE_TO_PIZZA = "Our pizza is designed as a vehicle for add-ons. We recommend at least two toppings to weigh the crust down during baking. If this is your first time dining with us, we'd suggest ordering a menu pizza without modifications.";
@@ -635,4 +637,4 @@ var CONST_MESSAGE_REQUEST_SLICING = "In order to ensure the quality of our pizza
 var CONST_MESSAGE_TIP_PREAMBLE = "The Windy City Pie family is working hard to serve you, safely. All gratuity is shared with the entire staff. Everyone, from our team that makes the house-made dough, to the staff that handles your order appreciates your support!";
 var DELIVERY_LINK = "http://bit.ly/2QsrfV8";
 </script>
-<script src="https://www.windycitypie.com/wp-includes/js/WCPJSFE44.js"></script>
+<script src="https://www.windycitypie.com/wp-includes/js/WCPJSFE45.js"></script>
