@@ -398,7 +398,7 @@
       <button type="submit" class="btn" ng-show="orderCtrl.HasNextStage() && (!orderCtrl.s.acknowledge_instructions_dialogue && !(orderCtrl.s.service_type === orderCtrl.CONFIG.DINEIN && !orderCtrl.CONFIG.ENABLE_DINE_IN_PREPAYMENT))" ng-click="orderCtrl.ScrollTop(); orderCtrl.NextStage();">Next</button>
       <button type="submit" class="btn" ng-disabled="orderCtrl.s.disableorder" ng-show="orderCtrl.s.acknowledge_instructions_dialogue || (orderCtrl.s.service_type === orderCtrl.CONFIG.DINEIN && !orderCtrl.CONFIG.ENABLE_DINE_IN_PREPAYMENT)" ng-click="orderCtrl.ScrollTop(); orderCtrl.SubmitToWario()">Submit Order</button>
     </div>
-    <div ng-hide="orderCtrl.s.tip_value === 0">* Gratuity is shared among the entire team.</div>
+    <div ng-hide="orderCtrl.s.tip_value === 0">* Gratuity is distributed in its entirety to front and back of house.</div>
   </div>
   <div ng-if="orderCtrl.s.stage === 6">
     <div ng-hide="orderCtrl.s.isProcessing">
@@ -627,7 +627,7 @@ var DINE_IN_TERMS_LIST = ["All dining service is outside. No exceptions.",
   "Will wear a mask while on premises and while interacting with our team.",
   "Will maintain a safe distance from our crew.",
   "Please note: Our covered patio is best utilized by parties of 2. Larger parties are likely to be sat at our uncovered patio.",
-  ABSOLUTE_MAX === MAX_PARTY_SIZE ? `Parties are limited to ${MAX_PARTY_SIZE} persons.` : `Parties are currently limited to ${MAX_PARTY_SIZE} due to weather`,
+  ABSOLUTE_MAX === MAX_PARTY_SIZE ? `Parties are limited to ${MAX_PARTY_SIZE} persons, but larger parties may be accommodated if we've confirmed it ahead of time.` : `Parties are currently limited to ${MAX_PARTY_SIZE} due to weather.`,
   "Table reservations last 60 minutes from the time selected below but we're flexible if there's no one waiting.",
   "Please arrive anticipating the pizza coming out at the time you select, so you have time to get situated."];
 var CONST_MESSAGE_ADD_MORE_TO_PIZZA = "Our pizza is designed as a vehicle for add-ons. We recommend at least two toppings to weigh the crust down during baking. If this is your first time dining with us, we'd suggest ordering a menu pizza without modifications.";
