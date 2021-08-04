@@ -327,60 +327,16 @@
                   <span ng-show="orderCtrl.s.delivery_fee !== 0" class="menu-list__item-price">{{orderCtrl.s.delivery_fee | number:2}}</span>
                 </td>
               </tr>
-              <tr ng-if="orderCtrl.s.credit.validation_successful && orderCtrl.s.credit.type == 'DISCOUNT'" class="cart-item">
-                <td class="cart-item-description">
-                  <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
-                    <div class="cart-item-title-subtitle column menu-list__item">
-                      <h4 class="menu-list__item-title"><span class="item_title">Discount Code Applied (<span style="text-transform: none;">{{orderCtrl.s.credit.code}}</span>)</span></h4>
-                    </div>
-                  </div>
-                </td>
-                <td class="cart-item-quantity-price no-wrap"></td>
-                <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">-{{orderCtrl.s.credit.amount_used | number: 2}}</span></td>
-              </tr>
               <tr class="cart-item">
                 <td class="cart-item-description">
                   <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
                     <div class="cart-item-title-subtitle column menu-list__item">
-                      <h4 class="menu-list__item-title"><span class="item_title">Sales Tax ({{orderCtrl.CONFIG.TAX_RATE * 100 | number:2}}%)</span></h4>
+                      <h4 class="menu-list__item-title"><span class="item_title">Subtotal</span></h4>
                     </div>
                   </div>
                 </td>
                 <td class="cart-item-quantity-price no-wrap"></td>
-                <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{orderCtrl.s.computed_tax | number:2}}</span></td>
-              </tr>
-              <tr class="cart-item" ng-hide="orderCtrl.s.tip_value === 0">
-                <td class="cart-item-description">
-                  <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
-                    <div class="cart-item-title-subtitle column menu-list__item">
-                      <h4 class="menu-list__item-title"><span class="item_title">Gratuity*</span></h4>
-                    </div>
-                  </div>
-                </td>
-                <td class="cart-item-quantity-price no-wrap"></td>
-                <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{orderCtrl.s.tip_value | number:2}}</span></td>
-              </tr>
-              <tr ng-if="orderCtrl.s.credit.validation_successful && orderCtrl.s.credit.type == 'MONEY'" class="cart-item">
-                <td class="cart-item-description">
-                  <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
-                    <div class="cart-item-title-subtitle column menu-list__item">
-                      <h4 class="menu-list__item-title"><span class="item_title">Digital Gift Applied (<span style="text-transform: none;">{{orderCtrl.s.credit.code}}</span>)</span></h4>
-                    </div>
-                  </div>
-                </td>
-                <td class="cart-item-quantity-price no-wrap"></td>
-                <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">-{{orderCtrl.s.credit.amount_used | number: 2}}</span></td>
-              </tr>
-              <tr class="cart-item">
-                <td class="cart-item-description">
-                  <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
-                    <div class="cart-item-title-subtitle column menu-list__item">
-                      <h4 class="menu-list__item-title"><span class="item_title">Total</span></h4>
-                    </div>
-                  </div>
-                </td>
-                <td class="cart-item-quantity-price no-wrap"></td>
-                <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{orderCtrl.s.balance | number: 2}}</span></td>
+                <td class="cart-item-subtotal no-wrap"><span class="menu-list__item-price">{{(orderCtrl.s.computed_subtotal + orderCtrl.s.delivery_fee) | number: 2}}</span></td>
               </tr>
             </tbody>
           </table>
@@ -627,7 +583,7 @@ var DINE_IN_TERMS_LIST = ["All dining service is outside. No exceptions.",
   "Will wear a mask while on premises and while interacting with our team.",
   "Will maintain a safe distance from our crew.",
   "Please note: Our covered patio is best utilized by parties of 2. Larger parties are likely to be sat at our uncovered patio.",
-  ABSOLUTE_MAX === MAX_PARTY_SIZE ? `Parties are limited to ${MAX_PARTY_SIZE} persons, but larger parties may be accommodated if we've confirmed it ahead of time.` : `Parties are currently limited to ${MAX_PARTY_SIZE} due to weather.`,
+  ABSOLUTE_MAX === MAX_PARTY_SIZE ? `Parties are limited to ${MAX_PARTY_SIZE} persons, but larger parties may be accommodated if confirmed ahead of time.` : `Parties are currently limited to ${MAX_PARTY_SIZE} due to weather.`,
   "Table reservations last 60 minutes from the time selected below but we're flexible if there's no one waiting.",
   "Please arrive anticipating the pizza coming out at the time you select, so you have time to get situated."];
 var CONST_MESSAGE_ADD_MORE_TO_PIZZA = "Our pizza is designed as a vehicle for add-ons. We recommend at least two toppings to weigh the crust down during baking. If this is your first time dining with us, we'd suggest ordering a menu pizza without modifications.";
@@ -637,4 +593,4 @@ var CONST_MESSAGE_REQUEST_SLICING = "In order to ensure the quality of our pizza
 var CONST_MESSAGE_TIP_PREAMBLE = "The Windy City Pie family is working hard to serve you, safely. All gratuity is shared with the entire staff. Everyone, from our team that makes the house-made dough, to the staff that handles your order appreciates your support!";
 var DELIVERY_LINK = "http://bit.ly/2QsrfV8";
 </script>
-<script src="https://www.windycitypie.com/wp-includes/js/WCPJSFE45.js"></script>
+<script src="https://www.windycitypie.com/wp-includes/js/WCPJSFE46.js"></script>
