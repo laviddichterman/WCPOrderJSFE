@@ -364,7 +364,7 @@
                 <td class="cart-item-description">
                   <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
                     <div class="cart-item-title-subtitle column menu-list__item">
-                      <h4 class="menu-list__item-title"><span class="item_title">Digital Gift Applied ({{orderCtrl.s.credit.code}})</span></h4>
+                      <h4 class="menu-list__item-title"><span class="item_title">Digital Gift Applied (<span style="text-transform: none;">{{orderCtrl.s.credit.code}}</span>)</span></h4>
                     </div>
                   </div>
                 </td>
@@ -398,7 +398,6 @@
       <button type="submit" class="btn" ng-show="orderCtrl.HasNextStage() && (!orderCtrl.s.acknowledge_instructions_dialogue && !(orderCtrl.s.service_type === orderCtrl.CONFIG.DINEIN && !orderCtrl.CONFIG.ENABLE_DINE_IN_PREPAYMENT))" ng-click="orderCtrl.ScrollTop(); orderCtrl.NextStage();">Next</button>
       <button type="submit" class="btn" ng-disabled="orderCtrl.s.disableorder" ng-show="orderCtrl.s.acknowledge_instructions_dialogue || (orderCtrl.s.service_type === orderCtrl.CONFIG.DINEIN && !orderCtrl.CONFIG.ENABLE_DINE_IN_PREPAYMENT)" ng-click="orderCtrl.ScrollTop(); orderCtrl.SubmitToWario()">Submit Order</button>
     </div>
-    <div ng-hide="orderCtrl.s.tip_value === 0">* Gratuity is distributed in its entirety to front and back of house.</div>
   </div>
   <div ng-if="orderCtrl.s.stage === 6">
     <div ng-hide="orderCtrl.s.isProcessing">
@@ -472,7 +471,7 @@
                 <td class="cart-item-description">
                   <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
                     <div class="cart-item-title-subtitle column menu-list__item">
-                      <h4 class="menu-list__item-title"><span class="item_title">Discount Code Applied ({{orderCtrl.s.credit.code}})</span></h4>
+                      <h4 class="menu-list__item-title"><span class="item_title">Discount Code Applied (<span style="text-transform: none;">{{orderCtrl.s.credit.code}}</span>)</span></h4>
                     </div>
                   </div>
                 </td>
@@ -505,7 +504,7 @@
                 <td class="cart-item-description">
                   <div class="grid-flex grid-align-justify grid-align-left-at-small grid-valign-middle">
                     <div class="cart-item-title-subtitle column menu-list__item">
-                      <h4 class="menu-list__item-title"><span class="item_title">Digital Gift Applied ({{orderCtrl.s.credit.code}})</span></h4>
+                      <h4 class="menu-list__item-title"><span class="item_title">Digital Gift Applied (<span style="text-transform: none;">{{orderCtrl.s.credit.code}}</span>)</span></h4>
                     </div>
                   </div>
                 </td>
@@ -566,6 +565,7 @@
           <button ng-show="orderCtrl.s.balance > 0" id="sq-creditcard" class="btn" ng-click="orderCtrl.ScrollTop(); submitForm()" ng-disabled="orderCtrl.s.isProcessing">Pay and submit order!</button>
           <button ng-show="orderCtrl.s.balance == 0" class="btn" ng-click="orderCtrl.ScrollTop(); orderCtrl.SubmitToWario()" ng-disabled="orderCtrl.s.isProcessing">Pay and submit order!</button>
         </div>
+        <div ng-hide="orderCtrl.s.tip_value === 0">* Gratuity is distributed in its entirety to front and back of house.</div>
       </div>
     </div>
   </div>
