@@ -19,7 +19,7 @@
   "homepage": "https://github.com/laviddichterman/WCPOrderJSFE#readme",
   "dependencies": {
     "@babel/polyfill": "^7.12.1",
-    "@wcp/wcpshared": "^2.2.2",
+    "@wcp/wcpshared": "^2.2.3",
     "angular": "^1.8.2",
     "angular-animate": "1.5.11",
     "angular-material": "1.1.22",

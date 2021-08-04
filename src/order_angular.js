@@ -50,7 +50,7 @@ var RoundToTwoDecimalPlaces = function(num) {
   return Math.round((num + Number.EPSILON) * 100) / 100;
 }
 var SanitizeIfExists = function (str) {
-  return str && str.length ? str.replace("'", "`").replace("/", "|").replace("&", "and").replace("<", "").replace(">", "").replace(/[\+\t\r\n\v\f]/g, '') : str;
+  return str && str.length ? str.replace("/", "|").replace("&", "and").replace("<", "").replace(">", "").replace(/[\+\t\r\n\v\f]/g, '') : str;
 }
 
 var FilterModifiersCurry = function (menu) {
