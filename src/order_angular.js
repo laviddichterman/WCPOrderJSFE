@@ -534,7 +534,7 @@ function UpdateLeadTime() {
           load_time: state.debug_info.load_time,
           time_selection_time: state.debug_info["time-selection-time"] ? state.debug_info["time-selection-time"].format("H:mm:ss") : "",
           submittime: moment().format("MM-DD-YYYY HH:mm:ss"),
-          useragent: navigator.userAgent + " FEV17",
+          useragent: navigator.userAgent + " FEV18",
         }
       }).then(onSuccess).catch(onFail);
     }
