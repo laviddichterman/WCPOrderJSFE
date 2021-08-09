@@ -270,7 +270,14 @@ function UpdateLeadTime() {
   });
 
   app.factory('socket', function ($rootScope) {
-    var socket = io.connect(`${WARIO_ENDPOINT}nsRO`);
+    var socket = io(`${WARIO_ENDPOINT}nsRO`, {
+      transports: ["websocket", "polling"]
+    });
+    socket.on("connect_error", function() {
+      // revert to classic upgrade
+      console.log("Reverting to polling first socketio transport");
+      socket.io.opts.transports = ["polling", "websocket"];
+    });
     return {
       on: function (eventName, callback) {
         socket.on(eventName, function () {
