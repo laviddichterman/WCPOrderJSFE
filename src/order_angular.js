@@ -147,7 +147,7 @@ var WCPStoreConfig = function () {
 
   // user messaging
   this.ENABLE_DINE_IN_PREPAYMENT = ENABLE_DINE_IN_PREPAYMENT;
-  this.DINE_IN_TERMS_LIST = DINE_IN_TERMS_LIST;
+  this.TERMS_LIST = TERMS_LIST;
   this.MAX_PARTY_SIZE = MAX_PARTY_SIZE;
   this.REQUEST_ANY = "By adding any special instructions, you will only be able to pay in person.";
   this.REQUEST_HALF = CONST_MESSAGE_REQUEST_HALF;
@@ -607,7 +607,7 @@ function UpdateLeadTime() {
     this.linear_cart = [];
     this.cart_based_lead_time = 0;
     this.referral = "";
-    this.acknowledge_dine_in_terms = false;
+    this.acknowledge_terms = false;
     this.acknowledge_instructions_dialogue = false;
     this.special_instructions = "";
     this.special_instructions_responses = [];
@@ -744,6 +744,7 @@ function UpdateLeadTime() {
 
       this.PostChangeServiceType = function() {
         this.s.number_guests = "";
+        this.s.acknowledge_terms = false;
         this.ValidateDate(); 
         this.ClearAddress(); 
         this.ClearSlicing();

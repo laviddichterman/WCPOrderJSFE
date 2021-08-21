@@ -170,10 +170,10 @@
           {{service[0]}}</label>
       </div>
     </div>
-    <span ng-show="orderCtrl.s.service_type == orderCtrl.CONFIG.DINEIN">
-      <br /><label><input type="checkbox" ng-model="orderCtrl.s.acknowledge_dine_in_terms">
+    <span ng-show="orderCtrl.CONFIG.TERMS_LIST[orderCtrl.s.service_type].length">
+      <br /><label><input type="checkbox" ng-model="orderCtrl.s.acknowledge_terms">
       REQUIRED: For the health and safety of our staff and fellow guests, you and all members of your party understand and agree to:
-    <ul><li ng-repeat="term in orderCtrl.CONFIG.DINE_IN_TERMS_LIST">{{term}}</li>
+    <ul><li ng-repeat="term in orderCtrl.CONFIG.TERMS_LIST[orderCtrl.s.service_type]">{{term}}</li>
       </ul></label>
     </span>
     <label for="service-date">
@@ -248,7 +248,7 @@
     </span>
     <div class="order-nav">
       <button type="submit" class="btn" ng-show="orderCtrl.HasPreviousStage()" ng-click="orderCtrl.ScrollTop(); orderCtrl.PreviousStage()">Previous</button>
-      <button type="submit" class="btn" ng-disabled="!orderCtrl.s.date_valid || (orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && (!orderCtrl.s.is_address_validated)) || (orderCtrl.s.service_type == orderCtrl.CONFIG.DINEIN && (!orderCtrl.s.acknowledge_dine_in_terms || Number.isNaN(orderCtrl.s.number_guests) || orderCtrl.s.number_guests < 1 || orderCtrl.s.number_guests > orderCtrl.CONFIG.MAX_PARTY_SIZE))" ng-show="orderCtrl.HasNextStage()" ng-click="orderCtrl.ScrollTop(); orderCtrl.NextStage(); orderCtrl.ClearTimeoutFlag();">Next</button>
+      <button type="submit" class="btn" ng-disabled="!orderCtrl.s.date_valid || (orderCtrl.CONFIG.TERMS_LIST[orderCtrl.s.service_type].length > 0 && !orderCtrl.s.acknowledge_terms) || (orderCtrl.s.service_type == orderCtrl.CONFIG.DELIVERY && (!orderCtrl.s.is_address_validated)) || (orderCtrl.s.service_type == orderCtrl.CONFIG.DINEIN && (Number.isNaN(orderCtrl.s.number_guests) || orderCtrl.s.number_guests < 1 || orderCtrl.s.number_guests > orderCtrl.CONFIG.MAX_PARTY_SIZE))" ng-show="orderCtrl.HasNextStage()" ng-click="orderCtrl.ScrollTop(); orderCtrl.NextStage(); orderCtrl.ClearTimeoutFlag();">Next</button>
     </div>
   </div>
   <div ng-show="orderCtrl.s.stage === 5 && !orderCtrl.s.isProcessing">
@@ -569,14 +569,15 @@ var TOPPING_BLEU_OID = "5f06f2bca117bf46f6553a51";
 var WCP_BLOG_LOAD_TIME = moment(new Date([WCP_blog_epoch_time]));
 var ENABLE_SPLIT_TOPPINGS = false || window.location.search.includes("split");
 var CONFIG_ALLOW_SLICING = false;
-var ENABLE_DELIVERY = true;
+var ENABLE_DELIVERY = false;
 var ENABLE_DINE_IN = true;
 var ENABLE_DINE_IN_PREPAYMENT = false;
 var ADD_SOMETHING_THRESHOLD = 2;
 var MAX_PARTY_SIZE = 6;
 var ABSOLUTE_MAX = 6;
 var TAX_RATE = 0.1025;
-var DINE_IN_TERMS_LIST = ["All dining service is outside. No exceptions.",
+var TERMS_LIST = [[], 
+["All dining service is outside. No exceptions.",
   "Have been following good social distancing practices.",
   "Are actively monitoring for any possible COVID-19 symptoms and have not had any.",
   "Are NOT knowingly sick or contagious.",
@@ -585,7 +586,8 @@ var DINE_IN_TERMS_LIST = ["All dining service is outside. No exceptions.",
   "Please note: Our covered patio is best utilized by parties of 2. Larger parties are likely to be sat at our uncovered patio.",
   ABSOLUTE_MAX === MAX_PARTY_SIZE ? `Parties are limited to ${MAX_PARTY_SIZE} persons, but larger parties may be accommodated if confirmed ahead of time.` : `Parties are currently limited to ${MAX_PARTY_SIZE} due to weather.`,
   "Table reservations last 60 minutes from the time selected below but we're flexible if there's no one waiting.",
-  "Please arrive anticipating the pizza coming out at the time you select, so you have time to get situated."];
+  "Please arrive anticipating the pizza coming out at the time you select, so you have time to get situated."],
+   []];
 var CONST_MESSAGE_ADD_MORE_TO_PIZZA = "Our pizza is designed as a vehicle for add-ons. We recommend at least two toppings to weigh the crust down during baking. If this is your first time dining with us, we'd suggest ordering a menu pizza without modifications.";
 var CONST_MESSAGE_REQUEST_VEGAN = "Our pizzas cannot be made vegan or without cheese. If you're looking for a vegan option, our Beets By Schrute salad can be made vegan by omitting the bleu cheese.";
 var CONST_MESSAGE_REQUEST_HALF = "While half toppings are not on the menu, we can do them (with the exception of half roasted garlic or half red sauce, half white sauce) but they are charged the same as full toppings. As such, we recommend against them as they're not a good value for the customer and an imbalance of toppings will cause uneven baking of your pizza.";
@@ -593,4 +595,4 @@ var CONST_MESSAGE_REQUEST_SLICING = "In order to ensure the quality of our pizza
 var CONST_MESSAGE_TIP_PREAMBLE = "The Windy City Pie family is working hard to serve you, safely. All gratuity is shared with the entire staff. Everyone, from our team that makes the house-made dough, to the staff that handles your order appreciates your support!";
 var DELIVERY_LINK = "http://bit.ly/2QsrfV8";
 </script>
-<script src="https://www.windycitypie.com/wp-includes/js/WCPJSFE46.js"></script>
+<script src="https://www.windycitypie.com/wp-includes/js/WCPJSFE47.js"></script>
