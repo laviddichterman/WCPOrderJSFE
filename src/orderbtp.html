@@ -10,6 +10,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-material/1.2.2/angular-material.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.min.js"></script>
+  <!--  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.4.0/socket.io.min.js"></script>
+-->
   <script src="https://www.breezytownpizza.com/wp-includes/js/socket.min.js"></script>
   <script src="https://www.breezytownpizza.com/wp-includes/js/wcpshared.2.2.3.js"></script>
   <script src="https://www.breezytownpizza.com/wp-includes/js/angularjs-toast.min.js"></script>
@@ -34,18 +36,21 @@
     var ADD_SOMETHING_THRESHOLD = 1;
     var MAX_PARTY_SIZE = 15;
     var TAX_RATE = 0.1025;
-    var DINE_IN_TERMS_LIST = ["Have been fully vaccinated for COVID-19 (or have a negative test result within 48 hours).",
-      "Individuals not eligible for vaccination due to age must remain masked while on site.",
-      "Are actively monitoring for any possible COVID-19 symptoms and have not had any.",
-      "Are NOT knowingly sick or contagious.",
-      "Will wear a mask while on premises and while interacting with our team.",
-      "Will maintain a safe distance from our crew.",
-      `Parties are limited to ${MAX_PARTY_SIZE} persons.`,
-      "Table reservations last 60 minutes from the time you've selected the pizza to be ready, but we're flexible if there's no one waiting."];
+    var TERMS_LIST = [["The person(s) picking up this order who are 12 years of age and up will provide proof (either digital or physical) of full COVID-19 vaccination (2 weeks after last shot in the series) or proof of a negative COVID-19 test result no more than than 48 hours old, along with matching ID to Breezy Town Pizza upon approaching the service counter.",
+      "The person(s) picking up this order under 12 years old will remain masked at all times.",
+      "The person(s) picking up this order are actively monitoring for any possible COVID-19 symptoms and have not had any.",
+      "The person(s) picking up this order will wear a mask while on premises and while interacting with our team."], 
+    ["All of our party members 12 years of age and up will provide proof (either digital or physical) of full COVID-19 vaccination (2 weeks after last shot in the series) or proof of a negative COVID-19 test result no more than than 48 hours old, along with matching ID to Breezy Town Pizza upon approaching the service counter.",
+      "All members of our party under 12 years old will remain masked at all times.",
+      "All members of our party are actively monitoring for any possible COVID-19 symptoms and have not had any.",
+      "All members of our party will wear a mask while on premises and while interacting with our team.",
+      `Our party size is no larger than ${MAX_PARTY_SIZE} persons.`,
+      "Our table reservation lasts 60 minutes from the time we've selected the pizza to be ready. (This is flexible if there's no one waiting for your seat.)"],
+   []];
     var CONST_MESSAGE_ADD_MORE_TO_PIZZA = "Hey, add something to this!";
     var CONST_MESSAGE_REQUEST_HALF = "While half toppings are not on the menu, we can do them but they are charged the same as full toppings. As such, we recommend against them as they're not a good value for the customer and an imbalance of toppings will cause uneven baking of your pizza.";
     var CONST_MESSAGE_REQUEST_VEGAN = null;
     var CONST_MESSAGE_REQUEST_SLICING = null;
     var CONST_MESSAGE_TIP_PREAMBLE = "The Breezy Town Pizza family is working hard to serve you, safely. All gratuity is shared with the entire staff. Everyone, from our team that makes the house-made dough, to the staff that handles your order appreciates your support!";
     </script>
-    <script src="https://www.breezytownpizza.com/wp-includes/js/BTPJSFE32.js"></script>
+    <script src="https://www.breezytownpizza.com/wp-includes/js/BTPJSFE33.js"></script>
