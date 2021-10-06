@@ -158,7 +158,15 @@ var WCPStoreConfig = function () {
   this.TIP_PREAMBLE = CONST_MESSAGE_TIP_PREAMBLE;
   this.DELIVERY_LINK = DELIVERY_LINK;
 
+  // re-type the intervals to Number from string (can occur with certain versions of socketio)
   this.UpdateBlockedOffVal = function (bo) {
+    bo.forEach(function(svc_block, i) {
+      svc_block.forEach(function(day_block, j) {
+        day_block[1].forEach(function(interval, k) {
+          bo[i][j][1][k] = [Number(bo[i][j][1][k][0]), Number(bo[i][j][1][k][1])];
+        })
+      })
+    })
     this.BLOCKED_OFF = bo;
   }
 

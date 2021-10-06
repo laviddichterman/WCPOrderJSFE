@@ -551,9 +551,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.maskedinput/1.4.1/jquery.maskedinput.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-material/1.2.2/angular-material.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.4.0/socket.io.min.js"></script>
 <script src="https://www.windycitypie.com/wp-includes/js/socket.min.js"></script>
-<script src="https://www.windycitypie.com/wp-includes/js/wcpshared.2.2.3.js"></script>
+<script src="https://www.windycitypie.com/wp-includes/js/wcpshared.2.2.4.js"></script>
 <script src="https://www.windycitypie.com/wp-includes/js/angularjs-toast.min.js"></script>
 <script>
 var WARIO_ENDPOINT = "https://wario.windycitypie.com/";
@@ -569,26 +569,20 @@ var TOPPING_BLEU_OID = "5f06f2bca117bf46f6553a51";
 var WCP_BLOG_LOAD_TIME = moment(new Date([WCP_blog_epoch_time]));
 var ENABLE_SPLIT_TOPPINGS = false || window.location.search.includes("split");
 var CONFIG_ALLOW_SLICING = false;
-var ENABLE_DELIVERY = false;
+var ENABLE_DELIVERY = false || window.location.search.includes("deliver");
 var ENABLE_DINE_IN = true;
 var ENABLE_DINE_IN_PREPAYMENT = false;
 var ADD_SOMETHING_THRESHOLD = 2;
-var MAX_PARTY_SIZE = 6;
-var ABSOLUTE_MAX = 6;
+var MAX_PARTY_SIZE = 10;
+var ABSOLUTE_MAX = 10;
 var TAX_RATE = 0.1025;
-var TERMS_LIST = [[], 
-["All dining service is outside. No exceptions.",
-  "Have been following good social distancing practices.",
-  "All eligible members of your party are fully vaccinated.",
-  "Are actively monitoring for any possible COVID-19 symptoms and have not had any.",
-  "Are NOT knowingly sick or contagious.",
-  "Will wear a mask while on premises and while interacting with our team.",
-  "Will maintain a safe distance from our crew.",
-  "Please note: Our covered patio is best utilized by parties of 2. Larger parties are likely to be sat at our uncovered patio.",
-  ABSOLUTE_MAX === MAX_PARTY_SIZE ? `Parties are limited to ${MAX_PARTY_SIZE} persons, but larger parties may be accommodated if confirmed ahead of time.` : `Parties are currently limited to ${MAX_PARTY_SIZE} due to weather.`,
-  "Table reservations last 60 minutes from the time selected below but we're flexible if there's no one waiting.",
-  "Please arrive anticipating the pizza coming out at the time you select, so you have time to get situated."],
-   []];
+var TERMS_LIST = [[],["All of our party members 12 years of age and up will provide proof (either digital or physical) of full COVID-19 vaccination (2 weeks after last shot in the series) along with matching ID to Windy City Pie upon arrival.",
+  "All members of our party will remain masked at all times not eating or drinking.",
+  "All members of our party are actively monitoring for any possible COVID-19 symptoms and have not had any.",
+  "Our party understands that placing this order is a commitment to pay for the items in the order, even if we cannot consume them due to violation of Windy City Pie's COVID-19 safety protocols.",
+  "Our party understands that table reservations last 60 minutes from the time selected below. (We're flexible if there's no one waiting.)",
+  "Our full party will arrive at least 15 minutes before the time we select below. We understand the pizza is scheduled to come out of the oven at the time selected below."],
+  []];
 var CONST_MESSAGE_ADD_MORE_TO_PIZZA = "Our pizza is designed as a vehicle for add-ons. We recommend at least two toppings to weigh the crust down during baking. If this is your first time dining with us, we'd suggest ordering a menu pizza without modifications.";
 var CONST_MESSAGE_REQUEST_VEGAN = "Our pizzas cannot be made vegan or without cheese. If you're looking for a vegan option, our Beets By Schrute salad can be made vegan by omitting the bleu cheese.";
 var CONST_MESSAGE_REQUEST_HALF = "While half toppings are not on the menu, we can do them (with the exception of half roasted garlic or half red sauce, half white sauce) but they are charged the same as full toppings. As such, we recommend against them as they're not a good value for the customer and an imbalance of toppings will cause uneven baking of your pizza.";
@@ -596,4 +590,4 @@ var CONST_MESSAGE_REQUEST_SLICING = "In order to ensure the quality of our pizza
 var CONST_MESSAGE_TIP_PREAMBLE = "The Windy City Pie family is working hard to serve you, safely. All gratuity is shared with the entire staff. Everyone, from our team that makes the house-made dough, to the staff that handles your order appreciates your support!";
 var DELIVERY_LINK = "http://bit.ly/2QsrfV8";
 </script>
-<script src="https://www.windycitypie.com/wp-includes/js/WCPJSFE47.js"></script>
+<script src="https://www.windycitypie.com/wp-includes/js/WCPJSFE48.js"></script>
