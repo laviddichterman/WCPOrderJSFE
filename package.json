@@ -19,7 +19,7 @@
   "homepage": "https://github.com/laviddichterman/WCPOrderJSFE#readme",
   "dependencies": {
     "@babel/polyfill": "^7.12.1",
-    "@wcp/wcpshared": "^2.2.3",
+    "@wcp/wcpshared": "^2.2.4",
     "angular": "^1.8.2",
     "angular-animate": "1.5.11",
     "angular-material": "1.1.22",
@@ -29,7 +29,7 @@
     "jquery.maskedinput": "^1.4.1",
     "mailcheck": "^1.1.1",
     "moment": "^2.29.1",
-    "socket.io": "^2.4.1"
+    "socket.io": "^4.2.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.13.16",
