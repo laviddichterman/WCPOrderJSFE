@@ -14,6 +14,11 @@
   z-index: 999 !important;
 }
 
+/* this might need to be more specific to just catch the Follow Us social media section */
+ol, ul {
+  overflow-wrap: normal;
+}
+
 [ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
   display: none !important;
 }
@@ -209,6 +214,10 @@ span.cf7bridge {
   background-color: #D3D3D3;
   color: #000000;
   cursor: not-allowed;
+}
+
+.item_title { 
+  font-weight: 900;
 }
 
 .cart .item_title,
@@ -765,6 +774,66 @@ h2.option-modal-title {
 
 .customizer md-dialog-actions {
   margin-top: 1em;
+}
+
+/* CF7 migration CSS */
+div.wpcf7 .screen-reader-response {
+  position: absolute;
+  overflow: hidden;
+  clip: rect(1px,1px,1px,1px);
+  height: 1px;
+  width: 1px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+div.wpcf7-response-output {
+  margin: 2em .5em 1em;
+  padding: .2em 1em;
+  border: 2px solid red;
+}
+
+div.wpcf7-mail-sent-ok {
+  border: 2px solid #398f14;
+}
+
+div.wpcf7-mail-sent-ng {
+  border: 2px solid red;
+}
+
+div.wpcf7-validation-errors {
+  border: 2px solid #f7e700
+}
+
+div.wpcf7 .ajax-loader {
+  visibility: visible;
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  padding: 6px;
+  margin: 0 0 0 4px;
+  vertical-align: middle;
+  border: 5px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 5px solid #252525;
+  -webkit-animation: spinloader 1s linear infinite; /* Safari */
+  animation: spinloader 1s linear infinite;
+}
+
+/* Safari */
+@-webkit-keyframes spinloader {
+  0% { -webkit-transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spinloader {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+div.wpcf7 .wpcf7-submit:disabled {
+  cursor: not-allowed;
 }
 
 /* Start section for toast CSS */
